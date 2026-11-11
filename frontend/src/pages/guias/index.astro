@@ -1,0 +1,21 @@
+---
+import { guiasDeEjemplo } from "@/data/palas";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Guías" descripcion="Guías para elegir pala de pádel.">
+  <h1>Guías</h1>
+  <ul class="rejilla">
+    {
+      guiasDeEjemplo.map((g) => (
+        <li>
+          <a class="tarjeta" href={rutas.guia(g.slug)}>
+            <strong>{g.titulo}</strong>
+            <p class="suave">{g.resumen}</p>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

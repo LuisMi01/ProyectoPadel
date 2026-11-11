@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Impide push directo a main/develop salvo el cierre de release/hotfix (con tags).
+# Para ese caso: ALLOW_PROTECTED_PUSH=1 git push origin main develop --follow-tags
+[[ "${ALLOW_PROTECTED_PUSH:-}" == 1 ]] && exit 0
+
+while read -r _ _ remote_ref _; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/develop)
+      echo "✗ Push directo a ${remote_ref#refs/heads/} bloqueado: usa una rama y un Pull Request." >&2
+      echo "  (cierre de release/hotfix: ALLOW_PROTECTED_PUSH=1 git push ...)" >&2
+      exit 1
+      ;;
+  esac
+done
+exit 0

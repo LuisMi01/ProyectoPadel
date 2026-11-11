@@ -1,0 +1,33 @@
+---
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Encuesta" descripcion="Responde seis preguntas y te recomendamos la pala ideal.">
+  <h1>Encuesta</h1>
+
+  <!-- "Elegir camino": sin ?camino=… mostramos la elección; con él, la encuesta. -->
+  <div id="elegir-camino">
+    <p class="suave">Para empezar, cuéntanos tu situación:</p>
+    <div class="acciones">
+      <a class="boton" href={rutas.encuestaCamino("primera")}>Es mi primera pala</a>
+      <a class="boton secundario" href={rutas.encuestaCamino("cambiar")}>Quiero cambiar la mía</a>
+    </div>
+  </div>
+
+  <div id="isla-encuesta" hidden></div>
+</Base>
+
+<script>
+  import { h, render } from "preact";
+  import Encuesta from "@/components/Encuesta";
+
+  // La web es estática: el camino llega por query string y se lee en el cliente.
+  const camino = new URLSearchParams(location.search).get("camino");
+  if (camino === "primera" || camino === "cambiar") {
+    document.getElementById("elegir-camino")!.hidden = true;
+    const destino = document.getElementById("isla-encuesta")!;
+    destino.hidden = false;
+    render(h(Encuesta, { camino }), destino);
+  }
+</script>

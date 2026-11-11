@@ -1,0 +1,9 @@
+---
+import Cuenta from "@/layouts/Cuenta.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Cuenta titulo="Alertas de precio">
+  <p class="suave">Listar, crear y eliminar alertas (/alertas).</p>
+  <p class="aviso">No tienes alertas. Créalas desde la ficha de una <a href={rutas.palas}>pala</a>.</p>
+</Cuenta>

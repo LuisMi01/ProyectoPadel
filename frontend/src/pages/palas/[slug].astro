@@ -1,0 +1,23 @@
+---
+import { type PalaResumen, palasDeEjemplo } from "@/data/palas";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+
+// Ficha estática por modelo. Más adelante: leer GET /internas/catalogo en build.
+export function getStaticPaths() {
+  return palasDeEjemplo.map((pala) => ({ params: { slug: pala.slug }, props: { pala } }));
+}
+
+const { pala } = Astro.props as { pala: PalaResumen };
+---
+
+<Base titulo={`${pala.marca} ${pala.nombre}`}>
+  <p><a href={rutas.palas}>← Todas las palas</a></p>
+  <h1>{pala.marca} {pala.nombre} ({pala.anio})</h1>
+  <p class="suave">Forma {pala.forma}.</p>
+  <p class="aviso">Aquí irán especificaciones, ofertas por tienda e histórico de precios.</p>
+  <div class="acciones">
+    <a class="boton" href={rutas.encuesta}>¿Es para mí? Haz la encuesta</a>
+    <a class="boton secundario" href={rutas.alertas}>Crear alerta de precio</a>
+  </div>
+</Base>

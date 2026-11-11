@@ -1,0 +1,33 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base titulo="Acceder">
+  <h1>Acceder</h1>
+  <p class="suave">Sin contraseñas: te enviamos un enlace a tu email. Si no tienes cuenta, se crea al entrar.</p>
+  <form id="form-acceso" class="tarjeta">
+    <label>
+      Email<br />
+      <input type="email" name="email" required autocomplete="email" />
+    </label>
+    <div class="acciones"><button class="boton" type="submit">Enviarme el enlace</button></div>
+    <p id="mensaje-acceso" role="status"></p>
+  </form>
+</Base>
+
+<script>
+  import { post } from "@/lib/api";
+
+  const form = document.getElementById("form-acceso") as HTMLFormElement;
+  const mensaje = document.getElementById("mensaje-acceso")!;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = new FormData(form).get("email");
+    try {
+      await post("/acceso/enlace", { email });
+      mensaje.textContent = "Revisa tu correo: te hemos enviado un enlace de acceso.";
+    } catch {
+      mensaje.textContent = "No hemos podido enviar el enlace. Inténtalo de nuevo.";
+    }
+  });
+</script>

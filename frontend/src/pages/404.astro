@@ -1,0 +1,12 @@
+---
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Página no encontrada">
+  <h1>Esta página no existe</h1>
+  <p class="acciones">
+    <a class="boton" href={rutas.inicio}>Volver al inicio</a>
+    <a class="boton secundario" href={rutas.encuesta}>Hacer la encuesta</a>
+  </p>
+</Base>

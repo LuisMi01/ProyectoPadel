@@ -1,0 +1,24 @@
+---
+import { palasDeEjemplo } from "@/data/palas";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Palas" descripcion="Catálogo de palas de pádel con comparativa de precios.">
+  <h1>Palas</h1>
+  <p class="suave">Catálogo de ejemplo: se generará desde la API en cada build.</p>
+  <ul class="rejilla">
+    {
+      palasDeEjemplo.map((p) => (
+        <li>
+          <a class="tarjeta" href={rutas.pala(p.slug)}>
+            <strong>{p.marca}</strong> {p.nombre}
+            <p class="suave">
+              {p.anio} · forma {p.forma}
+            </p>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

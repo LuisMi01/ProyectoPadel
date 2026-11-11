@@ -1,0 +1,14 @@
+---
+import Recomendacion from "@/components/Recomendacion";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Tu recomendación">
+  <h1>Tu recomendación</h1>
+  <Recomendacion client:load />
+  <p class="acciones">
+    <a class="boton secundario" href={rutas.encuesta}>Repetir encuesta</a>
+    <a class="boton secundario" href={rutas.acceso}>Guardar en mi cuenta</a>
+  </p>
+</Base>

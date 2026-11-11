@@ -1,0 +1,25 @@
+---
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Verificando acceso">
+  <h1>Verificando tu enlace…</h1>
+  <p id="estado-verificacion" role="status" class="suave"></p>
+  <p><a href={rutas.acceso}>Pedir otro enlace</a></p>
+</Base>
+
+<script>
+  import { post } from "@/lib/api";
+  import { rutas } from "@/lib/rutas";
+
+  const estado = document.getElementById("estado-verificacion")!;
+  const token = new URLSearchParams(location.search).get("token");
+  if (!token) {
+    estado.textContent = "Falta el token del enlace.";
+  } else {
+    post("/acceso/verificar", { token })
+      .then(() => location.replace(rutas.cuenta))
+      .catch(() => (estado.textContent = "El enlace no es válido o ha caducado."));
+  }
+</script>

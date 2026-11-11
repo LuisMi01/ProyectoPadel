@@ -1,0 +1,156 @@
+:root {
+  --fondo: #fffaf0;
+  --superficie: #ffffff;
+  --texto: #1a1a1a;
+  --texto-suave: #5c5c5c;
+  --acento: #d400d4;
+  --acento-2: #4a2bff;
+  --borde: #e8e1d4;
+  --radio: 12px;
+  --ancho: 64rem;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #14121a;
+    --superficie: #1e1b26;
+    --texto: #f3f0f7;
+    --texto-suave: #a9a3b5;
+    --acento: #f05cf0;
+    --acento-2: #8c7bff;
+    --borde: #2f2a3a;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+a {
+  color: inherit;
+}
+
+.contenedor {
+  width: min(100% - 2rem, var(--ancho));
+  margin-inline: auto;
+}
+
+main {
+  padding-block: 2.5rem 4rem;
+  min-height: 70vh;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.15;
+  margin-block: 0 1rem;
+}
+
+.suave {
+  color: var(--texto-suave);
+}
+
+.boton {
+  display: inline-block;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  border: 2px solid var(--acento);
+  background: var(--acento);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton.secundario {
+  background: transparent;
+  color: var(--texto);
+  border-color: var(--borde);
+}
+
+.boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rejilla {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  text-decoration: none;
+}
+
+a.tarjeta:hover {
+  border-color: var(--acento);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+fieldset {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+fieldset label {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+fieldset label:has(input:checked) {
+  border-color: var(--acento);
+}
+
+input[type="number"],
+input[type="email"] {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font: inherit;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+progress {
+  width: 100%;
+  accent-color: var(--acento);
+}
+
+.aviso {
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--acento-2);
+  background: var(--superficie);
+  border-radius: 0 var(--radio) var(--radio) 0;
+}

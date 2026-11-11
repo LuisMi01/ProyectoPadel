@@ -1,0 +1,28 @@
+---
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Inicio">
+  <section class="hero">
+    <h1>Encuentra la pala que encaja con tu juego</h1>
+    <p class="suave">Seis preguntas, sin registro. Te recomendamos palas y dónde comprarlas al mejor precio.</p>
+    <div class="acciones">
+      <a class="boton" href={rutas.encuestaCamino("primera")}>Es mi primera pala</a>
+      <a class="boton secundario" href={rutas.encuestaCamino("cambiar")}>Quiero cambiar la mía</a>
+    </div>
+  </section>
+
+  <ul class="rejilla">
+    <li><a class="tarjeta" href={rutas.palas}><h2>Palas</h2><p class="suave">Fichas y comparativa de precios.</p></a></li>
+    <li><a class="tarjeta" href={rutas.guias}><h2>Guías</h2><p class="suave">Aprende a elegir sin jerga.</p></a></li>
+    <li><a class="tarjeta" href={rutas.cuenta}><h2>Mi cuenta</h2><p class="suave">Palas guardadas y alertas de precio.</p></a></li>
+  </ul>
+</Base>
+
+<style>
+  .hero {
+    padding-block: 2rem 3rem;
+    max-width: 40rem;
+  }
+</style>

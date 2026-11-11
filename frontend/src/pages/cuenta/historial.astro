@@ -1,0 +1,9 @@
+---
+import Cuenta from "@/layouts/Cuenta.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Cuenta titulo="Historial">
+  <p class="suave">Recomendaciones anteriores (/historial).</p>
+  <p class="aviso">Sin recomendaciones todavía. <a href={rutas.encuesta}>Haz la encuesta</a>.</p>
+</Cuenta>

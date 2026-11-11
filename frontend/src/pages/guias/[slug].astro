@@ -1,0 +1,19 @@
+---
+import { type Guia, guiasDeEjemplo } from "@/data/palas";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+
+export function getStaticPaths() {
+  return guiasDeEjemplo.map((guia) => ({ params: { slug: guia.slug }, props: { guia } }));
+}
+
+const { guia } = Astro.props as { guia: Guia };
+---
+
+<Base titulo={guia.titulo} descripcion={guia.resumen}>
+  <p><a href={rutas.guias}>← Todas las guías</a></p>
+  <h1>{guia.titulo}</h1>
+  <p class="suave">{guia.resumen}</p>
+  <p class="aviso">Contenido pendiente.</p>
+  <a class="boton" href={rutas.encuesta}>Haz la encuesta</a>
+</Base>
