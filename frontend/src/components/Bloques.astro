@@ -1,0 +1,269 @@
+---
+/** Pinta el contenido en bloques de las guías y de las páginas de texto. */
+import PalaMini from "@/components/PalaMini";
+import { palaPorSlug } from "@/data/catalogo";
+import type { Bloque } from "@/data/guias";
+import { type Pala, textoCaracter } from "@/lib/catalogo";
+
+interface Props {
+  bloques: Bloque[];
+}
+
+const { bloques } = Astro.props;
+
+const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pala => p !== undefined);
+---
+
+<div class="prosa">
+  {
+    bloques.map((bloque) => {
+      switch (bloque.tipo) {
+        case "p":
+          return <p>{bloque.texto}</p>;
+        case "h2":
+          return <h2 class="titulo">{bloque.texto}</h2>;
+        case "lista":
+          return (
+            <ul class="lista">
+              {bloque.elementos.map((texto) => (
+                <li>{texto}</li>
+              ))}
+            </ul>
+          );
+        case "definiciones":
+          return (
+            <dl class="definiciones">
+              {bloque.elementos.map(({ termino, texto }) => (
+                <div>
+                  <dt>{termino}</dt>
+                  <dd>{texto}</dd>
+                </div>
+              ))}
+            </dl>
+          );
+        case "tabla":
+          return (
+            <div class="tabla">
+              <table>
+                <thead>
+                  <tr>
+                    {bloque.cabecera.map((celda) => (
+                      <th scope="col">{celda}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bloque.filas.map((fila) => (
+                    <tr>
+                      {fila.map((celda, i) =>
+                        i === 0 ? <th scope="row">{celda}</th> : <td data-rotulo={bloque.cabecera[i]}>{celda}</td>,
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        case "nota":
+          return (
+            <aside class="nota">
+              <p class="etiqueta">{bloque.titulo}</p>
+              <p>{bloque.texto}</p>
+            </aside>
+          );
+        case "palas":
+          return (
+            <section class="palas">
+              <h2 class="titulo">{bloque.titulo}</h2>
+              <div class="rejilla-palas">
+                {palasDe(bloque.slugs).map((pala) => (
+                  <PalaMini pala={pala} texto={`${pala.junior ? "Junior" : textoCaracter[pala.forma]} · ${pala.marca}`} />
+                ))}
+              </div>
+            </section>
+          );
+      }
+    })
+  }
+</div>
+
+<style>
+  .prosa {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  .prosa > p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+  h2 {
+    margin-top: 24px;
+    font-size: clamp(26px, 3vw, 34px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+  .prosa > :first-child {
+    margin-top: 0;
+  }
+
+  .lista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lista li {
+    position: relative;
+    padding-left: 26px;
+    text-wrap: pretty;
+  }
+  .lista li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--azul);
+  }
+
+  .definiciones {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-top: 1.5px solid var(--tinta);
+  }
+  .definiciones > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--borde);
+  }
+  .definiciones dt {
+    flex: 0 0 200px;
+    font-family: var(--f-titulo);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+  .definiciones dd {
+    flex: 1 1 300px;
+    margin: 0;
+    font-size: 17px;
+    color: var(--suave);
+    text-wrap: pretty;
+  }
+
+  .tabla {
+    padding: 8px 22px;
+    border-radius: 20px;
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  thead th {
+    padding: 14px 14px 12px 0;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--suave);
+  }
+  tbody tr {
+    border-top: 1px solid var(--borde);
+  }
+  tbody th,
+  td {
+    padding: 14px 14px 14px 0;
+    vertical-align: top;
+  }
+  tbody th {
+    font-family: var(--f-titulo);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  td {
+    color: var(--suave);
+  }
+
+  .nota {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 22px 24px;
+    border-radius: 18px;
+    background: var(--tenue);
+    font-size: 17px;
+  }
+  .nota p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .nota .etiqueta {
+    color: var(--azul);
+  }
+
+  .palas {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* En móvil las tablas pasan a fichas: la primera columna hace de título. */
+  @media (max-width: 640px) {
+    .prosa {
+      font-size: 17px;
+    }
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    table,
+    tbody,
+    tr,
+    tbody th,
+    td {
+      display: block;
+    }
+    tbody tr {
+      padding: 14px 0;
+    }
+    tbody tr:first-child {
+      border-top: 0;
+    }
+    tbody th,
+    td {
+      padding: 0;
+    }
+    td {
+      margin-top: 6px;
+    }
+    td::before {
+      content: attr(data-rotulo) ": ";
+      font-weight: 600;
+      color: var(--tinta);
+    }
+    .definiciones dt {
+      flex-basis: 100%;
+    }
+  }
+</style>

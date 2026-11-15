@@ -1,17 +1,22 @@
 # ProyectoPadel — guía para agentes
 
 Recomendador de palas de pádel: encuesta → recomendación → enlace a tienda (afiliación).
+La marca de cara al público es **palaideal** (`frontend/src/lib/sitio.ts`).
 Idioma del código, comentarios, commits y UI: **español**.
 
 ## Estructura
 
 ```
-frontend/   Astro + Preact + TypeScript. Web estática servida por Cloudflare Workers (wrangler.jsonc).
-backend/    Python 3.13 + FastAPI + Pydantic + SQLAlchemy 2 + psycopg 3 + Alembic. Railway (Ámsterdam).
+frontend/   Astro + Preact + TypeScript. Web estática (dist/). Despliegue previsto: Vercel (vercel.json).
+            wrangler.jsonc es la configuración anterior para Cloudflare Workers.
+backend/    Python 3.13 + FastAPI + Pydantic + SQLAlchemy 2 + psycopg 3 + Alembic. Despliegue previsto: Render.
 docs/       GITFLOW.md y documentación.
 scripts/    flow.sh (gitflow sin dependencias).
 .claude/    agentes: gitflow, code-reviewer.
 ```
+
+Los cuatro diseños de referencia (portada, cuestionario, recomendación y ficha) están fuera del repo,
+en `../Diseños/`. De ellos salen los valores de `frontend/src/styles/global.css`.
 
 ### Backend (`backend/app/`)
 
@@ -27,11 +32,27 @@ Ciclo de una petición: uvicorn → FastAPI (router) → Pydantic (`schemas.py`)
 
 ### Frontend (`frontend/src/`)
 
+La web funciona entera sin backend: el catálogo es de ejemplo, la recomendación se calcula en el
+navegador y lo que el usuario guarda vive en `localStorage`. Solo el acceso por correo usa la API.
+
 - `lib/rutas.ts`: **única** fuente de URLs. Enlaza siempre con `rutas.*`.
-- `lib/encuesta.ts`: máquina de estados del flujo de la encuesta (pura, sin DOM).
-- `lib/api.ts`: cliente de la API (`PUBLIC_API_URL`).
-- `components/*.tsx`: islas Preact (Encuesta, Recomendacion).
-- `pages/`: inicio, encuesta, recomendacion, palas/[slug], guias/[slug], acceso, cuenta/*, 404.
+- `lib/sitio.ts`: nombre de marca y datos legales del titular (pendientes de rellenar).
+- `lib/encuesta.ts`: máquina de estados del cuestionario (pura, sin DOM) y su persistencia.
+- `lib/recomendador.ts`: motor de recomendación **provisional** (función pura). Se sustituirá por
+  `POST /recomendaciones` cuando el backend lo implemente.
+- `lib/catalogo.ts` + `data/catalogo.ts`: tipos y catálogo **de ejemplo** (marcas, tiendas y precios
+  ficticios) mientras no exista `GET /internas/catalogo`. Los `id` son los `modelo_id`/`oferta_id` de la API.
+- `lib/cuenta.ts`: palas guardadas, avisos e historial en `localStorage`; sesión contra la API.
+- `lib/api.ts`: cliente de la API. Sin `PUBLIC_API_URL` en producción, la API se da por no disponible.
+- `data/guias.ts`, `data/legal.ts`: contenido en bloques tipados (los textos legales son provisionales).
+- `components/*.tsx`: islas Preact (Encuesta, Recomendacion, Cuenta, AvisoPrecio, GuardarPala,
+  FormularioAcceso, VerificarAcceso) y piezas que también se pintan en estático (Icono, dibujos, PalaMini).
+- `styles/`: `global.css` (tokens y piezas comunes) y una hoja por isla grande.
+- `pages/`: portada, encuesta, recomendacion, palas (índice y ficha), ir/[oferta] (salida a tienda),
+  guias, como-ganamos-dinero, legal/[slug], acceso, cuenta/*, 404.
+
+Las molestias físicas son un dato de salud: solo viven en `sessionStorage` y nunca se escriben en
+`localStorage`, en el historial ni se envían a la API.
 
 ## Comandos
 

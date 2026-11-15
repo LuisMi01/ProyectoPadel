@@ -1,33 +1,131 @@
 ---
+import FormularioAcceso from "@/components/FormularioAcceso";
+import Icono from "@/components/Icono";
 import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+
+const ventajas = [
+  "Recibes un correo el día que baja el precio de la pala que esperas.",
+  "Vuelves a tus recomendaciones y a tus palas guardadas cuando quieras.",
+  "Sin contraseñas que recordar: cada vez entras con un enlace nuevo.",
+];
 ---
 
-<Base titulo="Acceder">
-  <h1>Acceder</h1>
-  <p class="suave">Sin contraseñas: te enviamos un enlace a tu email. Si no tienes cuenta, se crea al entrar.</p>
-  <form id="form-acceso" class="tarjeta">
-    <label>
-      Email<br />
-      <input type="email" name="email" required autocomplete="email" />
-    </label>
-    <div class="acciones"><button class="boton" type="submit">Enviarme el enlace</button></div>
-    <p id="mensaje-acceso" role="status"></p>
-  </form>
+<Base
+  titulo="Acceder"
+  descripcion="Accede a palaideal con tu correo, sin contraseña: te enviamos un enlace de acceso."
+  accion="cuestionario"
+  noindex
+>
+  <main id="contenido" class="contenedor acceso">
+    <div class="texto s1">
+      <p class="kicker">Acceso</p>
+      <h1 class="titulo">Entra con tu correo, sin contraseña.</h1>
+      <p class="lead">
+        Te enviamos un enlace de acceso. Si todavía no tienes cuenta, se crea al entrar. La cuenta es opcional: el
+        cuestionario funciona sin registrarte.
+      </p>
+      <ul class="ventajas">
+        {
+          ventajas.map((texto) => (
+            <li>
+              <Icono nombre="check" grosor={2.6} color="#1747C9" />
+              <span>{texto}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="lnk lnk-azul lnk-alto" href={rutas.cuenta}>Seguir sin cuenta y ver lo guardado en este navegador</a>
+    </div>
+
+    <section class="tarjeta dk s2" aria-labelledby="titulo-enlace">
+      <Icono nombre="sobre" tamano={30} grosor={1.8} color="#D9F53B" />
+      <h2 id="titulo-enlace" class="titulo">Te enviamos un enlace</h2>
+      <p>Escribe tu correo y abre el enlace desde este mismo navegador.</p>
+      <FormularioAcceso client:load idCampo="correo-acceso" />
+      <p class="letra">
+        Solo usamos tu correo para el acceso y para los avisos que tú crees.{" "}
+        <a class="lnk" href={rutas.privacidad}>Política de privacidad</a>
+      </p>
+    </section>
+  </main>
 </Base>
 
-<script>
-  import { post } from "@/lib/api";
+<style>
+  .acceso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 40px 64px;
+    padding-block: clamp(32px, 5vw, 72px) clamp(56px, 7vw, 96px);
+  }
+  .texto {
+    flex: 1.3 1 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  h1 {
+    font-size: clamp(36px, 4.6vw, 60px);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  .lead {
+    margin: 0;
+    max-width: 560px;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--suave);
+    text-wrap: pretty;
+  }
+  .ventajas {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    max-width: 560px;
+    list-style: none;
+  }
+  .ventajas li {
+    display: flex;
+    gap: 14px;
+  }
+  .ventajas :global(svg) {
+    margin-top: 2px;
+  }
 
-  const form = document.getElementById("form-acceso") as HTMLFormElement;
-  const mensaje = document.getElementById("mensaje-acceso")!;
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = new FormData(form).get("email");
-    try {
-      await post("/acceso/enlace", { email });
-      mensaje.textContent = "Revisa tu correo: te hemos enviado un enlace de acceso.";
-    } catch {
-      mensaje.textContent = "No hemos podido enviar el enlace. Inténtalo de nuevo.";
+  .tarjeta {
+    flex: 1 1 360px;
+    min-width: 0;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: clamp(24px, 3.4vw, 40px);
+    border-radius: 28px;
+    background: var(--noche);
+    color: var(--blanco);
+  }
+  .tarjeta h2 {
+    font-size: clamp(26px, 3vw, 34px);
+    letter-spacing: -0.025em;
+  }
+  .tarjeta p {
+    margin: 0;
+    color: var(--sobre-noche);
+    text-wrap: pretty;
+  }
+  .tarjeta .letra {
+    margin-top: 4px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .tarjeta {
+      max-width: none;
     }
-  });
-</script>
+  }
+</style>

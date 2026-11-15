@@ -1,0 +1,197 @@
+---
+/**
+ * Salida a tienda. Todos los botones «Ir a la tienda» pasan por aquí.
+ * Si la oferta tiene URL, redirige a la tienda. En el catálogo de ejemplo no
+ * la tiene, y la página explica a dónde llevaría el botón.
+ */
+import Icono from "@/components/Icono";
+import { Silueta } from "@/components/dibujos";
+import { nombreTienda, palas } from "@/data/catalogo";
+import Base from "@/layouts/Base.astro";
+import { type Oferta, type Pala, euros, textoDisponibilidad } from "@/lib/catalogo";
+import { rutas } from "@/lib/rutas";
+
+export function getStaticPaths() {
+  return palas.flatMap((pala) =>
+    pala.ofertas.map((oferta) => ({ params: { oferta: String(oferta.id) }, props: { pala, oferta } })),
+  );
+}
+
+const { pala, oferta } = Astro.props as { pala: Pala; oferta: Oferta };
+const tienda = nombreTienda(oferta.tienda);
+---
+
+<Base titulo={`Ir a ${tienda} · ${pala.nombre}`} accion="cuestionario" activo="palas" pie="compacto" noindex>
+  {oferta.url && <meta slot="head" http-equiv="refresh" content={`0;url=${oferta.url}`} />}
+
+  <main id="contenido" class="contenedor salida">
+    <div class="texto s1">
+      <p class="kicker">Salida a tienda</p>
+      {
+        oferta.url ? (
+          <>
+            <h1 class="titulo">Te llevamos a {tienda}.</h1>
+            <p class="lead">
+              Vas a salir de palaideal. Es un enlace de afiliado: si compras, la tienda nos paga una comisión y a ti te
+              cuesta lo mismo.
+            </p>
+            <a class="btn btn-l btn-azul" href={oferta.url} rel="sponsored nofollow noopener">
+              Continuar a {tienda}
+              <Icono nombre="salida" tamano={20} grosor={2.4} class="arr" />
+            </a>
+          </>
+        ) : (
+          <>
+            <h1 class="titulo">Aquí saldrías hacia {tienda}.</h1>
+            <p class="lead">
+              Este catálogo es de ejemplo, así que todavía no hay una tienda real detrás de este botón. Cuando las
+              tiendas estén conectadas, aquí se abrirá la página de la pala en {tienda}, con nuestro enlace de afiliado
+              y al precio que ves en la ficha.
+            </p>
+            <div class="acciones">
+              <a class="btn btn-l btn-azul" href={rutas.pala(pala.slug)}>
+                <Icono nombre="atras" tamano={20} grosor={2.4} />
+                Volver a la ficha
+              </a>
+              <a class="lnk lnk-azul lnk-alto" href={rutas.palaPrecios(pala.slug)}>Comparar las demás tiendas</a>
+            </div>
+          </>
+        )
+      }
+      <p class="nota">
+        <Icono nombre="info" tamano={20} color="#1747C9" />
+        <span>
+          La comisión no cambia el precio ni el orden de nuestras recomendaciones.{" "}
+          <a class="lnk lnk-azul" href={rutas.comoGanamosDinero}>Cómo ganamos dinero</a>
+        </span>
+      </p>
+    </div>
+
+    <aside class="resumen s2" aria-label="Oferta elegida">
+      <div class="dibujo">
+        <Silueta forma={pala.forma} ancho={110} cara="blanca" trazo={5} punto={9} />
+      </div>
+      <dl>
+        <div>
+          <dt>Pala</dt>
+          <dd><a class="lnk" href={rutas.pala(pala.slug)}>{pala.nombre}</a></dd>
+        </div>
+        <div>
+          <dt>Tienda</dt>
+          <dd>{tienda}</dd>
+        </div>
+        <div>
+          <dt>Precio de hoy</dt>
+          <dd class="precio">{euros(oferta.precio)}</dd>
+        </div>
+        <div>
+          <dt>Disponibilidad</dt>
+          <dd>{textoDisponibilidad[oferta.disponibilidad]}</dd>
+        </div>
+      </dl>
+    </aside>
+  </main>
+</Base>
+
+<style>
+  .salida {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 40px 64px;
+    padding-block: clamp(32px, 5vw, 72px) clamp(56px, 7vw, 96px);
+  }
+  .texto {
+    flex: 1.4 1 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  h1 {
+    font-size: clamp(36px, 4.6vw, 60px);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  .lead {
+    margin: 0;
+    max-width: 580px;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--suave);
+    text-wrap: pretty;
+  }
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+  }
+  .nota {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 6px 0 0;
+    max-width: 580px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--suave);
+  }
+  .nota :global(svg) {
+    margin-top: 1px;
+  }
+
+  .resumen {
+    flex: 1 1 320px;
+    min-width: 0;
+    max-width: 460px;
+    border-radius: 22px;
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    overflow: hidden;
+  }
+  .dibujo {
+    display: flex;
+    justify-content: center;
+    padding: 28px 0 18px;
+    background: var(--tenue);
+  }
+  dl {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+  dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--borde);
+  }
+  dt {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--suave);
+  }
+  dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+  dd.precio {
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 900px) {
+    .resumen {
+      max-width: none;
+    }
+  }
+</style>
