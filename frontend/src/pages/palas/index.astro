@@ -1,24 +1,551 @@
 ---
-import { palasDeEjemplo } from "@/data/palas";
+import Icono from "@/components/Icono";
+import { Silueta } from "@/components/dibujos";
+import { CATALOGO_DE_EJEMPLO, palas } from "@/data/catalogo";
 import Base from "@/layouts/Base.astro";
-import { rutas } from "@/lib/rutas";
+import {
+  FORMAS,
+  euros,
+  ofertasDisponibles,
+  precioDesde,
+  textoBalance,
+  textoCaracter,
+  textoNucleo,
+} from "@/lib/catalogo";
+import { type FiltroForma, rutas } from "@/lib/rutas";
+
+// Orden del catálogo: adultos por forma, junior al final; dentro, de más barata a más cara.
+const ordenadas = [...palas].sort(
+  (a, b) =>
+    Number(a.junior) - Number(b.junior) ||
+    FORMAS.indexOf(a.forma) - FORMAS.indexOf(b.forma) ||
+    precioDesde(a) - precioDesde(b),
+);
+
+const formas: { id: FiltroForma | "todas"; texto: string; href: string }[] = [
+  { id: "todas", texto: "Todas", href: rutas.palas },
+  { id: "redonda", texto: "Redondas", href: rutas.palasPorForma("redonda") },
+  { id: "lagrima", texto: "Lágrima", href: rutas.palasPorForma("lagrima") },
+  { id: "diamante", texto: "Diamante", href: rutas.palasPorForma("diamante") },
+  { id: "junior", texto: "Junior", href: rutas.palasPorForma("junior") },
+];
+
+const topes = [
+  { id: "", texto: "Cualquier precio" },
+  { id: "80", texto: "Hasta 80 €" },
+  { id: "150", texto: "Hasta 150 €" },
+  { id: "250", texto: "Hasta 250 €" },
+];
+
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 ---
 
-<Base titulo="Palas" descripcion="Catálogo de palas de pádel con comparativa de precios.">
-  <h1>Palas</h1>
-  <p class="suave">Catálogo de ejemplo: se generará desde la API en cada build.</p>
-  <ul class="rejilla">
-    {
-      palasDeEjemplo.map((p) => (
-        <li>
-          <a class="tarjeta" href={rutas.pala(p.slug)}>
-            <strong>{p.marca}</strong> {p.nombre}
-            <p class="suave">
-              {p.anio} · forma {p.forma}
-            </p>
+<Base
+  titulo="Palas de pádel: fichas y mejor precio"
+  descripcion="Catálogo de palas de pádel con su forma, balance, peso y núcleo, y el precio de hoy comparado entre tiendas."
+  accion="cuestionario"
+  activo="palas"
+>
+  <main id="contenido">
+    <section class="contenedor cabeza">
+      <p class="kicker s1">Catálogo</p>
+      <h1 class="titulo t-pagina s1">Todas las palas, con su mejor precio.</h1>
+      <p class="lead s2">
+        Cada ficha dice lo que importa —forma, balance, peso y núcleo— y lo que cuesta hoy en cada tienda. Si no sabes
+        por dónde empezar, <a class="lnk lnk-azul" href={rutas.encuesta}>el cuestionario te lo reduce a tres</a>.
+      </p>
+      {
+        CATALOGO_DE_EJEMPLO && (
+          <p class="aviso s2">
+            <Icono nombre="info" tamano={20} color="#1747C9" />
+            <span>
+              Catálogo de ejemplo: las marcas, las tiendas y los precios son provisionales hasta conectar las tiendas
+              reales.
+            </span>
+          </p>
+        )
+      }
+    </section>
+
+    <section class="contenedor catalogo s3">
+      <div class="filtros">
+        <div class="grupo" role="group" aria-label="Filtrar por forma">
+          {
+            formas.map(({ id, texto, href }) => (
+              <a class="filtro" href={href} data-forma={id} aria-current={id === "todas" ? "true" : undefined}>
+                {texto}
+              </a>
+            ))
+          }
+        </div>
+        <div class="grupo derecha">
+          <div class="grupo" role="group" aria-label="Filtrar por precio">
+            {
+              topes.map(({ id, texto }) => (
+                <button type="button" class="filtro" data-tope={id} aria-pressed={id === "" ? "true" : "false"}>
+                  {texto}
+                </button>
+              ))
+            }
+          </div>
+          <label class="orden">
+            <span class="etiqueta">Ordenar</span>
+            <select id="orden">
+              <option value="">Por forma</option>
+              <option value="precio-asc">Precio: de menor a mayor</option>
+              <option value="precio-desc">Precio: de mayor a menor</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <p class="cuenta etiqueta" id="cuenta" aria-live="polite">{plural(ordenadas.length, "pala", "palas")}</p>
+
+      <ul class="rejilla" id="rejilla">
+        {
+          ordenadas.map((pala, i) => (
+            <li
+              class="pala card card-enlace"
+              data-forma={pala.junior ? "junior" : pala.forma}
+              data-precio={precioDesde(pala)}
+              data-orden={i}
+            >
+              <div class="dibujo">
+                <Silueta forma={pala.forma} ancho={118} cara="blanca" trazo={5} punto={9} anillo />
+              </div>
+              <div class="cuerpo">
+                <span class="etiqueta caracter">{pala.junior ? "Junior" : textoCaracter[pala.forma]}</span>
+                <h2 class="subtitulo">
+                  <a class="cubre" href={rutas.pala(pala.slug)}>
+                    {pala.nombre}
+                  </a>
+                </h2>
+                <span class="marca">{pala.marca}</span>
+                <ul class="rasgos">
+                  <li class="pastilla">Balance {textoBalance[pala.balance].toLowerCase()}</li>
+                  <li class="pastilla">{pala.peso} g</li>
+                  <li class="pastilla">{textoNucleo(pala)}</li>
+                </ul>
+                <div class="pie">
+                  <span class="precio">
+                    <span class="desde">desde</span>
+                    <span class="valor">{euros(precioDesde(pala))}</span>
+                  </span>
+                  <span class="tiendas">
+                    {plural(ofertasDisponibles(pala).length, "tienda", "tiendas")}
+                    <Icono nombre="flecha" tamano={20} class="arr" />
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="vacio" id="vacio" hidden>
+        <h2 class="subtitulo">Ninguna pala con esos filtros.</h2>
+        <p>Prueba con otro precio o con otra forma.</p>
+        <button type="button" class="btn btn-m btn-contorno" id="quitar-filtros">Quitar filtros</button>
+      </div>
+    </section>
+
+    <section class="contenedor cierre">
+      <div class="banda-pista dk banda rv">
+        <svg class="pista" aria-hidden="true" viewBox="0 0 1128 300" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="3">
+            <path d="M-20 232 L1150 232"></path>
+            <path d="M820 -20 L820 320"></path>
+            <path d="M820 110 L1150 110"></path>
+          </g>
+          <circle cx="940" cy="86" r="22" fill="#D9F53B"></circle>
+        </svg>
+        <div class="banda-dentro">
+          <h2 class="titulo">¿No sabes cuál elegir?</h2>
+          <a class="btn btn-xl btn-lima" href={rutas.encuesta}>
+            Responder 6 preguntas
+            <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
           </a>
-        </li>
-      ))
-    }
-  </ul>
+        </div>
+      </div>
+    </section>
+  </main>
 </Base>
+
+<script>
+  // Filtros del catálogo. Sin JavaScript se ven todas las palas.
+  const rejilla = document.getElementById("rejilla")!;
+  const tarjetas = [...rejilla.querySelectorAll<HTMLElement>(".pala")];
+  const enlacesForma = [...document.querySelectorAll<HTMLAnchorElement>("a.filtro[data-forma]")];
+  const botonesTope = [...document.querySelectorAll<HTMLButtonElement>("button.filtro[data-tope]")];
+  const selectorOrden = document.getElementById("orden") as HTMLSelectElement;
+  const cuenta = document.getElementById("cuenta")!;
+  const vacio = document.getElementById("vacio")!;
+
+  const FORMAS = ["todas", "redonda", "lagrima", "diamante", "junior"];
+  const TOPES = ["", "80", "150", "250"];
+  const ORDENES = ["", "precio-asc", "precio-desc"];
+
+  const inicial = new URLSearchParams(location.search);
+  const valido = (valor: string | null, lista: string[], defecto: string) =>
+    valor !== null && lista.includes(valor) ? valor : defecto;
+
+  const filtros = {
+    forma: valido(inicial.get("forma"), FORMAS, "todas"),
+    tope: valido(inicial.get("precio"), TOPES, ""),
+    orden: valido(inicial.get("orden"), ORDENES, ""),
+  };
+
+  function aplicar(actualizarUrl = true) {
+    const tope = filtros.tope ? Number(filtros.tope) : Infinity;
+    let visibles = 0;
+    for (const tarjeta of tarjetas) {
+      const encaja =
+        (filtros.forma === "todas" || tarjeta.dataset.forma === filtros.forma) &&
+        Number(tarjeta.dataset.precio) <= tope;
+      tarjeta.hidden = !encaja;
+      if (encaja) visibles++;
+    }
+
+    const clave = (t: HTMLElement) => Number(filtros.orden ? t.dataset.precio : t.dataset.orden);
+    const signo = filtros.orden === "precio-desc" ? -1 : 1;
+    [...tarjetas].sort((a, b) => signo * (clave(a) - clave(b))).forEach((t) => rejilla.append(t));
+
+    for (const enlace of enlacesForma) {
+      if (enlace.dataset.forma === filtros.forma) enlace.setAttribute("aria-current", "true");
+      else enlace.removeAttribute("aria-current");
+    }
+    for (const boton of botonesTope) boton.setAttribute("aria-pressed", String(boton.dataset.tope === filtros.tope));
+    selectorOrden.value = filtros.orden;
+
+    cuenta.textContent = `${visibles} ${visibles === 1 ? "pala" : "palas"}`;
+    vacio.hidden = visibles > 0;
+    rejilla.hidden = visibles === 0;
+
+    if (actualizarUrl) {
+      const parametros = new URLSearchParams();
+      if (filtros.forma !== "todas") parametros.set("forma", filtros.forma);
+      if (filtros.tope) parametros.set("precio", filtros.tope);
+      if (filtros.orden) parametros.set("orden", filtros.orden);
+      const consulta = parametros.toString();
+      history.replaceState(null, "", consulta ? `${location.pathname}?${consulta}` : location.pathname);
+    }
+  }
+
+  for (const enlace of enlacesForma) {
+    enlace.addEventListener("click", (e) => {
+      e.preventDefault();
+      filtros.forma = enlace.dataset.forma!;
+      aplicar();
+    });
+  }
+  for (const boton of botonesTope) {
+    boton.addEventListener("click", () => {
+      filtros.tope = boton.dataset.tope!;
+      aplicar();
+    });
+  }
+  selectorOrden.addEventListener("change", () => {
+    filtros.orden = selectorOrden.value;
+    aplicar();
+  });
+  document.getElementById("quitar-filtros")!.addEventListener("click", () => {
+    filtros.forma = "todas";
+    filtros.tope = "";
+    aplicar();
+  });
+
+  aplicar(false);
+</script>
+
+<style>
+  .cabeza {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-block: clamp(32px, 5vw, 64px) clamp(28px, 4vw, 44px);
+  }
+  .cabeza h1 {
+    max-width: 900px;
+  }
+  .lead {
+    margin: 0;
+    max-width: 640px;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--suave);
+    text-wrap: pretty;
+  }
+  .aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0;
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--suave);
+  }
+  .aviso :global(svg) {
+    margin-top: 1px;
+  }
+
+  .catalogo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: clamp(56px, 7vw, 96px);
+  }
+
+  /* --- Filtros --- */
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 28px;
+    padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--tinta);
+  }
+  .grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .derecha {
+    gap: 14px 24px;
+  }
+  .filtro {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 2px solid var(--borde);
+    border-radius: 12px;
+    background: var(--blanco);
+    color: var(--tinta);
+    font-size: 15.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 0.15s,
+      border-color 0.15s,
+      background-color 0.15s,
+      color 0.15s;
+  }
+  .filtro:hover {
+    transform: translateY(-2px);
+    border-color: var(--azul);
+  }
+  .filtro[aria-current="true"],
+  .filtro[aria-pressed="true"] {
+    border-color: var(--azul);
+    background: var(--azul);
+    color: var(--blanco);
+  }
+  .orden {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  select {
+    height: 44px;
+    padding: 0 38px 0 14px;
+    border: 2px solid var(--borde);
+    border-radius: 12px;
+    background: var(--blanco)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231747C9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 12px center;
+    font-size: 15.5px;
+    font-weight: 600;
+    appearance: none;
+    cursor: pointer;
+  }
+  select:hover {
+    border-color: var(--azul);
+  }
+  .cuenta {
+    margin: 0;
+  }
+
+  /* --- Tarjetas --- */
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pala {
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    overflow: hidden;
+  }
+  .dibujo {
+    display: flex;
+    justify-content: center;
+    padding: 26px 0 16px;
+    background: var(--tenue);
+  }
+  .pala :global(.spot) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .pala:hover :global(.spot) {
+    animation: pulse 1.4s ease-out infinite;
+  }
+  .cuerpo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+  }
+  .caracter {
+    color: var(--azul);
+  }
+  .pala h2 {
+    font-size: 26px;
+    line-height: 1.05;
+  }
+  .pala h2 a {
+    text-decoration: none;
+  }
+  .marca {
+    font-size: 15px;
+    color: var(--suave);
+  }
+  .rasgos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rasgos .pastilla {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin-top: auto;
+    padding-top: 18px;
+  }
+  .precio {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .desde {
+    font-size: 14.5px;
+    color: var(--suave);
+  }
+  .valor {
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -0.03em;
+  }
+  .tiendas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--f-mono);
+    font-size: 13px;
+    color: var(--suave);
+  }
+  .tiendas :global(.arr) {
+    color: var(--azul);
+    transition: transform 0.22s var(--curva);
+  }
+  .pala:hover .tiendas :global(.arr) {
+    transform: translateX(6px);
+  }
+
+  .vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: clamp(24px, 4vw, 48px);
+    border-radius: 22px;
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+  }
+  .vacio h2 {
+    font-size: 28px;
+  }
+  .vacio p {
+    margin: 0 0 6px;
+    color: var(--suave);
+  }
+
+  /* --- Cierre --- */
+  .cierre {
+    padding-bottom: clamp(56px, 7vw, 96px);
+  }
+  .banda {
+    border-radius: 28px;
+  }
+  .banda-dentro {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px 40px;
+    padding: clamp(28px, 4.4vw, 56px);
+  }
+  .banda h2 {
+    flex: 1 1 380px;
+    max-width: 620px;
+    font-size: clamp(30px, 4vw, 52px);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+
+  /* En móvil los filtros de forma se deslizan en horizontal en vez de apilarse. */
+  @media (max-width: 640px) {
+    .filtros > .grupo:first-child,
+    .derecha > .grupo {
+      flex: none;
+      flex-wrap: nowrap;
+      width: calc(100% + var(--margen) * 2);
+      overflow-x: auto;
+      margin-inline: calc(var(--margen) * -1);
+      padding: 4px var(--margen);
+      scrollbar-width: none;
+    }
+    .filtros > .grupo:first-child::-webkit-scrollbar,
+    .derecha > .grupo::-webkit-scrollbar {
+      display: none;
+    }
+    .filtro {
+      flex: none;
+    }
+    .filtros,
+    .derecha {
+      width: 100%;
+    }
+    .orden {
+      width: 100%;
+      justify-content: space-between;
+    }
+    /* El desplegable se encoge con la pantalla en vez de imponer su ancho. */
+    .orden select {
+      flex: 1 1 0;
+      min-width: 0;
+      text-overflow: ellipsis;
+    }
+  }
+</style>

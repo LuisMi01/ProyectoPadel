@@ -1,9 +1,8 @@
 ---
+import { ListaGuardadas } from "@/components/Cuenta";
 import Cuenta from "@/layouts/Cuenta.astro";
-import { rutas } from "@/lib/rutas";
 ---
 
-<Cuenta titulo="Palas guardadas">
-  <p class="suave">Listar, guardar y quitar palas (/palas-guardadas).</p>
-  <p class="aviso">Aún no has guardado palas. <a href={rutas.palas}>Explora el catálogo</a>.</p>
+<Cuenta titulo="Palas guardadas" entrada="Las palas que has marcado para volver a ellas, con su precio de hoy.">
+  <ListaGuardadas client:load />
 </Cuenta>

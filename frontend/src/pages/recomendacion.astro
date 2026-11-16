@@ -1,14 +1,26 @@
 ---
+import "@/styles/recomendacion.css";
 import Recomendacion from "@/components/Recomendacion";
 import Base from "@/layouts/Base.astro";
 import { rutas } from "@/lib/rutas";
 ---
 
-<Base titulo="Tu recomendación">
-  <h1>Tu recomendación</h1>
+<Base
+  titulo="Tu recomendación de pala"
+  descripcion="La pala que encaja con tus respuestas, por qué la recomendamos y dónde está más barata hoy."
+  accion="acceder"
+  pie="compacto"
+  noindex
+>
+  <!-- La recomendación se calcula en el navegador con las respuestas del cuestionario. -->
   <Recomendacion client:load />
-  <p class="acciones">
-    <a class="boton secundario" href={rutas.encuesta}>Repetir encuesta</a>
-    <a class="boton secundario" href={rutas.acceso}>Guardar en mi cuenta</a>
-  </p>
+
+  <noscript>
+    <div class="contenedor" style="padding-block:48px">
+      <p>
+        Para calcular tu recomendación hace falta JavaScript. Mientras tanto puedes
+        <a class="lnk lnk-azul" href={rutas.palas}>ver todas las palas</a>.
+      </p>
+    </div>
+  </noscript>
 </Base>

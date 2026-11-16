@@ -1,14 +1,41 @@
 ---
 import "@/styles/global.css";
-import { navegacion, rutas } from "@/lib/rutas";
+import Navegacion from "@/components/Navegacion.astro";
+import Pie from "@/components/Pie.astro";
+import { type SeccionNav, rutas } from "@/lib/rutas";
+import { sitio } from "@/lib/sitio";
 
 interface Props {
+  /** Título de la página; se le añade la marca salvo que `tituloCompleto` sea true. */
   titulo: string;
+  tituloCompleto?: boolean;
   descripcion?: string;
+  /**
+   * «clara»: cabecera blanca con navegación (la mayoría de páginas).
+   * «ninguna»: la página pinta la suya (portada y cuestionario).
+   */
+  cabecera?: "clara" | "ninguna";
+  /** Botón de la cabecera clara. */
+  accion?: "acceder" | "cuestionario";
+  activo?: SeccionNav;
+  pie?: "completo" | "compacto" | "ninguno";
+  /** Páginas personales o de paso que no deben indexarse. */
+  noindex?: boolean;
 }
 
-const { titulo, descripcion = "Encuentra la pala de pádel que encaja con tu juego." } = Astro.props;
-const actual = Astro.url.pathname;
+const {
+  titulo,
+  tituloCompleto = false,
+  descripcion = sitio.descripcion,
+  cabecera = "clara",
+  accion = "cuestionario",
+  activo,
+  pie = "completo",
+  noindex = false,
+} = Astro.props;
+
+const tituloPagina = tituloCompleto ? titulo : `${titulo} · ${sitio.nombre}`;
+const canonica = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -16,81 +43,58 @@ const actual = Astro.url.pathname;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{titulo} · ProyectoPadel</title>
+    <title>{tituloPagina}</title>
     <meta name="description" content={descripcion} />
-    <link rel="canonical" href={new URL(actual, Astro.site)} />
+    <link rel="canonical" href={canonica} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#1747C9" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={sitio.nombre} />
+    <meta property="og:title" content={tituloPagina} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:url" content={canonica} />
+    <meta property="og:locale" content="es_ES" />
+    <slot name="head" />
   </head>
   <body>
-    <header class="cabecera">
-      <nav class="contenedor" aria-label="Principal">
-        <a href={rutas.inicio} class="logo">ProyectoPadel</a>
-        <ul>
-          {
-            navegacion.map(({ texto, href }) => (
-              <li>
-                <a href={href} aria-current={actual.startsWith(href) ? "page" : undefined}>
-                  {texto}
-                </a>
-              </li>
-            ))
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    {
+      cabecera === "clara" && (
+        <header class="cabecera">
+          <div class="contenedor">
+            <Navegacion tono="claro" accion={accion} activo={activo} />
+          </div>
+        </header>
+      )
+    }
+
+    <slot />
+
+    {pie !== "ninguno" && <Pie variante={pie} />}
+
+    <script is:inline define:vars={{ cuenta: rutas.cuenta }}>
+      // Si ya hay una sesión recordada, «Acceder» pasa a ser «Mi cuenta».
+      try {
+        if (localStorage.getItem("palaideal:sesion")) {
+          for (const enlace of document.querySelectorAll("[data-acceso]")) {
+            enlace.textContent = "Mi cuenta";
+            enlace.setAttribute("href", cuenta);
           }
-        </ul>
-      </nav>
-    </header>
-
-    <main class="contenedor">
-      <slot />
-    </main>
-
-    <footer class="pie">
-      <div class="contenedor suave">
-        © {new Date().getFullYear()} ProyectoPadel ·
-        <a href={rutas.guias}>Guías</a> ·
-        <a href={rutas.acceso}>Acceder</a>
-      </div>
-    </footer>
+        }
+      } catch {
+        /* sin almacenamiento: se queda «Acceder» */
+      }
+    </script>
   </body>
 </html>
 
 <style>
   .cabecera {
+    position: relative;
+    z-index: 20;
     border-bottom: 1px solid var(--borde);
-    background: var(--superficie);
-  }
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 1.5rem;
-    padding-block: 0.9rem;
-  }
-  .logo {
-    font-weight: 800;
-    text-decoration: none;
-    background: linear-gradient(90deg, var(--acento), var(--acento-2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  ul a {
-    text-decoration: none;
-  }
-  ul a[aria-current="page"] {
-    color: var(--acento);
-    font-weight: 600;
-  }
-  .pie {
-    border-top: 1px solid var(--borde);
-    padding-block: 1.5rem;
-    font-size: 0.9rem;
+    background: var(--blanco);
   }
 </style>

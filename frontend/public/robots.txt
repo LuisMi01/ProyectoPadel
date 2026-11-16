@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /cuenta/
+Disallow: /acceso/
+Disallow: /ir/
+Disallow: /recomendacion/

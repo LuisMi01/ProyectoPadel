@@ -1,0 +1,129 @@
+---
+import Logo from "@/components/Logo.astro";
+import { pieColumnas, pieLegal } from "@/lib/rutas";
+import { sitio } from "@/lib/sitio";
+
+interface Props {
+  /** Completo (portada y páginas de contenido) o compacto (recomendación y ficha). */
+  variante: "completo" | "compacto";
+}
+
+const { variante } = Astro.props;
+const anio = new Date().getFullYear();
+---
+
+<footer class="pie dk">
+  {
+    variante === "completo" ? (
+      <div class="contenedor completo">
+        <div class="columnas">
+          <div class="marca">
+            <Logo tono="oscuro" />
+            <p>{sitio.lema}</p>
+          </div>
+          {pieColumnas.map(({ titulo, enlaces }) => (
+            <nav aria-label={titulo}>
+              <span class="rotulo-col">{titulo}</span>
+              {enlaces.map(({ texto, href }) => (
+                <a class="nv" href={href}>
+                  {texto}
+                </a>
+              ))}
+            </nav>
+          ))}
+        </div>
+        <p class="legal">
+          © {anio} {sitio.nombre} · {sitio.razonSocial} · {sitio.nif}
+        </p>
+      </div>
+    ) : (
+      <div class="contenedor compacto">
+        <Logo tono="oscuro" pequeno />
+        <nav aria-label="Legal">
+          {pieLegal.map(({ texto, href }) => (
+            <a class="nv" href={href}>
+              {texto}
+            </a>
+          ))}
+        </nav>
+      </div>
+    )
+  }
+</footer>
+
+<style>
+  .pie {
+    flex-grow: 1;
+    background: var(--noche);
+    color: var(--sobre-noche);
+  }
+
+  .completo {
+    padding-block: 64px 40px;
+  }
+  .columnas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px 64px;
+  }
+  .marca {
+    flex: 1 1 280px;
+    max-width: 360px;
+  }
+  .marca p {
+    margin: 12px 0 0;
+    font-size: 15.5px;
+    text-wrap: pretty;
+  }
+  .completo nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 15.5px;
+  }
+  .completo nav a {
+    padding: 8px 0;
+  }
+  .rotulo-col {
+    margin-bottom: 8px;
+    font-family: var(--f-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blanco);
+  }
+  .legal {
+    margin: 48px 0 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--borde-noche);
+    font-family: var(--f-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+  }
+
+  .compacto {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 40px;
+    padding-block: 40px;
+    font-size: 15px;
+  }
+  .compacto nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 26px;
+  }
+  .compacto nav a {
+    padding: 10px 0;
+  }
+
+  /* En móvil las columnas de enlaces se reparten de dos en dos. */
+  @media (max-width: 560px) {
+    .completo nav {
+      flex: 1 1 40%;
+    }
+  }
+</style>

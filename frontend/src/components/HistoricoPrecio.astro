@@ -1,0 +1,117 @@
+---
+/** Gráfico escalonado del precio más bajo entre tiendas en los últimos 90 días. */
+import type { Pala } from "@/lib/catalogo";
+import { graficoPrecio } from "@/lib/fichas";
+
+interface Props {
+  pala: Pala;
+}
+
+const g = graficoPrecio(Astro.props.pala);
+---
+
+<div class="historico">
+  <div class="cabeza">
+    <h2 class="titulo">{g.titular}</h2>
+    <p>Precio más bajo entre tiendas, últimos 90 días.</p>
+  </div>
+  <div class="lienzo">
+    <svg role="img" aria-label={g.descripcion} viewBox="0 0 860 290">
+      <g stroke="#D3DBE6" stroke-width="1">
+        {g.marcasY.map(({ y }) => <path d={`M60 ${y} H840`} />)}
+        <path d="M60 240 H840" stroke="#0A1B3D"></path>
+      </g>
+      <g class="ejes" font-size="13" fill="#46566F">
+        {
+          g.marcasY.map(({ y, texto }) => (
+            <text x="48" y={y + 4} text-anchor="end">
+              {texto}
+            </text>
+          ))
+        }
+        <text x="60" y="266">hace 90 días</text>
+        <text x="320" y="266" text-anchor="middle">60</text>
+        <text x="580" y="266" text-anchor="middle">30</text>
+        <text x="840" y="266" text-anchor="end">hoy</text>
+      </g>
+      <path class="ar" d={g.area} fill="#E6EDFD"></path>
+      <path
+        class="ln"
+        pathLength="1"
+        d={g.linea}
+        fill="none"
+        stroke="#1747C9"
+        stroke-width="3.5"
+        stroke-linejoin="round"
+        stroke-linecap="round"></path>
+      <g class="ar rotulos" font-size="15" font-weight="700" fill="#0A1B3D">
+        {
+          g.minimo && (
+            <>
+              <circle cx={g.minimo.x} cy={g.minimo.y} r="7" fill="#D9F53B" stroke="#0A1B3D" stroke-width="2.5" />
+              <text x={g.minimo.x} y={g.minimo.y + 28} text-anchor={g.minimo.ancla}>
+                {g.minimo.texto}
+              </text>
+            </>
+          )
+        }
+        <circle cx={g.hoy.x} cy={g.hoy.y} r="7" fill="#1747C9" stroke="#FFFFFF" stroke-width="2.5"></circle>
+        <text x={g.hoy.x - 12} y={g.hoy.y - 14} text-anchor="end">{g.hoy.texto}</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<style>
+  .historico {
+    flex: 2 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: clamp(22px, 2.8vw, 36px);
+    border-radius: 22px;
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+  }
+  .cabeza {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  h2 {
+    font-size: 30px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+  p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--suave);
+  }
+  /* En pantallas estrechas el gráfico conserva su tamaño y se desplaza en horizontal. */
+  .lienzo {
+    overflow-x: auto;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    min-width: 540px;
+    height: auto;
+  }
+  .ejes {
+    font-family: var(--f-mono);
+  }
+  .rotulos {
+    font-family: var(--f-texto);
+  }
+  .ln {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.2s forwards;
+  }
+  .ar {
+    opacity: 0;
+    animation: fade 0.9s 1.6s forwards;
+  }
+</style>

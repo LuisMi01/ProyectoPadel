@@ -1,293 +1,401 @@
-/** Isla Preact: guía la encuesta paso a paso y guarda el progreso en el navegador. */
-import { useEffect, useState } from "preact/hooks";
+/**
+ * Isla Preact del cuestionario: cabecera con progreso, preguntas y el panel
+ * «Tu pala, tomando forma». El flujo y la persistencia están en lib/encuesta.
+ */
+import { useEffect, useRef, useState } from "preact/hooks";
 
+import Icono from "@/components/Icono";
+import { type Balance, type Forma, textoBalance, textoForma } from "@/lib/catalogo";
 import {
-  type Camino,
-  type EstadoEncuesta,
+  MOMENTOS,
+  PREGUNTAS,
   type Paso,
+  type Pregunta,
+  type Reanudacion,
   type Respuestas,
-  PRIMER_PASO,
+  SIN_SALUD,
+  type Salud,
+  ZONAS,
   borrarProgreso,
   cargarProgreso,
-  guardarPerfilFinal,
+  guardarFinal,
   guardarProgreso,
-  recorrido,
+  leerFinal,
+  perfilOrientativo,
+  progreso,
+  responder,
+  resumen,
   siguientePaso,
 } from "@/lib/encuesta";
 import { rutas } from "@/lib/rutas";
 
-interface Props {
-  camino: Camino;
+interface Estado {
+  paso: Paso;
+  /** Pasos ya recorridos, para «Atrás». */
+  historial: Paso[];
+  respuestas: Respuestas;
+  salud: Salud;
 }
 
-const TITULOS: Record<Paso, string> = {
-  experiencia: "¿Cuánto tiempo llevas jugando?",
-  frecuencia: "¿Cuántas veces juegas por semana?",
-  estilo: "¿Cómo juegas un punto?",
-  molestias: "¿Tienes alguna molestia al jugar?",
-  zona: "¿Dónde y cuándo notas la molestia?",
-  edad: "¿Quién va a usar la pala?",
-  presupuesto: "¿Cuánto quieres gastar como máximo?",
-};
+const INICIAL: Estado = { paso: "camino", historial: [], respuestas: {}, salud: SIN_SALUD };
 
-export default function Encuesta({ camino }: Props) {
-  const [estado, setEstado] = useState<EstadoEncuesta>({
-    camino,
-    paso: PRIMER_PASO,
-    respuestas: {},
-  });
-  const [guardado, setGuardado] = useState<EstadoEncuesta | null>(null);
+const TECLAS = "ABCD";
 
-  // "¿Respuestas guardadas?" -> ofrecer "Retomar encuesta".
+function esPregunta(paso: Paso): paso is Pregunta {
+  return paso !== "zona" && paso !== "fin";
+}
+
+export default function Encuesta() {
+  const [estado, setEstado] = useState<Estado>(INICIAL);
+  const [aMedias, setAMedias] = useState<Reanudacion | null>(null);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const primerPintado = useRef(true);
+
+  const { paso, historial, respuestas, salud } = estado;
+
+  // Al llegar: editar las últimas respuestas, entrar con el camino ya elegido u ofrecer retomar.
   useEffect(() => {
-    const previo = cargarProgreso();
-    if (previo && previo.paso !== PRIMER_PASO) setGuardado(previo);
+    const parametros = new URLSearchParams(location.search);
+    const camino = parametros.get("camino");
+
+    if (parametros.has("editar")) {
+      const ultimas = leerFinal();
+      if (ultimas) setEstado({ ...INICIAL, respuestas: ultimas.respuestas, salud: ultimas.salud });
+    } else if (camino === "primera" || camino === "cambio") {
+      setEstado({ ...INICIAL, paso: "exp", historial: ["camino"], respuestas: { camino } });
+    } else {
+      setAMedias(cargarProgreso());
+    }
   }, []);
 
-  const { paso, respuestas } = estado;
-  const pasos = recorrido(respuestas);
-  const indice = pasos.indexOf(paso);
-
-  function responder(cambios: Partial<Respuestas>) {
-    setEstado((e) => ({ ...e, respuestas: { ...e.respuestas, ...cambios } }));
-  }
-
-  function avanzar() {
-    const siguiente = siguientePaso(paso, respuestas);
-    if (siguiente === null) {
-      guardarPerfilFinal(estado);
-      borrarProgreso();
-      window.location.href = rutas.recomendacion;
+  // Al cambiar de paso, el foco va al enunciado para que el teclado y los lectores sigan el hilo.
+  useEffect(() => {
+    if (primerPintado.current) {
+      primerPintado.current = false;
       return;
     }
-    const nuevo = { ...estado, paso: siguiente };
-    setEstado(nuevo);
-    guardarProgreso(nuevo);
+    titulo.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [paso]);
+
+  function avanzar(desde: Paso, nuevas: Respuestas, nuevaSalud: Salud) {
+    const siguiente = siguientePaso(desde, nuevas);
+    if (siguiente === "fin") {
+      guardarFinal(nuevas, nuevaSalud);
+      borrarProgreso();
+    } else {
+      guardarProgreso(nuevas);
+    }
+    setAMedias(null);
+    setEstado({ paso: siguiente, historial: [...historial, desde], respuestas: nuevas, salud: nuevaSalud });
+  }
+
+  function elegir(pregunta: Pregunta, id: string) {
+    const nuevas = responder(respuestas, pregunta, id as never);
+    // Si ya no hay molestias, se olvida el detalle.
+    const nuevaSalud = pregunta === "mol" && id !== "si" ? SIN_SALUD : salud;
+    avanzar(pregunta, nuevas, nuevaSalud);
   }
 
   function retroceder() {
-    if (indice > 0) setEstado({ ...estado, paso: pasos[indice - 1] });
+    const previo = historial[historial.length - 1];
+    if (previo) setEstado({ ...estado, paso: previo, historial: historial.slice(0, -1) });
   }
 
-  if (guardado) {
-    return (
-      <div class="tarjeta">
-        <p>Tienes una encuesta a medias. ¿Quieres seguir donde lo dejaste?</p>
-        <div class="acciones">
-          <button
-            class="boton"
-            onClick={() => {
-              setEstado(guardado);
-              setGuardado(null);
-            }}
-          >
-            Retomar encuesta
-          </button>
-          <button
-            class="boton secundario"
-            onClick={() => {
-              borrarProgreso();
-              setGuardado(null);
-            }}
-          >
-            Empezar de nuevo
-          </button>
+  function retomar() {
+    if (!aMedias) return;
+    setEstado({ paso: aMedias.paso, historial: aMedias.historial, respuestas: aMedias.respuestas, salud: SIN_SALUD });
+    setAMedias(null);
+  }
+
+  // Las letras A–D eligen la opción correspondiente. El oyente se registra una
+  // sola vez y lee el paso actual de una referencia, para no perder pulsaciones
+  // entre una pregunta y la siguiente.
+  const alTeclear = useRef<(letra: number) => boolean>(() => false);
+  alTeclear.current = (letra) => {
+    if (!esPregunta(paso)) return false;
+    const opcion = PREGUNTAS[paso].opciones[letra];
+    if (!opcion) return false;
+    elegir(paso, opcion.id);
+    return true;
+  };
+
+  useEffect(() => {
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.key.length !== 1) return;
+      const destino = e.target as HTMLElement | null;
+      if (destino && /^(INPUT|TEXTAREA|SELECT)$/.test(destino.tagName)) return;
+      const letra = TECLAS.indexOf(e.key.toUpperCase());
+      if (letra >= 0 && alTeclear.current(letra)) e.preventDefault();
+    };
+    window.addEventListener("keydown", alPulsar);
+    return () => window.removeEventListener("keydown", alPulsar);
+  }, []);
+
+  const avance = progreso(paso, respuestas);
+  const zonaLista = Boolean(salud.zona && salud.momento && salud.consentimiento);
+
+  return (
+    <>
+      <header class="enc-cab">
+        <div class="contenedor enc-cab-dentro">
+          <a href={rutas.inicio} class="logo claro" aria-label="palaideal, ir al inicio">
+            <span class="punto" aria-hidden="true" />
+            <span>
+              pala<span class="fino">ideal</span>
+            </span>
+          </a>
+          <div class="enc-progreso">
+            <span class="etiqueta">{avance.rotulo}</span>
+            <div
+              class="enc-barra"
+              role="progressbar"
+              aria-label="Progreso del cuestionario"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={avance.porcentaje}
+            >
+              <div class="bar" style={{ width: `${avance.porcentaje}%` }} />
+            </div>
+          </div>
+          <a class="lnk lnk-alto enc-salir" href={rutas.inicio}>
+            {paso === "fin" ? "Salir" : "Guardar y salir"}
+          </a>
         </div>
-      </div>
-    );
-  }
+      </header>
 
-  return (
-    <form
-      class="tarjeta"
-      onSubmit={(e) => {
-        e.preventDefault();
-        avanzar();
-      }}
-    >
-      <p class="suave">
-        Paso {indice + 1} de {pasos.length}
-      </p>
-      <progress max={pasos.length} value={indice + 1} />
-      <h2>{TITULOS[paso]}</h2>
+      <main id="contenido" class="contenedor enc-main">
+        <div class="enc-col">
+          {aMedias && paso === "camino" && (
+            <div class="enc-retomar">
+              <span>Tienes un cuestionario a medias.</span>
+              <button type="button" class="btn btn-lima" onClick={retomar}>
+                Retomar donde lo dejaste
+              </button>
+            </div>
+          )}
 
-      <CamposPaso paso={paso} r={respuestas} responder={responder} />
+          {esPregunta(paso) && (
+            <div class="enc-pregunta" key={paso}>
+              <p class="kicker">
+                {paso === "camino" ? "Antes de empezar" : `${avance.rotulo} · ${PREGUNTAS[paso].nombre}`}
+              </p>
+              <h1 class="titulo" ref={titulo} tabIndex={-1}>
+                {PREGUNTAS[paso].pregunta}
+              </h1>
+              <p class="enc-ayuda">{PREGUNTAS[paso].ayuda}</p>
+              <div class="enc-opciones" role="group" aria-label="Opciones de respuesta">
+                {PREGUNTAS[paso].opciones.map((opcion, i) => (
+                  <button
+                    type="button"
+                    class="opt"
+                    key={opcion.id}
+                    aria-pressed={respuestas[paso] === opcion.id}
+                    aria-keyshortcuts={TECLAS[i]}
+                    onClick={() => elegir(paso, opcion.id)}
+                  >
+                    <span class="tecla" aria-hidden="true">
+                      {TECLAS[i]}
+                    </span>
+                    <span class="texto">
+                      <span class="t">{opcion.titulo}</span>
+                      {opcion.detalle && <span class="d">{opcion.detalle}</span>}
+                    </span>
+                    <Icono nombre="flecha" grosor={2.2} color="#1747C9" class="arr" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-      <div class="acciones">
-        {indice > 0 && (
-          <button type="button" class="boton secundario" onClick={retroceder}>
-            Atrás
-          </button>
-        )}
-        <button type="submit" class="boton" disabled={!pasoCompleto(paso, respuestas)}>
-          {siguientePaso(paso, respuestas) === null ? "Ver recomendación" : "Siguiente"}
-        </button>
-      </div>
-    </form>
+          {paso === "zona" && (
+            <div class="enc-pregunta" key="zona">
+              <p class="kicker">{avance.rotulo} · Molestias</p>
+              <h1 class="titulo" ref={titulo} tabIndex={-1}>
+                ¿Dónde lo notas y cuándo?
+              </h1>
+              <fieldset class="enc-grupo">
+                <legend>Zona de la molestia</legend>
+                <div class="enc-chips">
+                  {ZONAS.map((zona) => (
+                    <button
+                      type="button"
+                      class="chip"
+                      key={zona}
+                      aria-pressed={salud.zona === zona}
+                      onClick={() => setEstado({ ...estado, salud: { ...salud, zona } })}
+                    >
+                      {zona}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset class="enc-grupo">
+                <legend>Cuándo aparece</legend>
+                <div class="enc-chips">
+                  {MOMENTOS.map((momento) => (
+                    <button
+                      type="button"
+                      class="chip"
+                      key={momento}
+                      aria-pressed={salud.momento === momento}
+                      onClick={() => setEstado({ ...estado, salud: { ...salud, momento } })}
+                    >
+                      {momento}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <label class="enc-consentimiento">
+                <input
+                  type="checkbox"
+                  checked={salud.consentimiento}
+                  onChange={(e) =>
+                    setEstado({ ...estado, salud: { ...salud, consentimiento: e.currentTarget.checked } })
+                  }
+                />
+                <span>
+                  Acepto que uséis este dato de salud solo para calcular mi recomendación. No se guarda en mi perfil
+                  ni se comparte con las tiendas.
+                </span>
+              </label>
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-azul enc-continuar"
+                  disabled={!zonaLista}
+                  onClick={() => zonaLista && avanzar("zona", respuestas, salud)}
+                >
+                  Continuar
+                  <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {paso === "mol" && (
+            <p class="enc-salud">
+              <Icono nombre="candado" tamano={20} color="#1747C9" />
+              <span>
+                Las molestias son un dato de salud. Las usamos solo para esta recomendación y no se guardan en tu
+                perfil. Puedes no contestar.
+              </span>
+            </p>
+          )}
+
+          {paso === "fin" && (
+            <div class="enc-pregunta fin" key="fin">
+              <p class="kicker">Completado</p>
+              <h1 class="titulo" ref={titulo} tabIndex={-1}>
+                Listo. Ya sabemos qué buscar.
+              </h1>
+              <dl class="enc-resumen">
+                {resumen(respuestas).map(({ clave, valor }) => (
+                  <div key={clave}>
+                    <dt>{clave}</dt>
+                    <dd>{valor}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div>
+                <a class="btn btn-xl btn-azul" href={rutas.recomendacion}>
+                  Ver mi recomendación
+                  <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
+                </a>
+              </div>
+            </div>
+          )}
+
+          {historial.length > 0 && (
+            <div>
+              <button type="button" class="enc-atras" onClick={retroceder}>
+                <Icono nombre="atras" tamano={18} grosor={2.2} />
+                Atrás
+              </button>
+            </div>
+          )}
+        </div>
+
+        <PalaTomandoForma respuestas={respuestas} />
+      </main>
+    </>
   );
 }
 
-function pasoCompleto(paso: Paso, r: Respuestas): boolean {
-  switch (paso) {
-    case "experiencia":
-      return r.experiencia_meses !== undefined;
-    case "frecuencia":
-      return r.frecuencia_semanal !== undefined;
-    case "estilo":
-      return r.estilo !== undefined;
-    case "molestias":
-      return r.molestias !== undefined;
-    case "zona":
-      return r.zona_molestia !== undefined && r.momento_molestia !== undefined;
-    case "edad":
-      return r.junior !== undefined;
-    case "presupuesto":
-      return (r.presupuesto_max ?? 0) > 0;
-  }
-}
+// --- Panel «Tu pala, tomando forma» -------------------------------------------
 
-interface Opcion<T> {
-  valor: T;
-  texto: string;
-}
+/** Altura de la cabeza, radios y posición del punto dulce para cada forma (en unidades del dibujo). */
+const SILUETA: Record<Forma, { alto: number; radio: string; punto: number }> = {
+  redonda: { alto: 240, radio: "50% 50% 50% 50% / 50% 50% 50% 50%", punto: 247 },
+  lagrima: { alto: 262, radio: "50% 50% 50% 50% / 44% 44% 56% 56%", punto: 274 },
+  diamante: { alto: 268, radio: "42% 42% 50% 50% / 28% 28% 72% 72%", punto: 304 },
+};
 
-function Opciones<T>(props: {
-  nombre: string;
-  opciones: Opcion<T>[];
-  actual: T | undefined;
-  elegir: (v: T) => void;
-}) {
+const ALTURA_BALANCE: Record<Balance, number> = { bajo: 203, medio: 294, alto: 385 };
+
+const u = (unidades: number) => `calc(var(--u) * ${unidades})`;
+
+function PalaTomandoForma({ respuestas }: { respuestas: Respuestas }) {
+  const perfil = perfilOrientativo(respuestas);
+  // Mientras no se sabe la forma, se dibuja una lágrima con trazo discontinuo.
+  const silueta = SILUETA[perfil.forma ?? "lagrima"];
+  const balance = ALTURA_BALANCE[perfil.balance ?? "medio"];
+
   return (
-    <fieldset>
-      {props.opciones.map((o) => (
-        <label key={String(o.valor)}>
-          <input
-            type="radio"
-            name={props.nombre}
-            checked={props.actual === o.valor}
-            onChange={() => props.elegir(o.valor)}
-          />{" "}
-          {o.texto}
-        </label>
-      ))}
-    </fieldset>
-  );
-}
+    <aside class="enc-pala" aria-label="Perfil de pala orientativo">
+      <svg aria-hidden="true" viewBox="0 0 480 760" preserveAspectRatio="xMidYMid slice">
+        <path d="M-10 130 L490 130" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2.5" />
+      </svg>
+      <div class="enc-pala-dentro">
+        <p class="kicker">Tu pala, tomando forma</p>
 
-function CamposPaso({
-  paso,
-  r,
-  responder,
-}: {
-  paso: Paso;
-  r: Respuestas;
-  responder: (c: Partial<Respuestas>) => void;
-}) {
-  switch (paso) {
-    case "experiencia":
-      return (
-        <Opciones
-          nombre="experiencia"
-          actual={r.experiencia_meses}
-          elegir={(v) => responder({ experiencia_meses: v })}
-          opciones={[
-            { valor: 0, texto: "Estoy empezando" },
-            { valor: 3, texto: "Menos de 6 meses" },
-            { valor: 12, texto: "Entre 6 meses y 2 años" },
-            { valor: 36, texto: "Más de 2 años" },
-          ]}
-        />
-      );
-    case "frecuencia":
-      return (
-        <Opciones
-          nombre="frecuencia"
-          actual={r.frecuencia_semanal}
-          elegir={(v) => responder({ frecuencia_semanal: v })}
-          opciones={[
-            { valor: 1, texto: "1 vez" },
-            { valor: 2, texto: "2–3 veces" },
-            { valor: 4, texto: "4 o más" },
-          ]}
-        />
-      );
-    case "estilo":
-      return (
-        <Opciones<NonNullable<Respuestas["estilo"]>>
-          nombre="estilo"
-          actual={r.estilo}
-          elegir={(v) => responder({ estilo: v })}
-          opciones={[
-            { valor: "defensivo", texto: "Defiendo y espero el error" },
-            { valor: "polivalente", texto: "Un poco de todo" },
-            { valor: "ofensivo", texto: "Busco rematar" },
-          ]}
-        />
-      );
-    case "molestias":
-      return (
-        <Opciones
-          nombre="molestias"
-          actual={r.molestias}
-          elegir={(v) =>
-            responder(
-              v ? { molestias: v } : { molestias: v, zona_molestia: undefined, momento_molestia: undefined },
-            )
-          }
-          opciones={[
-            { valor: false, texto: "No, juego cómodo" },
-            { valor: true, texto: "Sí, alguna molestia" },
-          ]}
-        />
-      );
-    case "zona":
-      return (
-        <>
-          <Opciones<NonNullable<Respuestas["zona_molestia"]>>
-            nombre="zona"
-            actual={r.zona_molestia}
-            elegir={(v) => responder({ zona_molestia: v })}
-            opciones={[
-              { valor: "codo", texto: "Codo" },
-              { valor: "hombro", texto: "Hombro" },
-              { valor: "muneca", texto: "Muñeca" },
-            ]}
-          />
-          <Opciones<NonNullable<Respuestas["momento_molestia"]>>
-            nombre="momento"
-            actual={r.momento_molestia}
-            elegir={(v) => responder({ momento_molestia: v })}
-            opciones={[
-              { valor: "durante", texto: "Mientras juego" },
-              { valor: "despues", texto: "Después de jugar" },
-            ]}
-          />
-        </>
-      );
-    case "edad":
-      return (
-        <Opciones
-          nombre="edad"
-          actual={r.junior}
-          elegir={(v) => responder({ junior: v })}
-          opciones={[
-            { valor: false, texto: "Adulto (14 años o más)" },
-            { valor: true, texto: "Junior (menos de 14)" },
-          ]}
-        />
-      );
-    case "presupuesto":
-      return (
-        <label>
-          Presupuesto máximo (€){" "}
-          <input
-            type="number"
-            min={20}
-            step={10}
-            value={r.presupuesto_max ?? ""}
-            onInput={(e) => responder({ presupuesto_max: Number(e.currentTarget.value) })}
-          />
-        </label>
-      );
-  }
+        <div class="dibujo" aria-hidden="true">
+          <div class="mango" />
+          <div class="tapon" />
+          <div
+            class={perfil.forma ? "cabeza" : "cabeza sin-definir"}
+            style={{ height: u(silueta.alto), borderRadius: silueta.radio }}
+          >
+            <div class="agujeros" />
+          </div>
+          <div class="puente" />
+          <div class="punto-dulce" style={{ bottom: u(silueta.punto), opacity: perfil.forma ? 1 : 0 }} />
+          <div class="eje" />
+          <span class="marca" style={{ bottom: u(384) }}>
+            ALTO
+          </span>
+          <span class="marca" style={{ bottom: u(293) }}>
+            MEDIO
+          </span>
+          <span class="marca" style={{ bottom: u(202) }}>
+            BAJO
+          </span>
+          <div class="cursor" style={{ bottom: u(balance), opacity: perfil.balance ? 1 : 0.3 }} />
+          <span class="marca titulo-eje">BALANCE</span>
+        </div>
+
+        <dl class="enc-datos">
+          <div>
+            <dt>Forma</dt>
+            <dd>{perfil.forma ? textoForma[perfil.forma] : "—"}</dd>
+          </div>
+          <div>
+            <dt>Balance</dt>
+            <dd>{perfil.balance ? textoBalance[perfil.balance] : "—"}</dd>
+          </div>
+          <div>
+            <dt>Peso</dt>
+            <dd>{perfil.peso ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>Núcleo</dt>
+            <dd>{perfil.nucleo ?? "—"}</dd>
+          </div>
+        </dl>
+        <p class="enc-nota">
+          Orientativo: se afina con cada respuesta. La recomendación final sale del catálogo real.
+        </p>
+      </div>
+    </aside>
+  );
 }

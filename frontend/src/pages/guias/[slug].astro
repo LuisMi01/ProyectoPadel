@@ -1,19 +1,47 @@
 ---
-import { type Guia, guiasDeEjemplo } from "@/data/palas";
-import Base from "@/layouts/Base.astro";
+import ListaGuias from "@/components/ListaGuias.astro";
+import { type Guia, guias } from "@/data/guias";
+import Texto from "@/layouts/Texto.astro";
 import { rutas } from "@/lib/rutas";
 
 export function getStaticPaths() {
-  return guiasDeEjemplo.map((guia) => ({ params: { slug: guia.slug }, props: { guia } }));
+  return guias.map((guia) => ({ params: { slug: guia.slug }, props: { guia } }));
 }
 
 const { guia } = Astro.props as { guia: Guia };
+const otras = guias.filter((g) => g.slug !== guia.slug).slice(0, 3);
 ---
 
-<Base titulo={guia.titulo} descripcion={guia.resumen}>
-  <p><a href={rutas.guias}>← Todas las guías</a></p>
-  <h1>{guia.titulo}</h1>
-  <p class="suave">{guia.resumen}</p>
-  <p class="aviso">Contenido pendiente.</p>
-  <a class="boton" href={rutas.encuesta}>Haz la encuesta</a>
-</Base>
+<Texto
+  titulo={guia.titulo}
+  descripcion={guia.resumen}
+  kicker={guia.categoria}
+  resumen={guia.resumen}
+  meta={`${guia.lectura} min de lectura`}
+  migas={[{ texto: "Guías", href: rutas.guias }]}
+  activo="guias"
+  bloques={guia.bloques}
+>
+  <section class="mas rv">
+    <div class="mas-cabeza">
+      <h2 class="titulo t-bloque">Sigue leyendo</h2>
+      <a class="lnk lnk-azul lnk-alto" href={rutas.guias}>Ver todas las guías</a>
+    </div>
+    <ListaGuias guias={otras} />
+  </section>
+</Texto>
+
+<style>
+  .mas {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .mas-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 40px;
+  }
+</style>
