@@ -1,8 +1,11 @@
 """Caso de uso de la recomendación: coordina el catálogo, el motor del dominio y el guardado."""
 
 import hashlib
+from collections import Counter
+from dataclasses import fields
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.adapters.catalogo_sql import RepositorioCatalogoSQL
@@ -104,6 +107,47 @@ def explicar(db: Session, recomendacion_id: int) -> str:
     if not palas:
         raise NoEncontrada  # las palas ya no están en el catálogo
     return explicaciones.obtener(db, rec.perfil, palas)
+
+
+def pregenerar_explicaciones(db: Session, dias: int, maximo: int) -> dict[str, int | str]:
+    """Deja en caché la explicación de los perfiles más repetidos de los últimos `dias` días.
+
+    Se calcula con el catálogo y los precios de hoy, igual que al pedirla: quien haga hoy la
+    encuesta con uno de esos perfiles (sin molestias) la recibe al momento y sin otra llamada a la
+    IA. `maximo` deja sitio en el tope diario para las explicaciones que se piden en el momento.
+    """
+    desde = datetime.now(UTC) - timedelta(days=dias)
+    perfiles = db.scalars(
+        select(Recomendacion.perfil)
+        .where(Recomendacion.fecha >= desde)
+        .group_by(Recomendacion.perfil)
+        .order_by(func.count().desc())
+        .limit(maximo)
+    ).all()
+    palas = RepositorioCatalogoSQL(db).palas()
+    campos = {f.name for f in fields(Respuestas)}
+
+    cuenta = Counter[str]()
+    for perfil in perfiles:
+        resultado = recomendar(
+            Respuestas(**{k: v for k, v in perfil.items() if k in campos}), None, palas
+        )
+        if resultado is None:
+            continue
+        elegidas = [resultado.mejor, *(a.pala for a in resultado.alternativas)]
+        origen = explicaciones.generar(db, perfil, elegidas)[1]
+        if origen == "sin_ia":
+            return {"omitida": "sin clave de IA"}
+        cuenta[origen] += 1
+        if origen == "tope":
+            break
+    return {
+        "perfiles": len(perfiles),
+        "ya_en_cache": cuenta["cache"],
+        "generadas": cuenta["ia"],
+        "fallidas": cuenta["plantilla"],
+        "tope_alcanzado": "si" if cuenta["tope"] else "no",
+    }
 
 
 def valorar(db: Session, recomendacion_id: int, valoracion: ValoracionIn) -> None:

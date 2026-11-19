@@ -24,7 +24,7 @@ from app.models import (
     Sku,
     Tienda,
 )
-from app.services import explicaciones, importacion
+from app.services import explicaciones, importacion, recomendacion
 
 CASOS = json.loads((Path(__file__).parent / "datos" / "motor_casos.json").read_text("utf-8"))
 
@@ -142,6 +142,46 @@ def test_explicacion_de_la_ia_que_no_nombra_la_pala_se_descarta(cliente, catalog
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: ProveedorFalso("Texto sin la pala."))
     texto = cliente.get(f"/recomendaciones/{datos['id']}/explicacion").json()["texto"]
     assert datos["mejor"]["nombre"] in texto  # plantilla
+
+
+class ProveedorEco(ProveedorFalso):
+    """Nombra la primera pala de los hechos, como haría la IA."""
+
+    def explicar(self, hechos: str) -> str | None:
+        super().explicar(hechos)
+        return f"La {hechos.split(chr(10) + '1. ')[1].split(' (')[0]} te encaja."
+
+
+def test_pregenerar_explica_los_perfiles_mas_repetidos(cliente, catalogo, monkeypatch):
+    eco = ProveedorEco("")
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: eco)
+    otro = {**PERFIL, "estilo": "control"}
+    repetido = [cliente.post("/recomendaciones", json=PERFIL).json() for _ in range(2)]
+    cliente.post("/recomendaciones", json=otro)
+
+    resumen = recomendacion.pregenerar_explicaciones(catalogo, dias=7, maximo=1)
+
+    assert resumen == {
+        "perfiles": 1,
+        "ya_en_cache": 0,
+        "generadas": 1,
+        "fallidas": 0,
+        "tope_alcanzado": "no",
+    }
+    # Quien pide la explicación de ese perfil la recibe de la caché, sin otra llamada.
+    texto = cliente.get(f"/recomendaciones/{repetido[0]['id']}/explicacion").json()["texto"]
+    assert repetido[0]["mejor"]["nombre"] in texto
+    assert eco.llamadas == 1
+    # Al día siguiente, con los mismos precios, no se repite.
+    assert recomendacion.pregenerar_explicaciones(catalogo, 7, 1)["ya_en_cache"] == 1
+    assert eco.llamadas == 1
+
+
+def test_pregenerar_sin_clave_de_ia_no_hace_nada(cliente, catalogo, monkeypatch):
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: None)
+    cliente.post("/recomendaciones", json=PERFIL)
+    resumen = recomendacion.pregenerar_explicaciones(catalogo, 7, 100)
+    assert resumen == {"omitida": "sin clave de IA"}
 
 
 def test_explicacion_de_recomendacion_inexistente(cliente, catalogo):

@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr | None = None
     ia_modelo: str = "claude-haiku-5-5"
     ia_llamadas_diarias_max: int = 500  # tope de gasto: explicaciones nuevas por día
+    # jobs.daily.pregenerate_explanations: perfiles más repetidos de los últimos días que se dejan
+    # explicados cada mañana. El resto del tope queda para las que se piden en el momento.
+    ia_pregenerar_max: int = 100
+    ia_pregenerar_dias: int = 7
 
     # Importación de feeds (jobs.daily.import_feed).
     feed_minimo_respecto_anterior: float = 0.5  # menos productos que esto x el anterior: descartar

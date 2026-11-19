@@ -109,26 +109,31 @@ def _valida(texto: str, palas: list[Pala]) -> bool:
     return palas[0].nombre.lower() in texto.lower() and len(texto) <= 1500
 
 
-def obtener(db: Session, perfil: dict[str, str], palas: list[Pala]) -> str:
+def generar(db: Session, perfil: dict[str, str], palas: list[Pala]) -> tuple[str, str]:
+    """Devuelve el texto y de dónde sale: cache, ia, sin_ia, tope (diario) o plantilla (la IA
+    falló o dio un texto no válido)."""
     ajustes = get_settings()
     texto_hechos = hechos(perfil, palas)
     clave = _clave(texto_hechos, ajustes.ia_modelo)
 
     guardada = db.scalar(select(ExplicacionCache.texto).where(ExplicacionCache.clave == clave))
     if guardada:
-        return guardada
+        return guardada, "cache"
 
     proveedor = _proveedor()
-    if (
-        proveedor is None
-        or _llamadas_de_hoy(db, ajustes.ia_modelo) >= ajustes.ia_llamadas_diarias_max
-    ):
-        return plantilla(palas)
+    if proveedor is None:
+        return plantilla(palas), "sin_ia"
+    if _llamadas_de_hoy(db, ajustes.ia_modelo) >= ajustes.ia_llamadas_diarias_max:
+        return plantilla(palas), "tope"
 
     texto = proveedor.explicar(texto_hechos)
     if not texto or not _valida(texto, palas):
-        return plantilla(palas)
+        return plantilla(palas), "plantilla"
 
     db.add(ExplicacionCache(clave=clave, texto=texto, modelo=ajustes.ia_modelo))
     db.commit()
-    return texto
+    return texto, "ia"
+
+
+def obtener(db: Session, perfil: dict[str, str], palas: list[Pala]) -> str:
+    return generar(db, perfil, palas)[0]

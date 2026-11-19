@@ -28,7 +28,7 @@ from app.models import (
     Tienda,
     TokenAcceso,
 )
-from app.services import importacion
+from app.services import importacion, recomendacion
 
 log = logging.getLogger(__name__)
 
@@ -144,8 +144,12 @@ def extract_specs() -> dict[str, Any]:
 
 
 def pregenerate_explanations() -> dict[str, Any]:
-    """Segunda etapa de la IA: pregenerar explicaciones. Hoy se generan al pedirlas y se cachean."""
-    return {"omitida": "pendiente (segunda etapa de la IA)"}
+    """Deja explicados los perfiles más repetidos con los precios de hoy (va tras import_feed)."""
+    ajustes = get_settings()
+    with SessionLocal() as db:
+        return recomendacion.pregenerar_explicaciones(
+            db, ajustes.ia_pregenerar_dias, ajustes.ia_pregenerar_max
+        )
 
 
 # --- Métricas ----------------------------------------------------------------------
