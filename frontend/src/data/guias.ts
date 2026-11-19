@@ -95,7 +95,8 @@ export const guias: Guia[] = [
       {
         tipo: "lista",
         elementos: [
-          "Si llevas menos de seis meses, redonda. Todavía se está formando tu golpe y lo que más ayuda es que la pala perdone.",
+          "Si no has jugado nunca, redonda: lo que más ayuda mientras aprendes es que la pala perdone.",
+          "Si llevas menos de seis meses, redonda o una lágrima suave según cómo juegues, pero todavía no un diamante: tu golpe se está formando.",
           "Si juegas a aguantar la bola y esperar el fallo, redonda, lleves el tiempo que lleves.",
           "Si haces un poco de todo, lágrima.",
           "Si buscas el remate y llevas más de dos años, diamante. Si llevas menos, mejor una lágrima: tendrás pegada sin castigarte los golpes descentrados.",
@@ -334,7 +335,7 @@ export const guias: Guia[] = [
         tipo: "nota",
         titulo: "Si prefieres que lo hagamos por ti",
         texto:
-          "El cuestionario hace estas mismas preguntas y te enseña palas concretas con su precio en varias tiendas. Si llevas menos de seis meses jugando, son solo cuatro preguntas.",
+          "El cuestionario hace estas mismas preguntas y te enseña palas concretas con su precio en varias tiendas. Si todavía no has jugado, son solo cuatro preguntas.",
       },
       {
         tipo: "palas",
