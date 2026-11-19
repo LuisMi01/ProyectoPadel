@@ -25,9 +25,27 @@ Ciclo de una petición: uvicorn → FastAPI (router) → Pydantic (`schemas.py`)
 
 - `api/routes/`: un archivo por grupo de la tabla *Peticiones* (recomendaciones, tienda, analítica,
   acceso, cuenta, internas). Solo validan y delegan.
-- `services/`: lógica de negocio. Lo no implementado lanza `core.errores.Pendiente` → HTTP 501.
-- `models/`: tablas del modelo relacional de Figma (catálogo, usuarios, recomendaciones).
-- `jobs/`: crons `python -m app.jobs daily|weekly|monthly [--solo tarea]`.
+- `services/`: casos de uso; coordinan dominio, adaptadores y BD. Lo no implementado lanza
+  `core.errores.Pendiente` → HTTP 501.
+- `domain/`: Python puro, sin FastAPI, Pydantic, SQLAlchemy ni otras capas de `app` (lo comprueba
+  `tests/test_arquitectura.py`). `motor.py` es el **mismo algoritmo** que
+  `frontend/src/lib/recomendador.ts`; `tests/test_motor.py` compara los dos con casos calculados en
+  el frontend (`tests/datos/motor_casos.json`). Si cambias las reglas, cámbialas en los dos sitios,
+  regenera los casos y sube `MOTOR_VERSION`. También: tipos (`modelos.py`), puertos (`puertos.py`),
+  normalización de feeds, histórico de precios y enlace de afiliado.
+- `adapters/`: catálogo en PostgreSQL y en el formato JSON del frontend, Claude (explicaciones),
+  feeds por HTTP (CSV/JSON) y email (pendiente).
+- `models/`: tablas de los esquemas `public` y `staging` (feeds sin normalizar).
+- `semillas/`: catálogo de ejemplo de la web (mismos ids). `python -m app.semillas` lo carga en la BD.
+- `jobs/`: crons `python -m app.jobs daily|weekly|monthly [--solo tarea]`. Cada ejecución queda en
+  `job_run`; lo que ya salió bien en su periodo no se repite.
+- La API recibe las respuestas del cuestionario con los mismos valores que `lib/encuesta.ts`
+  (`camino`, `exp`, `frec`, `estilo`, `mol`, `salud`, `edad`, `ppto`) y devuelve lo mismo que calcula
+  el recomendador del navegador. `mol` y `salud` se usan en memoria: nunca se guardan ni se registran.
+- `GET /internas/catalogo` devuelve el catálogo en el formato de `frontend/src/data/catalogo.ts`
+  (protegido con `X-Token-Interno` si hay `TOKEN_INTERNO`).
+- `GET /tienda/{oferta_id}` registra el clic y redirige con el enlace de afiliado de la tienda; el id
+  del clic viaja como SubID.
 - Acceso sin contraseña: `token_acceso` (enlace por email) → `sesion` en cookie httpOnly. Solo se guardan hashes.
 
 ### Frontend (`frontend/src/`)
@@ -60,8 +78,9 @@ Las molestias físicas son un dato de salud: solo viven en `sessionStorage` y nu
 docker compose up -d                                   # PostgreSQL local
 cd backend && uv sync && cp .env.example .env
 uv run alembic upgrade head                            # aplicar migraciones
+uv run python -m app.semillas                          # catálogo de ejemplo en la BD
 uv run python -m uvicorn app.main:app --reload         # API en :8000 (docs en /docs)
-uv run python -m pytest -q && uv run ruff check .      # tests + lint
+uv run python -m pytest -q && uv run ruff check .      # tests + lint (los de BD usan padel_test)
 uv run alembic revision --autogenerate -m "..."        # tras cambiar models/
 
 cd frontend && npm install && npm run dev              # web en :4321
