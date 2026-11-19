@@ -21,6 +21,15 @@ from app.db.base import Base  # noqa: E402
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
+# Esquemas del proyecto: `public` (datos limpios) y `staging` (feeds sin normalizar).
+ESQUEMAS = {None, "public", "staging"}
+
+
+def include_name(name: str | None, type_: str, parent_names: dict) -> bool:
+    """Autogenerate solo mira los esquemas del proyecto."""
+    return name in ESQUEMAS if type_ == "schema" else True
+
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -43,6 +52,8 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
+        include_schemas=True,
+        include_name=include_name,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -65,7 +76,12 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_schemas=True,
+            include_name=include_name,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
