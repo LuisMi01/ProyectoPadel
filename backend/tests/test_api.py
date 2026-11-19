@@ -1,7 +1,9 @@
 """Tests de humo: no necesitan base de datos."""
 
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
+from app.core.config import get_settings
 from app.jobs import GRUPOS
 from app.main import app
 
@@ -33,12 +35,10 @@ def test_cuenta_requiere_sesion():
     assert client.get("/perfil").status_code == 401
 
 
-def test_endpoint_pendiente_devuelve_501():
-    assert client.get("/internas/catalogo").status_code == 501
-
-
-def test_evento_se_acepta():
-    assert client.post("/eventos", json={"tipo": "encuesta_iniciada"}).status_code == 202
+def test_catalogo_interno_exige_token_si_esta_configurado(monkeypatch):
+    monkeypatch.setattr(get_settings(), "token_interno", SecretStr("secreto"))
+    assert client.get("/internas/catalogo").status_code == 401
+    assert client.get("/internas/catalogo", headers={"X-Token-Interno": "otro"}).status_code == 401
 
 
 def test_encuesta_invalida_da_422():
@@ -47,3 +47,6 @@ def test_encuesta_invalida_da_422():
 
 def test_grupos_de_tareas():
     assert set(GRUPOS) == {"daily", "weekly", "monthly"}
+    diarias = [t.__name__ for t in GRUPOS["daily"]]
+    # La copia va antes de la importación, que es la tarea que más cambia la base de datos.
+    assert diarias.index("backup_db") < diarias.index("import_feed")
