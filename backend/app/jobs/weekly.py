@@ -1,17 +1,13 @@
-"""Tareas semanales."""
+"""Tareas semanales (lunes)."""
 
-import logging
-
-log = logging.getLogger(__name__)
+from typing import Any
 
 
-def check_links() -> None:
-    log.info("pendiente: comprobar que las URLs de oferta siguen vivas")
+def check_links() -> dict[str, Any]:
+    """Comprobar que la página de cada oferta sigue existiendo (tras el lanzamiento)."""
+    return {"omitida": "pendiente (tras el lanzamiento)"}
 
 
-def evaluate_recommender() -> None:
-    log.info("pendiente: evaluar el recomendador con los clics de la semana")
-
-
-def weekly_digest() -> None:
-    log.info("pendiente: resumen semanal (alertas de precio alcanzadas)")
+def weekly_digest() -> dict[str, Any]:
+    """Resumen semanal por correo al equipo (llega con el envío de correo, junto a los usuarios)."""
+    return {"omitida": "pendiente (necesita el envío de correo)"}
