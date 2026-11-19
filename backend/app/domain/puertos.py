@@ -24,5 +24,11 @@ class FuenteFeed(Protocol):
         ...
 
 
+class ComprobadorEnlaces(Protocol):
+    def codigo(self, url: str) -> int | None:
+        """Código HTTP de la página (tras seguir redirecciones); None si no responde."""
+        ...
+
+
 class EnviadorEmail(Protocol):
     def enviar(self, destino: str, asunto: str, cuerpo: str) -> None: ...

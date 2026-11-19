@@ -2,10 +2,19 @@
 
 from typing import Any
 
+from app.adapters.enlaces import ComprobadorEnlacesHTTP
+from app.db.session import SessionLocal
+from app.services import enlaces
+
 
 def check_links() -> dict[str, Any]:
-    """Comprobar que la página de cada oferta sigue existiendo (tras el lanzamiento)."""
-    return {"omitida": "pendiente (tras el lanzamiento)"}
+    """Comprueba la página de cada oferta y oculta las que no existen dos semanas seguidas."""
+    comprobador = ComprobadorEnlacesHTTP()
+    try:
+        with SessionLocal() as db:
+            return enlaces.comprobar_ofertas(db, comprobador)
+    finally:
+        comprobador.cerrar()
 
 
 def weekly_digest() -> dict[str, Any]:

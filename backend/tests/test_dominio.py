@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from app.adapters.feeds import leer_feed
 from app.domain import normalizacion
 from app.domain.afiliacion import enlace_afiliado
+from app.domain.enlaces import estado_enlace
 from app.domain.historico import serie_minimos
 from app.jobs import periodo
 from app.schemas import PerfilEncuesta
@@ -84,6 +85,18 @@ def test_leer_feed_json_envuelto():
     campos = {"referencia": "sku", "titulo": "name", "precio": "price", "disponible": "inStock"}
     [p] = leer_feed(contenido, "json", campos)
     assert (p.referencia, p.precio, p.disponible, p.url) == ("x1", Decimal("120.00"), False, None)
+
+
+# --- Enlaces de las ofertas ---------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("codigo", "esperado"),
+    [(200, "ok"), (301, "ok"), (404, "rota"), (410, "rota"), (403, "dudosa"), (429, "dudosa"),
+     (500, "dudosa"), (None, "dudosa")],
+)  # fmt: skip
+def test_estado_enlace(codigo, esperado):
+    assert estado_enlace(codigo) == esperado
 
 
 # --- Afiliación ------------------------------------------------------------------------------

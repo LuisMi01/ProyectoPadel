@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.adapters.catalogo_json import pala_desde_frontend
+from app.domain.enlaces import visible
 from app.domain.modelos import Pala
 from app.models import Modelo, Sku
 
@@ -25,6 +26,7 @@ def modelo_a_frontend(modelo: Modelo) -> dict[str, Any]:
         }
         for sku in modelo.skus
         for oferta in sku.ofertas
+        if visible(oferta.enlace_fallos)  # sin página en la tienda: no se enseña
     ]
     return {
         **modelo.atributos,

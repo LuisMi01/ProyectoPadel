@@ -96,6 +96,9 @@ class Oferta(Base):
     # stock | ultimas | agotada (los mismos valores que muestra el frontend)
     disponibilidad: Mapped[str] = mapped_column(String(20), default="stock", server_default="stock")
     url: Mapped[str] = mapped_column(String(2048))
+    # Semanas seguidas en que la página del producto no existe (jobs.weekly.check_links). Con 2 la
+    # oferta deja de mostrarse; vuelve a 0 en cuanto la página responde.
+    enlace_fallos: Mapped[int] = mapped_column(default=0, server_default=text("0"))
 
     sku: Mapped[Sku] = relationship(back_populates="ofertas")
     tienda: Mapped[Tienda] = relationship(back_populates="ofertas")

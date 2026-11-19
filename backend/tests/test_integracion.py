@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from sqlalchemy import func, select
 
+from app.adapters.catalogo_sql import RepositorioCatalogoSQL
 from app.domain.modelos import ProductoFeed as Producto
 from app.domain.motor import MOTOR_VERSION
 from app.models import (
@@ -24,7 +25,7 @@ from app.models import (
     Sku,
     Tienda,
 )
-from app.services import explicaciones, importacion, recomendacion
+from app.services import enlaces, explicaciones, importacion, recomendacion
 
 CASOS = json.loads((Path(__file__).parent / "datos" / "motor_casos.json").read_text("utf-8"))
 
@@ -234,6 +235,51 @@ def test_salida_desde_la_ficha_sin_recomendacion(cliente, catalogo):
     clic = catalogo.scalar(select(RecClick).order_by(RecClick.id.desc()))
     assert (clic.recomendacion_id, clic.origen) == (None, "ficha")
     assert cliente.get("/tienda/999999", follow_redirects=False).status_code == 404
+
+
+# --- Comprobación de enlaces -------------------------------------------------------------------
+
+
+class ComprobadorFalso:
+    def __init__(self, rota: str) -> None:
+        self.rota, self.codigo_rota, self.vistas = rota, 404, []
+
+    def codigo(self, url: str) -> int | None:
+        self.vistas.append(url)
+        return self.codigo_rota if url == self.rota else 200
+
+
+def _ofertas_publicadas(cliente) -> set[int]:
+    catalogo = cliente.get("/internas/catalogo").json()
+    return {o["id"] for p in catalogo["palas"] for o in p["ofertas"]}
+
+
+def test_oferta_sin_pagina_dos_semanas_seguidas_se_oculta(cliente, catalogo):
+    oferta = catalogo.get(Oferta, 101)
+    oferta.url = "https://tienda.example/pala-retirada"
+    catalogo.flush()
+    falso = ComprobadorFalso(oferta.url)
+
+    primera = enlaces.comprobar_ofertas(catalogo, falso)
+    assert (primera["rotas"], primera["ocultadas"]) == (1, 0)
+    assert 101 in _ofertas_publicadas(cliente)  # una semana puede ser un fallo pasajero
+
+    segunda = enlaces.comprobar_ofertas(catalogo, falso)
+    assert segunda["ocultadas"] == 1
+    assert 101 not in _ofertas_publicadas(cliente)
+    assert all(
+        101 not in {o.id for o in p.ofertas} for p in RepositorioCatalogoSQL(catalogo).palas()
+    )
+
+    # Un bloqueo de la tienda no cuenta como fallo; cuando la página vuelve, la oferta reaparece.
+    falso.codigo_rota = 403
+    assert enlaces.comprobar_ofertas(catalogo, falso)["dudosas"] == 1
+    assert catalogo.get(Oferta, 101).enlace_fallos == 2
+    falso.rota = ""
+    assert enlaces.comprobar_ofertas(catalogo, falso)["recuperadas"] == 1
+    assert 101 in _ofertas_publicadas(cliente)
+    # Se comprueba la página del producto, nunca el enlace de afiliado.
+    assert all(u.startswith("https://") and "{subid}" not in u for u in falso.vistas)
 
 
 # --- Importación de feeds ----------------------------------------------------------------------

@@ -56,3 +56,6 @@ class RevisionPendiente(Base):
     # pendiente | aprobado | rechazado
     estado: Mapped[str] = mapped_column(String(20), default="pendiente")
     creada: Mapped[datetime] = mapped_column(server_default=func.now())
+    # Pala nueva: ficha que propone la IA (jobs.daily.extract_specs) para revisarla. Al aprobarla
+    # se crea el modelo con estos datos.
+    propuesta: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
