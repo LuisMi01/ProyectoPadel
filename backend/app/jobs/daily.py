@@ -16,6 +16,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.feeds import FuenteFeedHTTP
+from app.adapters.llm import ExtractorFichasClaude
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import (
@@ -28,7 +29,7 @@ from app.models import (
     Tienda,
     TokenAcceso,
 )
-from app.services import importacion, recomendacion
+from app.services import fichas, importacion, recomendacion
 
 log = logging.getLogger(__name__)
 
@@ -139,8 +140,15 @@ def import_feed() -> dict[str, Any]:
 
 
 def extract_specs() -> dict[str, Any]:
-    """Segunda etapa de la IA: extraer la ficha de las palas nuevas a modelo.atributos."""
-    return {"omitida": "pendiente (segunda etapa de la IA)"}
+    """La IA propone la ficha de las palas nuevas para revisarla (va tras import_feed)."""
+    ajustes = get_settings()
+    if ajustes.anthropic_api_key is None:
+        return {"omitida": "sin clave de IA"}
+    extractor = ExtractorFichasClaude(
+        ajustes.anthropic_api_key.get_secret_value(), ajustes.ia_modelo
+    )
+    with SessionLocal() as db:
+        return fichas.proponer_fichas(db, extractor, ajustes.ia_fichas_max)
 
 
 def pregenerate_explanations() -> dict[str, Any]:

@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     # explicados cada mañana. El resto del tope queda para las que se piden en el momento.
     ia_pregenerar_max: int = 100
     ia_pregenerar_dias: int = 7
+    # jobs.daily.extract_specs: fichas de palas nuevas que la IA propone cada día como mucho.
+    ia_fichas_max: int = 50
 
     # Importación de feeds (jobs.daily.import_feed).
     feed_minimo_respecto_anterior: float = 0.5  # menos productos que esto x el anterior: descartar

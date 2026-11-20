@@ -11,6 +11,7 @@ from app.adapters.feeds import leer_feed
 from app.domain import normalizacion
 from app.domain.afiliacion import enlace_afiliado
 from app.domain.enlaces import estado_enlace
+from app.domain.fichas import MAX_TEXTO, limpiar_ficha, texto_producto
 from app.domain.historico import serie_minimos
 from app.jobs import periodo
 from app.schemas import PerfilEncuesta
@@ -97,6 +98,28 @@ def test_leer_feed_json_envuelto():
 )  # fmt: skip
 def test_estado_enlace(codigo, esperado):
     assert estado_enlace(codigo) == esperado
+
+
+# --- Fichas de palas nuevas --------------------------------------------------------------------
+
+
+def test_texto_producto_junta_titulo_marca_y_columnas_del_feed():
+    datos = {
+        "titulo": "Pala Zeta Rayo",
+        "marca": "Zeta",
+        "original": {"peso": "365 g", "stock": 3, "vacia": " ", "lista": ["no"]},
+    }
+    assert texto_producto(datos) == "titulo: Pala Zeta Rayo\nmarca: Zeta\npeso: 365 g\nstock: 3"
+    assert len(texto_producto({"titulo": "x" * (MAX_TEXTO * 2)})) == MAX_TEXTO
+
+
+def test_limpiar_ficha_descarta_lo_imposible():
+    ficha = limpiar_ficha({"forma": "lagrima", "temporada": 2026, "peso_min": 370, "peso_max": 355})
+    assert (ficha["forma"], ficha["temporada"], ficha["peso_min"], ficha["peso_max"]) == (
+        "lagrima", 2026, 355, 370,
+    )  # fmt: skip
+    rara = limpiar_ficha({"temporada": 1890, "peso_min": 36, "peso_max": "365"})
+    assert (rara["temporada"], rara["peso_min"], rara["peso_max"]) == (None, None, None)
 
 
 # --- Afiliación ------------------------------------------------------------------------------

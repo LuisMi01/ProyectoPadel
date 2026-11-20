@@ -1,7 +1,7 @@
 """Puertos: lo que el dominio necesita del exterior. Los implementan los adaptadores."""
 
 from collections.abc import Iterable
-from typing import Protocol
+from typing import Any, Protocol
 
 from app.domain.modelos import Pala, ProductoFeed
 
@@ -27,6 +27,12 @@ class FuenteFeed(Protocol):
 class ComprobadorEnlaces(Protocol):
     def codigo(self, url: str) -> int | None:
         """Código HTTP de la página (tras seguir redirecciones); None si no responde."""
+        ...
+
+
+class ExtractorFichas(Protocol):
+    def extraer(self, texto: str) -> dict[str, Any] | None:
+        """Ficha de la pala (forma, balance, peso…) leída del texto de la tienda; None si falla."""
         ...
 
 

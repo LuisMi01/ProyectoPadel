@@ -25,7 +25,7 @@ from app.models import (
     Sku,
     Tienda,
 )
-from app.services import enlaces, explicaciones, importacion, recomendacion
+from app.services import enlaces, explicaciones, fichas, importacion, recomendacion
 
 CASOS = json.loads((Path(__file__).parent / "datos" / "motor_casos.json").read_text("utf-8"))
 
@@ -362,3 +362,44 @@ def test_feed_mucho_mas_pequeno_que_el_anterior_se_descarta(db):
     db.flush()
     resumen = importacion.importar_tienda(db, tienda, [_producto("a")])
     assert resumen.estado == "descartada"
+
+
+# --- Fichas de palas nuevas --------------------------------------------------------------------
+
+
+class ExtractorFalso:
+    def __init__(self, ficha: dict | None) -> None:
+        self.ficha, self.textos = ficha, []
+
+    def extraer(self, texto: str) -> dict | None:
+        self.textos.append(texto)
+        return self.ficha
+
+
+def test_la_ia_propone_la_ficha_de_las_palas_nuevas(catalogo):
+    db = catalogo
+    tienda = Tienda(nombre="Tienda con novedades", dominios=[])
+    db.add(tienda)
+    db.flush()
+    nueva = Producto(
+        "nov-1", "Pala Zeta Rayo 2026", Decimal("199"), "https://tienda.example/rayo", True,
+        marca="Zeta", datos={"descripcion": "Forma diamante, 360-375 g, núcleo EVA Hard"},
+    )  # fmt: skip
+    importacion.importar_tienda(db, tienda, [nueva])
+
+    falso = ExtractorFalso({"marca": "Zeta", "nombre": "Rayo", "temporada": 1999,
+                            "forma": "diamante", "peso_min": 375, "peso_max": 360})  # fmt: skip
+    assert fichas.proponer_fichas(db, ExtractorFalso(None), 10) == {
+        "pendientes": 1, "propuestas": 0, "fallidas": 1,
+    }  # fmt: skip
+    assert fichas.proponer_fichas(db, falso, 10)["propuestas"] == 1
+
+    # La IA recibe lo que publica la tienda, también la descripción original.
+    assert "Forma diamante, 360-375 g" in falso.textos[0]
+    revision = db.scalar(select(RevisionPendiente).where(RevisionPendiente.motivo == "pala_nueva"))
+    ficha = revision.propuesta["ficha"]
+    assert (ficha["forma"], ficha["peso_min"], ficha["peso_max"]) == ("diamante", 360, 375)
+    assert ficha["temporada"] is None  # un año imposible se descarta
+    assert revision.estado == "pendiente"  # sigue esperando a que alguien la apruebe
+    # Al día siguiente no se vuelve a pedir.
+    assert fichas.proponer_fichas(db, falso, 10)["pendientes"] == 0
