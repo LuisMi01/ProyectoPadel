@@ -14,74 +14,45 @@ class Esquema(BaseModel):
 # --- Encuesta y recomendación -------------------------------------------------
 
 
-class SaludIn(Esquema):
-    """Detalle de la molestia. Solo se acepta con el consentimiento expreso del cuestionario."""
+class RecomendacionIn(Esquema):
+    """Recomendación que ha calculado el navegador (frontend/src/lib/recomendador.ts).
 
-    zona: Literal["Codo", "Hombro", "Muñeca", "Espalda"]
-    momento: Literal["Mientras juego", "Al día siguiente", "Casi siempre"]
-    consentimiento: Literal[True]
-
-
-class PerfilEncuesta(Esquema):
-    """Respuestas del cuestionario, con los mismos valores que frontend/src/lib/encuesta.ts.
-
-    `mol` y `salud` son datos de salud: se usan para calcular la recomendación y no se guardan
-    ni se escriben en los logs.
+    Trae las respuestas con los mismos valores que frontend/src/lib/encuesta.ts y los modelos que
+    se han enseñado, en orden. La API no recibe nunca datos de salud: las molestias se quedan en el
+    navegador, y cualquier campo que no esté aquí (como `mol` o `salud`) se rechaza con un 422.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     camino: Literal["primera", "cambio"]
     exp: Literal["nunca", "lt6", "m6a2", "gt2"]
     frec: Literal["1", "2-3", "4+"] | None = None
     estilo: Literal["control", "mixto", "potencia"] | None = None
-    mol: Literal["no", "si", "nc"]
-    salud: SaludIn | None = None
     edad: Literal["adulto", "junior"]
     ppto: Literal["80", "150", "250", "max"]
+    # La mejor y sus alternativas (ids de modelo, los mismos que en el catálogo de la web).
+    palas: list[int] = Field(min_length=1, max_length=3)
 
     @model_validator(mode="after")
-    def _coherente(self) -> "PerfilEncuesta":
+    def _coherente(self) -> "RecomendacionIn":
         if self.exp == "nunca":
             # Quien no ha jugado nunca no tiene frecuencia ni estilo: el cuestionario los salta.
             self.frec = None
             self.estilo = None
         elif self.frec is None or self.estilo is None:
             raise ValueError("Si ya juegas, hacen falta la frecuencia y el estilo")
-        if self.mol != "si":
-            self.salud = None
+        if len(set(self.palas)) != len(self.palas):
+            raise ValueError("Una pala no puede salir dos veces en la misma recomendación")
         return self
 
-    def sin_salud(self) -> dict[str, str]:
-        """Lo que se guarda en recomendacion.perfil."""
-        return self.model_dump(exclude={"mol", "salud"}, exclude_none=True)
+    def perfil(self) -> dict[str, str]:
+        """Las respuestas, tal como se guardan en recomendacion.perfil."""
+        return self.model_dump(exclude={"palas"}, exclude_none=True)
 
 
-class PalaOut(Esquema):
-    modelo_id: int
-    slug: str
-    nombre: str
-
-
-class MotivoOut(Esquema):
-    respuesta: str
-    explicacion: str
-
-
-class AlternativaOut(PalaOut):
-    etiqueta: str
-    ganas: str
-    pierdes: str
-
-
-class RecomendacionOut(Esquema):
-    """Mismo contenido que calcula frontend/src/lib/recomendador.ts, más el id guardado."""
-
+class RecomendacionGuardadaOut(Esquema):
     id: int
     fecha: datetime
-    titular: str
-    mejor: PalaOut
-    motivos: list[MotivoOut]
-    alternativas: list[AlternativaOut]
-    nota: str | None = None
 
 
 class ExplicacionOut(Esquema):

@@ -6,10 +6,13 @@ el servicio sigue sin IA (plantilla o reintento al día siguiente).
 """
 
 import logging
+from collections.abc import Iterator
 from typing import Any, Literal
 
 import anthropic
 from pydantic import BaseModel, Field
+
+from app.domain.puertos import ExplicacionFallida
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +68,30 @@ class ProveedorExplicacionesClaude:
             return None
         texto = "".join(b.text for b in respuesta.content if b.type == "text").strip()
         return texto or None
+
+    def redactar(self, hechos: str) -> Iterator[str]:
+        try:
+            with self._cliente.messages.stream(
+                model=self._modelo,
+                max_tokens=2000,
+                system=SISTEMA,
+                output_config={"effort": "low"},
+                messages=[{"role": "user", "content": hechos}],
+            ) as flujo:
+                yield from flujo.text_stream
+                final = flujo.get_final_message()
+        except anthropic.RateLimitError as exc:
+            log.warning("IA: límite de peticiones alcanzado")
+            raise ExplicacionFallida from exc
+        except anthropic.APIStatusError as exc:
+            log.warning("IA: error %s de la API", exc.status_code)
+            raise ExplicacionFallida from exc
+        except anthropic.APIConnectionError as exc:
+            log.warning("IA: sin conexión con la API")
+            raise ExplicacionFallida from exc
+        if final.stop_reason != "end_turn":
+            log.warning("IA: respuesta descartada (stop_reason=%s)", final.stop_reason)
+            raise ExplicacionFallida
 
 
 # --- Fichas de palas nuevas (jobs.daily.extract_specs) ---------------------------------------

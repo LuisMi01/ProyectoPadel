@@ -15,6 +15,7 @@ def test_rutas_de_la_arquitectura_registradas():
     for esperada in [
         "/recomendaciones",
         "/recomendaciones/{recomendacion_id}/explicacion",
+        "/recomendaciones/{recomendacion_id}/explicacion/flujo",
         "/recomendaciones/{recomendacion_id}/valoracion",
         "/tienda/{oferta_id}",
         "/eventos",
@@ -43,6 +44,13 @@ def test_catalogo_interno_exige_token_si_esta_configurado(monkeypatch):
 
 def test_encuesta_invalida_da_422():
     assert client.post("/recomendaciones", json={"camino": "otro"}).status_code == 422
+
+
+def test_la_api_no_acepta_datos_de_salud():
+    perfil = {"camino": "cambio", "exp": "gt2", "frec": "2-3", "estilo": "mixto",
+              "edad": "adulto", "ppto": "250", "palas": [1]}  # fmt: skip
+    for salud in ({"mol": "si"}, {"salud": {"zona": "Codo", "momento": "Casi siempre"}}):
+        assert client.post("/recomendaciones", json={**perfil, **salud}).status_code == 422
 
 
 def test_grupos_de_tareas():

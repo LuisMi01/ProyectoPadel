@@ -76,12 +76,17 @@ def db(motor_bd):
 
 @pytest.fixture
 def cliente(db):
+    from contextlib import nullcontext
+
     from fastapi.testclient import TestClient
 
+    from app.api.deps import get_nueva_sesion
     from app.db.session import get_db
     from app.main import app
 
     app.dependency_overrides[get_db] = lambda: db
+    # Lo que se escribe después de responder (flujo SSE) va a la misma transacción de prueba.
+    app.dependency_overrides[get_nueva_sesion] = lambda: lambda: nullcontext(db)
     yield TestClient(app)
     app.dependency_overrides.clear()
 

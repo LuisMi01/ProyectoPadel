@@ -1,17 +1,24 @@
 """Explicación de una recomendación: con IA (cacheada y con tope diario) o con plantilla."""
 
 import hashlib
+import json
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager
 from datetime import UTC, datetime, time
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.adapters.llm import ProveedorExplicacionesClaude
 from app.core.config import get_settings
 from app.domain.modelos import Pala
-from app.domain.puertos import ProveedorExplicaciones
+from app.domain.puertos import ExplicacionFallida, ProveedorExplicaciones
 from app.domain.textos import TEXTO_BALANCE, euros_cortos, precio_desde
 from app.models import ExplicacionCache
+
+# Abre una sesión de base de datos propia (en la API, SessionLocal).
+FabricaSesiones = Callable[[], AbstractContextManager[Session]]
 
 # Súbela al cambiar el prompt o los hechos: invalida la caché.
 VERSION_PROMPT = "1"
@@ -137,3 +144,65 @@ def generar(db: Session, perfil: dict[str, str], palas: list[Pala]) -> tuple[str
 
 def obtener(db: Session, perfil: dict[str, str], palas: list[Pala]) -> str:
     return generar(db, perfil, palas)[0]
+
+
+# --- En flujo (Server-Sent Events) ------------------------------------------------------------
+
+
+def _sse(evento: str, datos: dict[str, str]) -> str:
+    return f"event: {evento}\ndata: {json.dumps(datos, ensure_ascii=False)}\n\n"
+
+
+def en_flujo(
+    db: Session, perfil: dict[str, str], palas: list[Pala], nueva_sesion: FabricaSesiones
+) -> Iterator[str]:
+    """Eventos SSE para la web: «texto» con cada trozo según lo escribe la IA y «fin» con el texto
+    definitivo y de dónde sale (cache, ia, sin_ia, tope o plantilla).
+
+    Si al terminar el texto de la IA no vale, «fin» trae la plantilla y la web la pone en su lugar.
+    La caché y el tope se miran aquí, con la sesión de la petición; el texto nuevo se guarda al
+    acabar con una sesión propia, porque el flujo sigue cuando la petición ya ha devuelto la
+    respuesta.
+    """
+    ajustes = get_settings()
+    texto_hechos = hechos(perfil, palas)
+    clave = _clave(texto_hechos, ajustes.ia_modelo)
+
+    guardada = db.scalar(select(ExplicacionCache.texto).where(ExplicacionCache.clave == clave))
+    if guardada:
+        return iter([_sse("fin", {"texto": guardada, "origen": "cache"})])
+    proveedor = _proveedor()
+    if proveedor is None:
+        return iter([_sse("fin", {"texto": plantilla(palas), "origen": "sin_ia"})])
+    if _llamadas_de_hoy(db, ajustes.ia_modelo) >= ajustes.ia_llamadas_diarias_max:
+        return iter([_sse("fin", {"texto": plantilla(palas), "origen": "tope"})])
+    return _redactar(proveedor, texto_hechos, clave, palas, nueva_sesion)
+
+
+def _redactar(
+    proveedor: ProveedorExplicaciones,
+    texto_hechos: str,
+    clave: str,
+    palas: list[Pala],
+    nueva_sesion: FabricaSesiones,
+) -> Iterator[str]:
+    partes: list[str] = []
+    try:
+        for trozo in proveedor.redactar(texto_hechos):
+            partes.append(trozo)
+            yield _sse("texto", {"t": trozo})
+    except ExplicacionFallida:
+        partes = []
+
+    texto = "".join(partes).strip()
+    if not texto or not _valida(texto, palas):
+        yield _sse("fin", {"texto": plantilla(palas), "origen": "plantilla"})
+        return
+
+    with nueva_sesion() as sesion:
+        sesion.add(ExplicacionCache(clave=clave, texto=texto, modelo=get_settings().ia_modelo))
+        try:
+            sesion.commit()
+        except IntegrityError:
+            sesion.rollback()  # otra petición la guardó a la vez: vale cualquiera de las dos
+    yield _sse("fin", {"texto": texto, "origen": "ia"})

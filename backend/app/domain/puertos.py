@@ -1,6 +1,6 @@
 """Puertos: lo que el dominio necesita del exterior. Los implementan los adaptadores."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, Protocol
 
 from app.domain.modelos import Pala, ProductoFeed
@@ -12,9 +12,18 @@ class RepositorioCatalogo(Protocol):
         ...
 
 
+class ExplicacionFallida(Exception):
+    """La IA no ha terminado bien la explicación (error, rechazo o respuesta cortada)."""
+
+
 class ProveedorExplicaciones(Protocol):
     def explicar(self, hechos: str) -> str | None:
         """Redacta la explicación a partir de hechos del catálogo; None si falla."""
+        ...
+
+    def redactar(self, hechos: str) -> Iterator[str]:
+        """La misma explicación, por trozos según se escribe. Lanza ExplicacionFallida si no
+        termina bien (los trozos ya enviados no valen)."""
         ...
 
 

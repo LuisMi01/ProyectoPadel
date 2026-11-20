@@ -8,12 +8,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.seguridad import hash_token
-from app.db.session import get_db
+from app.db.session import SessionLocal, get_db
 from app.models import Sesion, Usuario
+from app.services.explicaciones import FabricaSesiones
 
 COOKIE_SESION = "sesion"
 
 DB = Annotated[Session, Depends(get_db)]
+
+
+def get_nueva_sesion() -> FabricaSesiones:
+    """Para lo que sigue escribiendo en la base de datos después de responder (un flujo SSE)."""
+    return SessionLocal
+
+
+NuevaSesion = Annotated[FabricaSesiones, Depends(get_nueva_sesion)]
 
 
 def get_usuario_opcional(

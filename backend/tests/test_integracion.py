@@ -1,16 +1,18 @@
 """API y servicios contra la base de datos de pruebas (ver conftest.py)."""
 
 import json
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-import pytest
 from sqlalchemy import func, select
 
 from app.adapters.catalogo_sql import RepositorioCatalogoSQL
 from app.domain.modelos import ProductoFeed as Producto
-from app.domain.motor import MOTOR_VERSION
+from app.domain.modelos import Respuestas, Salud
+from app.domain.motor import recomendar
+from app.domain.puertos import ExplicacionFallida
 from app.models import (
     Evento,
     ExplicacionCache,
@@ -27,17 +29,24 @@ from app.models import (
 )
 from app.services import enlaces, explicaciones, fichas, importacion, recomendacion
 
-CASOS = json.loads((Path(__file__).parent / "datos" / "motor_casos.json").read_text("utf-8"))
-
 PERFIL = {
     "camino": "cambio",
     "exp": "gt2",
     "frec": "2-3",
     "estilo": "potencia",
-    "mol": "no",
     "edad": "adulto",
     "ppto": "max",
 }
+
+
+def _registrar(cliente, db, perfil=PERFIL, salud: Salud | None = None) -> dict:
+    """Hace lo que la web: calcula la recomendación y manda a la API lo que ha enseñado."""
+    respuestas = Respuestas(**perfil, mol="si" if salud else "no")
+    res = recomendar(respuestas, salud, RepositorioCatalogoSQL(db).palas())
+    ids = [res.mejor.id, *(a.pala.id for a in res.alternativas)]
+    respuesta = cliente.post("/recomendaciones", json={**perfil, "palas": ids})
+    assert respuesta.status_code == 201, respuesta.text
+    return {**respuesta.json(), "palas": ids, "mejor": res.mejor.nombre}
 
 
 # --- Catálogo -------------------------------------------------------------------------------
@@ -65,45 +74,26 @@ def test_exportar_catalogo_en_formato_del_frontend(cliente, catalogo):
 # --- Recomendación ------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("caso", CASOS[::9], ids=lambda c: json.dumps(c["respuestas"]))
-def test_recomendacion_igual_que_en_el_navegador(cliente, catalogo, caso):
-    perfil = dict(caso["respuestas"])
-    if caso["salud"]:
-        perfil["salud"] = {**caso["salud"], "consentimiento": True}
-    respuesta = cliente.post("/recomendaciones", json=perfil)
-    assert respuesta.status_code == 201, respuesta.text
-    datos = respuesta.json()
-    esperado = caso["resultado"]
-    assert datos["titular"] == esperado["titular"]
-    assert datos["mejor"]["slug"] == esperado["mejor"]
-    assert [a["slug"] for a in datos["alternativas"]] == [
-        a["slug"] for a in esperado["alternativas"]
-    ]
-    assert datos["motivos"] == esperado["motivos"]
-    assert datos["nota"] == esperado["nota"]
+def test_se_guarda_lo_que_enseno_el_navegador_sin_datos_de_salud(cliente, catalogo):
+    # Con molestias, el navegador enseña otras palas; a la API solo le llegan las palas.
+    datos = _registrar(cliente, catalogo, salud=Salud("Codo", "Casi siempre"))
+    sin_molestias = recomendar(Respuestas(**PERFIL), None, RepositorioCatalogoSQL(catalogo).palas())
+    assert datos["palas"][0] != sin_molestias.mejor.id
 
-
-def test_recomendacion_se_guarda_sin_datos_de_salud(cliente, catalogo):
-    perfil = {
-        **PERFIL,
-        "mol": "si",
-        "salud": {"zona": "Codo", "momento": "Casi siempre", "consentimiento": True},
-    }
-    datos = cliente.post("/recomendaciones", json=perfil).json()
     rec = catalogo.get(Recomendacion, datos["id"])
-    assert "mol" not in rec.perfil and "salud" not in rec.perfil
-    assert rec.perfil["estilo"] == "potencia"
-    assert rec.versiones["motor"] == MOTOR_VERSION
-    posiciones = catalogo.scalars(
-        select(RecShown.posicion).where(RecShown.recomendacion_id == rec.id)
+    assert rec.perfil == PERFIL
+    assert rec.versiones == {"calculada_en": "navegador"}
+    enseñadas = catalogo.scalars(
+        select(RecShown.modelo_id)
+        .where(RecShown.recomendacion_id == rec.id)
+        .order_by(RecShown.posicion)
     ).all()
-    assert sorted(posiciones) == list(range(1, len(datos["alternativas"]) + 2))
+    assert enseñadas == datos["palas"]
 
 
-def test_sin_palas_en_el_presupuesto_da_404(cliente, catalogo):
-    catalogo.execute(Oferta.__table__.update().values(precio=Decimal("999")))
-    perfil = {**PERFIL, "ppto": "80"}
-    assert cliente.post("/recomendaciones", json=perfil).status_code == 404
+def test_pala_que_no_esta_en_el_catalogo_da_422(cliente, catalogo):
+    respuesta = cliente.post("/recomendaciones", json={**PERFIL, "palas": [999999]})
+    assert respuesta.status_code == 422
 
 
 # --- Explicación -----------------------------------------------------------------------------
@@ -119,17 +109,23 @@ class ProveedorFalso:
         self.llamadas += 1
         return self.texto
 
+    def redactar(self, hechos: str) -> Iterator[str]:
+        texto = self.explicar(hechos) or ""
+        mitad = len(texto) // 2
+        yield texto[:mitad]
+        yield texto[mitad:]
+
 
 def test_explicacion_con_plantilla_sin_clave(cliente, catalogo, monkeypatch):
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: None)
-    datos = cliente.post("/recomendaciones", json=PERFIL).json()
+    datos = _registrar(cliente, catalogo)
     texto = cliente.get(f"/recomendaciones/{datos['id']}/explicacion").json()["texto"]
-    assert datos["mejor"]["nombre"] in texto
+    assert datos["mejor"] in texto
 
 
 def test_explicacion_con_ia_se_cachea(cliente, catalogo, monkeypatch):
-    datos = cliente.post("/recomendaciones", json=PERFIL).json()
-    falso = ProveedorFalso(f"La {datos['mejor']['nombre']} te encaja porque buscas pegada.")
+    datos = _registrar(cliente, catalogo)
+    falso = ProveedorFalso(f"La {datos['mejor']} te encaja porque buscas pegada.")
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: falso)
     for _ in range(2):
         r = cliente.get(f"/recomendaciones/{datos['id']}/explicacion")
@@ -139,10 +135,65 @@ def test_explicacion_con_ia_se_cachea(cliente, catalogo, monkeypatch):
 
 
 def test_explicacion_de_la_ia_que_no_nombra_la_pala_se_descarta(cliente, catalogo, monkeypatch):
-    datos = cliente.post("/recomendaciones", json=PERFIL).json()
+    datos = _registrar(cliente, catalogo)
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: ProveedorFalso("Texto sin la pala."))
     texto = cliente.get(f"/recomendaciones/{datos['id']}/explicacion").json()["texto"]
-    assert datos["mejor"]["nombre"] in texto  # plantilla
+    assert datos["mejor"] in texto  # plantilla
+
+
+def _eventos(cliente, recomendacion_id: int) -> list[tuple[str, dict]]:
+    respuesta = cliente.get(f"/recomendaciones/{recomendacion_id}/explicacion/flujo")
+    assert respuesta.status_code == 200
+    assert respuesta.headers["content-type"].startswith("text/event-stream")
+    eventos = []
+    for bloque in respuesta.text.strip().split("\n\n"):
+        evento, datos = (linea.split(": ", 1)[1] for linea in bloque.split("\n"))
+        eventos.append((evento, json.loads(datos)))
+    return eventos
+
+
+def test_explicacion_en_flujo_con_ia(cliente, catalogo, monkeypatch):
+    datos = _registrar(cliente, catalogo)
+    falso = ProveedorFalso(f"La {datos['mejor']} te encaja porque buscas pegada.")
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: falso)
+
+    eventos = _eventos(cliente, datos["id"])
+    assert [e for e, _ in eventos] == ["texto", "texto", "fin"]
+    assert "".join(d["t"] for e, d in eventos if e == "texto") == falso.texto
+    assert eventos[-1][1] == {"texto": falso.texto, "origen": "ia"}
+    # La segunda vez sale de la caché, entera y sin llamar a la IA.
+    assert _eventos(cliente, datos["id"]) == [("fin", {"texto": falso.texto, "origen": "cache"})]
+    assert falso.llamadas == 1
+
+
+def test_explicacion_en_flujo_que_no_vale_acaba_en_plantilla(cliente, catalogo, monkeypatch):
+    datos = _registrar(cliente, catalogo)
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: ProveedorFalso("Texto sin la pala."))
+    fin = _eventos(cliente, datos["id"])[-1]
+    assert fin[0] == "fin" and fin[1]["origen"] == "plantilla"
+    assert datos["mejor"] in fin[1]["texto"]
+    assert catalogo.scalar(select(func.count()).select_from(ExplicacionCache)) == 0
+
+
+def test_explicacion_en_flujo_cortada_acaba_en_plantilla(cliente, catalogo, monkeypatch):
+    class ProveedorQueSeCorta(ProveedorFalso):
+        def redactar(self, hechos: str) -> Iterator[str]:
+            yield "La pala que "
+            raise ExplicacionFallida
+
+    datos = _registrar(cliente, catalogo)
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: ProveedorQueSeCorta(""))
+    eventos = _eventos(cliente, datos["id"])
+    assert [e for e, _ in eventos] == ["texto", "fin"]
+    assert eventos[-1][1]["origen"] == "plantilla"
+
+
+def test_explicacion_en_flujo_sin_clave(cliente, catalogo, monkeypatch):
+    monkeypatch.setattr(explicaciones, "_proveedor", lambda: None)
+    datos = _registrar(cliente, catalogo)
+    [(evento, fin)] = _eventos(cliente, datos["id"])
+    assert (evento, fin["origen"]) == ("fin", "sin_ia")
+    assert datos["mejor"] in fin["texto"]
 
 
 class ProveedorEco(ProveedorFalso):
@@ -156,9 +207,8 @@ class ProveedorEco(ProveedorFalso):
 def test_pregenerar_explica_los_perfiles_mas_repetidos(cliente, catalogo, monkeypatch):
     eco = ProveedorEco("")
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: eco)
-    otro = {**PERFIL, "estilo": "control"}
-    repetido = [cliente.post("/recomendaciones", json=PERFIL).json() for _ in range(2)]
-    cliente.post("/recomendaciones", json=otro)
+    repetido = [_registrar(cliente, catalogo) for _ in range(2)]
+    _registrar(cliente, catalogo, {**PERFIL, "estilo": "control"})
 
     resumen = recomendacion.pregenerar_explicaciones(catalogo, dias=7, maximo=1)
 
@@ -171,7 +221,7 @@ def test_pregenerar_explica_los_perfiles_mas_repetidos(cliente, catalogo, monkey
     }
     # Quien pide la explicación de ese perfil la recibe de la caché, sin otra llamada.
     texto = cliente.get(f"/recomendaciones/{repetido[0]['id']}/explicacion").json()["texto"]
-    assert repetido[0]["mejor"]["nombre"] in texto
+    assert repetido[0]["mejor"] in texto
     assert eco.llamadas == 1
     # Al día siguiente, con los mismos precios, no se repite.
     assert recomendacion.pregenerar_explicaciones(catalogo, 7, 1)["ya_en_cache"] == 1
@@ -180,20 +230,21 @@ def test_pregenerar_explica_los_perfiles_mas_repetidos(cliente, catalogo, monkey
 
 def test_pregenerar_sin_clave_de_ia_no_hace_nada(cliente, catalogo, monkeypatch):
     monkeypatch.setattr(explicaciones, "_proveedor", lambda: None)
-    cliente.post("/recomendaciones", json=PERFIL)
+    _registrar(cliente, catalogo)
     resumen = recomendacion.pregenerar_explicaciones(catalogo, 7, 100)
     assert resumen == {"omitida": "sin clave de IA"}
 
 
 def test_explicacion_de_recomendacion_inexistente(cliente, catalogo):
     assert cliente.get("/recomendaciones/999999/explicacion").status_code == 404
+    assert cliente.get("/recomendaciones/999999/explicacion/flujo").status_code == 404
 
 
 # --- Valoración y eventos ----------------------------------------------------------------------
 
 
 def test_valoracion(cliente, catalogo):
-    datos = cliente.post("/recomendaciones", json=PERFIL).json()
+    datos = _registrar(cliente, catalogo)
     r = cliente.post(f"/recomendaciones/{datos['id']}/valoracion", json={"puntuacion": 4})
     assert r.status_code == 204
     assert catalogo.scalar(select(Feedback.puntuacion)) == 4
@@ -217,7 +268,7 @@ def test_salida_a_tienda_con_enlace_de_afiliado(cliente, catalogo):
     oferta.tienda.plantilla_enlace = "https://red.example/go?aff={id_afiliado}&ref={subid}&u={url}"
     oferta.tienda.id_afiliado = "777"
     catalogo.flush()
-    datos = cliente.post("/recomendaciones", json=PERFIL).json()
+    datos = _registrar(cliente, catalogo)
 
     r = cliente.get(f"/tienda/101?rec={datos['id']}&pos=1", follow_redirects=False)
     assert r.status_code == 307

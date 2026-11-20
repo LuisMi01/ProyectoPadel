@@ -14,7 +14,7 @@ from app.domain.enlaces import estado_enlace
 from app.domain.fichas import MAX_TEXTO, limpiar_ficha, texto_producto
 from app.domain.historico import serie_minimos
 from app.jobs import periodo
-from app.schemas import PerfilEncuesta
+from app.schemas import RecomendacionIn
 
 # --- Normalización de feeds --------------------------------------------------------------
 
@@ -188,32 +188,33 @@ BASE = {
     "exp": "gt2",
     "frec": "2-3",
     "estilo": "mixto",
-    "mol": "no",
     "edad": "adulto",
     "ppto": "250",
+    "palas": [3, 1, 7],
 }
 
 
-def test_perfil_sin_haber_jugado_no_tiene_frecuencia_ni_estilo():
-    perfil = PerfilEncuesta(**{**BASE, "exp": "nunca"})
-    assert perfil.frec is None and perfil.estilo is None
+def test_sin_haber_jugado_no_hay_frecuencia_ni_estilo():
+    rec = RecomendacionIn(**{**BASE, "exp": "nunca"})
+    assert rec.frec is None and rec.estilo is None
+    assert rec.perfil() == {"camino": "cambio", "exp": "nunca", "edad": "adulto", "ppto": "250"}
 
 
 @pytest.mark.parametrize("exp", ["lt6", "m6a2", "gt2"])
-def test_perfil_exige_frecuencia_y_estilo_si_ya_juega(exp):
-    assert PerfilEncuesta(**{**BASE, "exp": exp}).estilo == "mixto"
+def test_si_ya_juega_hacen_falta_frecuencia_y_estilo(exp):
+    assert RecomendacionIn(**{**BASE, "exp": exp}).estilo == "mixto"
     with pytest.raises(ValidationError):
-        PerfilEncuesta(**{**BASE, "exp": exp, "frec": None})
+        RecomendacionIn(**{**BASE, "exp": exp, "frec": None})
 
 
-def test_perfil_salud_solo_con_molestias_y_consentimiento():
-    salud = {"zona": "Codo", "momento": "Casi siempre", "consentimiento": True}
-    assert PerfilEncuesta(**BASE, salud=salud).salud is None  # mol = no: se descarta
-    con = PerfilEncuesta(**{**BASE, "mol": "si"}, salud=salud)
-    assert con.salud is not None
-    assert "mol" not in con.sin_salud() and "salud" not in con.sin_salud()
+@pytest.mark.parametrize(
+    "cambio",
+    [{"mol": "si"}, {"salud": {"zona": "Codo"}}, {"palas": []}, {"palas": [1, 2, 3, 4]},
+     {"palas": [1, 1]}],
+)  # fmt: skip
+def test_recomendacion_rechaza_salud_y_palas_raras(cambio):
     with pytest.raises(ValidationError):
-        PerfilEncuesta(**{**BASE, "mol": "si"}, salud={**salud, "consentimiento": False})
+        RecomendacionIn(**{**BASE, **cambio})
 
 
 # --- Tareas programadas ------------------------------------------------------------------------
