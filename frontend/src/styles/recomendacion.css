@@ -263,6 +263,37 @@
   margin-top: 1px;
 }
 
+/* Explicación en pocas palabras (API, redactada con IA según llega). */
+.rec-ia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--tenue);
+}
+
+.rec-porque .rec-ia h3 {
+  font-size: 17px;
+}
+
+.rec-ia p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.rec-ia .cargando {
+  color: var(--suave);
+}
+
+.rec-ia .aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--suave);
+}
+
 /* --- Ofertas --- */
 
 .ofertas {
