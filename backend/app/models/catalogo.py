@@ -70,7 +70,8 @@ class Tienda(Base):
     # Feed de productos (jobs.daily.import_feed). `feed_campos` dice qué columna del feed es cada
     # dato nuestro: {"referencia": "aw_product_id", "titulo": "product_name", "precio":
     # "search_price", "url": "merchant_deep_link", "ean": "ean", "marca": "brand_name",
-    # "disponible": "in_stock"}.
+    # "categoria": "merchant_category", "disponible": "in_stock"}. La categoría sirve para no
+    # mandar a revisión lo que no es una pala.
     feed_url: Mapped[str | None] = mapped_column(String(2048))
     feed_formato: Mapped[str | None] = mapped_column(String(10))  # csv | json
     feed_campos: Mapped[dict[str, str]] = mapped_column(

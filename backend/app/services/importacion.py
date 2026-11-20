@@ -4,7 +4,9 @@
 2. Si el feed trae muchos menos productos que el anterior, se descarta: la web sigue con lo de ayer.
 3. Cada producto se empareja con su SKU: por la referencia de la tienda (ofertas ya conocidas),
    por EAN o, si no, va a revisión manual (nombre parecido a una pala del catálogo: emparejamiento
-   dudoso; si no se parece a ninguna: pala nueva).
+   dudoso; si no se parece a ninguna: pala nueva). Lo que no es una pala (zapatillas, pelotas,
+   paleteros) no va a revisión, y una pala nueva que ya espera revisión porque llegó por otra
+   tienda tampoco: se revisa una sola vez.
 4. Los emparejados actualizan su oferta y, si cambia el precio, el histórico. Un cambio de precio
    extremo no se publica: va a revisión.
 5. Las ofertas de la tienda que ya no vienen en el feed pasan a agotadas.
@@ -47,6 +49,8 @@ class Resumen:
     precio_anomalo: int = 0
     incompletos: int = 0
     agotados: int = 0
+    no_pala: int = 0  # zapatillas, pelotas, paleteros…: no van a revisión
+    ya_en_revision: int = 0  # pala nueva que ya espera revisión (llegó por otra tienda)
 
     def como_dict(self) -> dict[str, int | str]:
         return asdict(self)
@@ -60,6 +64,7 @@ def _datos(producto: Producto) -> dict[str, object]:
         "url": producto.url,
         "ean": producto.ean,
         "marca": producto.marca,
+        "categoria": producto.categoria,
         "disponible": producto.disponible,
         "original": producto.datos,
     }
@@ -85,6 +90,26 @@ def _a_revision(db: Session, tienda: Tienda, fila: ProductoFeed, motivo: str) ->
     referencia = str(fila.datos["referencia"])
     if not _hay_revision_pendiente(db, tienda.id, referencia, motivo):
         db.add(RevisionPendiente(producto_feed_id=fila.id, motivo=motivo))
+
+
+def _nombre(marca: object, titulo: object) -> str:
+    return normalizacion.texto_comparable(f"{marca or ''} {titulo or ''}")
+
+
+def _palas_nuevas_en_revision(db: Session) -> tuple[set[str], set[str]]:
+    """EAN y nombres de las palas nuevas que ya esperan revisión, de cualquier tienda."""
+    eans: set[str] = set()
+    nombres: set[str] = set()
+    filas = db.scalars(
+        select(ProductoFeed.datos)
+        .join(RevisionPendiente, RevisionPendiente.producto_feed_id == ProductoFeed.id)
+        .where(RevisionPendiente.motivo == "pala_nueva", RevisionPendiente.estado == "pendiente")
+    )
+    for datos in filas:
+        if datos.get("ean"):
+            eans.add(datos["ean"])
+        nombres.add(_nombre(datos.get("marca"), datos.get("titulo")))
+    return eans, nombres
 
 
 def importar_tienda(db: Session, tienda: Tienda, productos: list[Producto]) -> Resumen:
@@ -130,7 +155,9 @@ def importar_tienda(db: Session, tienda: Tienda, productos: list[Producto]) -> R
     skus_por_ean = (
         {s.ean: s for s in db.scalars(select(Sku).where(Sku.ean.in_(eans)))} if eans else {}
     )
-    catalogo: list[tuple[str, Modelo]] | None = None  # se carga solo si hace falta comparar nombres
+    # Se cargan solo si hace falta comparar nombres (hay algún producto sin emparejar).
+    catalogo: list[tuple[str, Modelo]] | None = None
+    en_revision: tuple[set[str], set[str]] = (set(), set())
     vistos: set[str] = set()
 
     for producto in productos:
@@ -146,12 +173,27 @@ def importar_tienda(db: Session, tienda: Tienda, productos: list[Producto]) -> R
         oferta = ofertas.get(producto.referencia)
         sku = oferta.sku if oferta else skus_por_ean.get(producto.ean or "")
         if sku is None:
+            if not normalizacion.parece_pala(producto.titulo, producto.categoria):
+                resumen.no_pala += 1
+                continue
             if catalogo is None:
                 modelos = db.scalars(select(Modelo).options(selectinload(Modelo.familia)))
                 catalogo = [(f"{m.familia.marca} {m.nombre}", m) for m in modelos]
+                en_revision = _palas_nuevas_en_revision(db)
             nombre = f"{producto.marca or ''} {producto.titulo}"
             parecido = max((normalizacion.parecido(nombre, n) for n, _ in catalogo), default=0.0)
             motivo = "emparejamiento_dudoso" if parecido >= PARECIDO_MINIMO else "pala_nueva"
+            if motivo == "pala_nueva":
+                # La misma pala desde otra tienda: una sola ficha. Cuando se apruebe, las demás
+                # tiendas se emparejan solas por EAN (o van a revisión como emparejamiento dudoso).
+                eans, nombres = en_revision
+                clave = _nombre(producto.marca, producto.titulo)
+                if (producto.ean and producto.ean in eans) or clave in nombres:
+                    resumen.ya_en_revision += 1
+                    continue
+                if producto.ean:
+                    eans.add(producto.ean)
+                nombres.add(clave)
             _a_revision(db, tienda, fila, motivo)
             resumen.a_revision += 1
             continue

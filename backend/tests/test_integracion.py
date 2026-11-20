@@ -364,6 +364,43 @@ def test_feed_mucho_mas_pequeno_que_el_anterior_se_descarta(db):
     assert resumen.estado == "descartada"
 
 
+def _tienda(db, nombre: str) -> Tienda:
+    tienda = Tienda(nombre=nombre, dominios=[])
+    db.add(tienda)
+    db.flush()
+    return tienda
+
+
+def test_lo_que_no_es_pala_no_va_a_revision(db):
+    tienda = _tienda(db, "Tienda de todo")
+    productos = [
+        Producto("z1", "Asics Gel Padel Pro", Decimal("90"), "https://t.example/z1", True,
+                 categoria="Zapatillas"),
+        Producto("p1", "Paletero Zeta Tour", Decimal("40"), "https://t.example/p1", True),
+        Producto("n1", "Pala Zeta Rayo 2026", Decimal("199"), "https://t.example/n1", True,
+                 categoria="Palas"),
+    ]  # fmt: skip
+    resumen = importacion.importar_tienda(db, tienda, productos)
+    assert (resumen.no_pala, resumen.a_revision) == (2, 1)
+    assert db.scalar(select(func.count()).select_from(RevisionPendiente)) == 1
+
+
+def test_la_misma_pala_nueva_desde_varias_tiendas_se_revisa_una_vez(db):
+    def pala(ref: str, titulo: str, ean: str | None = None) -> Producto:
+        return Producto(ref, titulo, Decimal("199"), f"https://t.example/{ref}", True, ean=ean)
+
+    primera, segunda = _tienda(db, "Tienda A"), _tienda(db, "Tienda B")
+    importacion.importar_tienda(db, primera, [pala("a1", "Pala Zeta Rayo", "8435000000099"),
+                                             pala("a2", "Pala Zeta Brisa")])  # fmt: skip
+    # Misma pala por EAN (con otro título) y por nombre (sin EAN), y una que sí es distinta.
+    resumen = importacion.importar_tienda(
+        db, segunda, [pala("b1", "Zeta Rayo 2026", "8435000000099"),
+                      pala("b2", "PALA de pádel Zeta Brisa"), pala("b3", "Pala Zeta Trueno")],
+    )  # fmt: skip
+    assert (resumen.ya_en_revision, resumen.a_revision) == (2, 1)
+    assert db.scalar(select(func.count()).select_from(RevisionPendiente)) == 3
+
+
 # --- Fichas de palas nuevas --------------------------------------------------------------------
 
 

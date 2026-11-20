@@ -123,4 +123,5 @@ class ProductoFeed:
     disponible: bool
     ean: str | None = None
     marca: str | None = None
+    categoria: str | None = None  # categoría de la tienda («Palas», «Zapatillas»…), si la da
     datos: dict[str, object] = field(default_factory=dict)  # fila original del feed

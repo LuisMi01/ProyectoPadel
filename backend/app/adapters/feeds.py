@@ -62,6 +62,7 @@ def leer_feed(contenido: bytes, formato: str, campos: dict[str, str]) -> list[Pr
                 disponible=normalizacion.disponible(valor("disponible")),
                 ean=normalizacion.ean(valor("ean")),
                 marca=str(valor("marca")) if valor("marca") else None,
+                categoria=str(valor("categoria")) if valor("categoria") else None,
                 datos=dict(fila),
             )
         )

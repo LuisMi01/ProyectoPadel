@@ -97,14 +97,42 @@ def ean(valor: object) -> str | None:
 _GENERICAS = {"pala", "palas", "padel", "de", "racket"}
 
 
+def _palabras(texto: str) -> list[str]:
+    sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", " ", sin_tildes.lower()).split()
+
+
 def texto_comparable(texto: str) -> str:
     """Minúsculas, sin tildes, signos ni palabras genéricas.
 
     «Pala de pádel BULLPADEL Vertex-04 '25» -> «bullpadel vertex 04 25».
     """
-    sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
-    palabras = re.sub(r"[^a-z0-9]+", " ", sin_tildes.lower()).split()
-    return " ".join(p for p in palabras if p not in _GENERICAS)
+    return " ".join(p for p in _palabras(texto) if p not in _GENERICAS)
+
+
+# Lo que también venden las tiendas de pádel y no es una pala.
+_NO_PALA = {
+    "paletero", "paleteros", "mochila", "mochilas", "bolsa", "bolsas", "bolso", "funda", "fundas",
+    "protector", "protectores", "grip", "grips", "overgrip", "overgrips", "cinta", "cintas",
+    "pelota", "pelotas", "bote", "botes", "zapatilla", "zapatillas", "calcetines", "camiseta",
+    "camisetas", "polo", "pantalon", "short", "falda", "vestido", "sudadera", "chaqueta", "gorra",
+    "visera", "munequera", "munequeras", "antivibrador", "red", "poste", "recogepelotas",
+}  # fmt: skip
+_PALA = {"pala", "palas", "racket", "rackets", "raqueta", "raquetas"}
+
+
+def parece_pala(titulo: str, categoria: str | None = None) -> bool:
+    """¿Es una pala? Para no mandar a revisión zapatillas, pelotas o paleteros.
+
+    Si el feed trae categoría, manda ella: tiene que hablar de palas y no de accesorios. Si no la
+    trae, se mira la primera palabra del título, que suele ser el tipo de producto («Paletero…»,
+    «Zapatillas…»). Ante la duda se deja pasar: una pala perdida es peor que una revisión de más.
+    """
+    if categoria:
+        palabras = set(_palabras(categoria))
+        return bool(palabras & _PALA) and not palabras & _NO_PALA
+    palabras = _palabras(titulo)
+    return not (palabras and palabras[0] in _NO_PALA)
 
 
 def parecido(a: str, b: str) -> float:

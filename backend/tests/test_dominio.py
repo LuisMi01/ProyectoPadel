@@ -58,6 +58,25 @@ def test_parecido():
     assert normalizacion.parecido("Bullpadel Vertex 04", "Head Delta Pro") < 0.5
 
 
+@pytest.mark.parametrize(
+    ("titulo", "categoria", "esperado"),
+    [
+        ("Pala Bullpadel Vertex 04", None, True),
+        ("Bullpadel Vertex 04 2026", None, True),  # sin la palabra «pala»: ante la duda, pasa
+        ("Pala Nox AT10 con funda", None, True),
+        ("Paletero Bullpadel Hack", None, False),
+        ("Zapatillas Asics Gel Padel", None, False),
+        ("Bote de pelotas Head", None, False),
+        ("Bullpadel Vertex 04", "Pádel > Palas", True),
+        ("Bullpadel Vertex 04", "Palas junior", True),
+        ("Protector Bullpadel", "Accesorios > Protectores de pala", False),
+        ("Asics Gel", "Zapatillas", False),
+    ],
+)
+def test_parece_pala(titulo, categoria, esperado):
+    assert normalizacion.parece_pala(titulo, categoria) is esperado
+
+
 def test_leer_feed_csv_comprimido_con_punto_y_coma():
     csv = "id;nombre;precio;enlace;ean;stock\n1;Pala A;99,90 €;https://t.es/a;8435123456789;5\n"
     csv += ";Sin referencia;10;https://t.es/x;;1\n"
