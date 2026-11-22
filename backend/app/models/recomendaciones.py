@@ -2,13 +2,14 @@
 
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import ForeignKey, Numeric, String, func
+from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base import Base, en
 
 
 class Recomendacion(Base):
@@ -38,17 +39,28 @@ class RecShown(Base):
     posicion: Mapped[int]
 
 
+class OrigenClic(StrEnum):
+    RECOMENDACION = "recomendacion"
+    FICHA = "ficha"
+    PALAS_GUARDADAS = "palas_guardadas"
+    ALERTA_PRECIO = "alerta_precio"
+
+
 class RecClick(Base):
-    """Clic en "ir a la tienda" desde una recomendación."""
+    """Clic en "ir a la tienda". Su id viaja como subid del enlace de afiliado."""
 
     __tablename__ = "rec_click"
+    __table_args__ = (CheckConstraint(en(OrigenClic, "origen"), name="origen"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    recomendacion_id: Mapped[int] = mapped_column(
-        ForeignKey("recomendacion.id", ondelete="CASCADE"), index=True
+    # 0..1: solo los clics desde una recomendación la tienen. Si se borra la recomendación
+    # el clic se conserva, porque hace falta para atribuir la comisión.
+    recomendacion_id: Mapped[int | None] = mapped_column(
+        ForeignKey("recomendacion.id", ondelete="SET NULL"), index=True
     )
     oferta_id: Mapped[int] = mapped_column(ForeignKey("oferta.id"), index=True)
-    posicion: Mapped[int]
+    origen: Mapped[str] = mapped_column(String(30), server_default=OrigenClic.RECOMENDACION)
+    posicion: Mapped[int | None]
     fecha: Mapped[datetime] = mapped_column(server_default=func.now())
 
 

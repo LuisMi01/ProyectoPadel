@@ -21,6 +21,21 @@ from app.db.base import Base  # noqa: E402
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
+# Esquemas que gestiona Alembic: public (datos limpios) y staging (catálogos en bruto).
+ESQUEMAS = {None, "public", "staging"}
+
+
+def incluir(nombre, tipo, _padre):
+    """Ignora cualquier otro esquema que exista en la base de datos."""
+    return nombre in ESQUEMAS if tipo == "schema" else True
+
+
+OPCIONES = {
+    "target_metadata": target_metadata,
+    "include_schemas": True,
+    "include_name": incluir,
+}
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -42,8 +57,8 @@ def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
-        target_metadata=target_metadata,
         literal_binds=True,
+        **OPCIONES,
         dialect_opts={"paramstyle": "named"},
     )
 
@@ -65,7 +80,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(connection=connection, **OPCIONES)
 
         with context.begin_transaction():
             context.run_migrations()

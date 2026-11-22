@@ -37,10 +37,12 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest -q
-      - name: Migraciones (subir, bajar y volver a subir en PostgreSQL real)
+      - name: Migraciones
+        run: uv run alembic upgrade head
+      - name: Tests (incluidos los de base de datos)
+        run: uv run pytest -q -rs
+      - name: Las migraciones se pueden deshacer y rehacer
         run: |
-          uv run alembic upgrade head
           uv run alembic downgrade base
           uv run alembic upgrade head
       - name: Los modelos y las migraciones coinciden

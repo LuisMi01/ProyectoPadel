@@ -54,6 +54,11 @@ class Tienda(Base):
     red_afiliacion: Mapped[str | None] = mapped_column(String(100))
     comision: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
     dominios: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    # Enlace de afiliado: la plantilla lleva marcadores {url}, {id_afiliado} y {subid}.
+    # El subid identifica el clic (rec_click.id) para atribuir después la comisión.
+    plantilla_enlace: Mapped[str | None] = mapped_column(String(2048))
+    id_afiliado: Mapped[str | None] = mapped_column(String(100))
+    parametro_subid: Mapped[str | None] = mapped_column(String(50))
 
     ofertas: Mapped[list["Oferta"]] = relationship(back_populates="tienda")
 
@@ -83,3 +88,32 @@ class PrecioHistorico(Base):
     fecha: Mapped[datetime] = mapped_column(server_default=func.now())
 
     oferta: Mapped[Oferta] = relationship(back_populates="historico")
+
+
+class VocabMap(Base):
+    """Traduce los valores que envía cada tienda a uno único.
+
+    Ej.: campo="forma", valor_origen="round" -> valor="redonda". Con tienda_id NULL la
+    traducción vale para todas las tiendas; una fila con tienda_id tiene prioridad.
+    valor_origen se guarda normalizado (minúsculas, sin espacios sobrantes).
+    """
+
+    __tablename__ = "vocab_map"
+    __table_args__ = (
+        # NULLS NOT DISTINCT (PostgreSQL 15+): solo una traducción genérica por campo y valor.
+        UniqueConstraint(
+            "campo",
+            "valor_origen",
+            "tienda_id",
+            name="uq_vocab_map_campo_valor_tienda",
+            postgresql_nulls_not_distinct=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campo: Mapped[str] = mapped_column(String(50))
+    valor_origen: Mapped[str] = mapped_column(String(200))
+    valor: Mapped[str] = mapped_column(String(100))
+    tienda_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tienda.id", ondelete="CASCADE"), index=True
+    )
