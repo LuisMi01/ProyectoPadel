@@ -63,12 +63,13 @@ interface Objetivo {
 
 /** Perfil de pala que piden las respuestas. */
 function objetivo(r: Respuestas): Objetivo {
-  const nivel: Nivel = r.exp === "lt6" ? 1 : r.exp === "gt2" ? 3 : 2;
+  const nivel: Nivel = r.exp === "nunca" || r.exp === "lt6" ? 1 : r.exp === "gt2" ? 3 : 2;
   const molestias = r.mol === "si";
   const junior = r.edad === "junior";
 
+  // Con menos de 6 meses ya hay estilo, pero nunca un diamante: eso queda para más de 2 años.
   let forma: Forma = "lagrima";
-  if (r.exp === "lt6" || r.estilo === "control") forma = "redonda";
+  if (r.exp === "nunca" || r.estilo === "control") forma = "redonda";
   else if (r.estilo === "potencia" && r.exp === "gt2") forma = "diamante";
   if (molestias && forma === "diamante") forma = "lagrima";
   if (junior) forma = "redonda";
@@ -334,8 +335,8 @@ function motivoForma(pala: Pala, r: Respuestas): Motivo {
       explicacion: `Las palas junior son más cortas y ligeras: con ${pala.peso} g se mueve sin esfuerzo y cuida el brazo.`,
     };
   }
-  if (r.exp === "lt6") {
-    return { respuesta: "Llevas menos de 6 meses", explicacion: EXPLICACION_FORMA[pala.forma] };
+  if (r.exp === "nunca") {
+    return { respuesta: "Empiezas de cero", explicacion: EXPLICACION_FORMA[pala.forma] };
   }
   if (r.estilo === "control") {
     return {
@@ -355,14 +356,24 @@ function motivoForma(pala: Pala, r: Respuestas): Motivo {
       };
     }
     if (pala.forma === "lagrima") {
+      if (r.mol === "si") {
+        return {
+          respuesta: "Buscas el remate, pero notas molestias",
+          explicacion: "Una lágrima te deja pegar sin cargar el brazo tanto como un diamante.",
+        };
+      }
+      if (r.exp === "lt6") {
+        return {
+          respuesta: "Buscas el remate, pero llevas poco tiempo",
+          explicacion: "Una lágrima te deja atacar sin la exigencia de un diamante mientras coges técnica.",
+        };
+      }
       return {
-        respuesta: r.mol === "si" ? "Buscas el remate, pero notas molestias" : "Buscas el remate",
+        respuesta: "Buscas el remate",
         explicacion:
-          r.mol === "si"
-            ? "Una lágrima te deja pegar sin cargar el brazo tanto como un diamante."
-            : r.exp === "gt2"
-              ? EXPLICACION_FORMA.lagrima
-              : "Una lágrima te da pegada sin castigar los golpes descentrados tanto como un diamante.",
+          r.exp === "gt2"
+            ? EXPLICACION_FORMA.lagrima
+            : "Una lágrima te da pegada sin castigar los golpes descentrados tanto como un diamante.",
       };
     }
     return { respuesta: "Buscas el remate", explicacion: EXPLICACION_FORMA[pala.forma] };
@@ -379,7 +390,7 @@ function motivoUso(pala: Pala, r: Respuestas, salud: Salud | null): Motivo {
   if (r.mol === "si") {
     const enBrazo = salud?.zona === "Codo" || salud?.zona === "Muñeca";
     return {
-      respuesta: "Notas molestias al jugar",
+      respuesta: r.exp === "nunca" ? "Tienes molestias" : "Notas molestias al jugar",
       explicacion:
         pala.dureza <= 2
           ? enBrazo && pala.balance === "bajo"
@@ -390,7 +401,7 @@ function motivoUso(pala: Pala, r: Respuestas, salud: Salud | null): Motivo {
   }
   if (pala.junior) {
     return {
-      respuesta: r.exp === "lt6" ? "Está empezando" : "Ya lleva un tiempo jugando",
+      respuesta: r.exp === "nunca" || r.exp === "lt6" ? "Está empezando" : "Ya lleva un tiempo jugando",
       explicacion:
         pala.forma === "redonda"
           ? "La forma redonda perdona los golpes descentrados mientras coge técnica."

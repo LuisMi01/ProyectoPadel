@@ -1,11 +1,12 @@
 /**
  * Textos de transparencia y legales.
  *
- * PROVISIONALES: describen cómo funciona la web hoy (todo se calcula y se
- * guarda en el navegador; la API solo interviene en el acceso por correo).
- * Hay que revisarlos con asesoría legal y completar los datos del titular en
- * lib/sitio.ts antes de publicar, y actualizarlos cuando cambie el tratamiento
- * de datos (p. ej. cuando la recomendación se calcule en el servidor).
+ * PROVISIONALES: describen cómo funciona la web hoy (la recomendación se
+ * calcula en el navegador y las molestias no salen de él; con API, se guardan
+ * las respuestas sin molestias, las palas recomendadas y los clics a tiendas, y
+ * la explicación la redacta una IA). Hay que revisarlos con asesoría legal y
+ * completar los datos del titular en lib/sitio.ts antes de publicar, y
+ * actualizarlos cuando cambie el tratamiento de datos.
  */
 import type { Bloque } from "@/data/guias";
 import { sitio } from "@/lib/sitio";
@@ -204,7 +205,7 @@ export const paginasLegales: PaginaTexto[] = [
     kicker: "Privacidad",
     titulo: "Política de privacidad",
     resumen:
-      "Qué datos tratamos, para qué y durante cuánto tiempo. La versión corta: el cuestionario funciona en tu navegador, y tus molestias no se guardan.",
+      "Qué datos tratamos, para qué y durante cuánto tiempo. La versión corta: tu recomendación se calcula en tu navegador, y tus molestias no salen de él.",
     bloques: [
       { tipo: "h2", texto: "Responsable" },
       {
@@ -218,7 +219,17 @@ export const paginasLegales: PaginaTexto[] = [
           {
             termino: "Respuestas del cuestionario",
             texto:
-              "Se usan para calcular tu recomendación. El cálculo se hace en tu navegador: las respuestas no se envían a nuestros servidores.",
+              "Se usan para calcular tu recomendación, y el cálculo se hace en tu navegador. Después guardamos en nuestro servidor tus respuestas, sin el dato de molestias, y las palas que te hemos recomendado: sirven para explicarte la recomendación, saber qué palas se recomiendan y mejorar el recomendador. No van unidas a tu nombre ni a tu correo, salvo que hayas accedido con tu cuenta.",
+          },
+          {
+            termino: "Explicación con inteligencia artificial",
+            texto:
+              "El texto «En pocas palabras» de tu recomendación lo redacta un modelo de IA (Claude, de Anthropic) a partir de las características de las palas y de tus respuestas, sin el dato de molestias ni nada que te identifique. Lo indicamos junto al texto.",
+          },
+          {
+            termino: "Salidas a las tiendas",
+            texto:
+              "Cuando pulsas «Ir a la tienda», registramos qué oferta has elegido y desde dónde (y de qué recomendación, si viene de una), para atribuir la comisión y saber qué funciona. No guardamos nada que te identifique.",
           },
           {
             termino: "Molestias físicas",
@@ -238,7 +249,7 @@ export const paginasLegales: PaginaTexto[] = [
           {
             termino: "Valoración de la recomendación",
             texto:
-              "Si contestas a «¿Te ha servido esta recomendación?», recibimos tu respuesta (sí o no) sin ningún dato que te identifique.",
+              "Si contestas a «¿Te ha servido esta recomendación?», recibimos tu respuesta (sí o no) junto a la recomendación a la que se refiere, sin ningún dato que te identifique.",
           },
         ],
       },
@@ -248,7 +259,7 @@ export const paginasLegales: PaginaTexto[] = [
         elementos: [
           "Tu consentimiento, para el dato de molestias y para crear la cuenta con tu correo.",
           "La prestación del servicio que pides, para enviarte el enlace de acceso y los avisos de precio.",
-          "Nuestro interés legítimo en mejorar el recomendador, para las valoraciones anónimas.",
+          "Nuestro interés legítimo en mejorar el recomendador, para las respuestas sin molestias, las salidas a tiendas y las valoraciones.",
         ],
       },
       { tipo: "h2", texto: "Cuánto tiempo los conservamos" },
@@ -258,13 +269,14 @@ export const paginasLegales: PaginaTexto[] = [
           "Lo guardado en tu navegador permanece hasta que lo borres tú.",
           "El correo y la cuenta, hasta que borres la cuenta desde «Mi cuenta» o nos lo pidas.",
           "Los enlaces de acceso caducan a los pocos minutos y las sesiones, a los 30 días.",
+          "Las recomendaciones guardadas (sin molestias) y las salidas a tiendas: plazo pendiente de fijar con la revisión legal.",
         ],
       },
       { tipo: "h2", texto: "Con quién los compartimos" },
       {
         tipo: "p",
         texto:
-          "No vendemos ni cedemos tus datos. Solo acceden a ellos los proveedores que nos prestan el alojamiento y el envío de correo, como encargados del tratamiento. Cuando sales hacia una tienda, esa tienda y su red de afiliación aplican sus propias políticas.",
+          "No vendemos ni cedemos tus datos. Solo acceden a ellos los proveedores que nos prestan el alojamiento, el envío de correo y la redacción de explicaciones con IA (Anthropic, que solo recibe datos de las palas y respuestas sin molestias), como encargados del tratamiento. Cuando sales hacia una tienda, esa tienda y su red de afiliación aplican sus propias políticas.",
       },
       { tipo: "h2", texto: "Tus derechos" },
       {
@@ -296,6 +308,11 @@ export const paginasLegales: PaginaTexto[] = [
           [
             "palaideal:respuestas",
             "Mostrar la recomendación del cuestionario que acabas de hacer",
+            "Hasta que cierres la pestaña",
+          ],
+          [
+            "palaideal:rec-servidor",
+            "No registrar dos veces la misma recomendación si recargas la página",
             "Hasta que cierres la pestaña",
           ],
           ["palaideal:guardadas", "Tus palas guardadas", "Hasta que las borres"],

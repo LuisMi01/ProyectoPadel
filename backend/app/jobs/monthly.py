@@ -1,13 +1,21 @@
-"""Tareas mensuales."""
+"""Tareas mensuales (día 1)."""
 
-import logging
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-log = logging.getLogger(__name__)
+from sqlalchemy import delete
+
+from app.db.session import SessionLocal
+from app.models import Evento
+
+# Propuesta pendiente de revisión legal (ver la arquitectura).
+MESES_EVENTOS = 13
 
 
-def data_retention() -> None:
-    log.info("pendiente: aplicar política de retención de datos")
-
-
-def train_ranker() -> None:
-    log.info("pendiente: reentrenar el ranker de recomendaciones")
+def data_retention() -> dict[str, Any]:
+    """Aplica los plazos de conservación. Hoy, los eventos de uso; las cuentas, con los usuarios."""
+    limite = datetime.now(UTC) - timedelta(days=MESES_EVENTOS * 30)
+    with SessionLocal() as db:
+        eventos = db.execute(delete(Evento).where(Evento.fecha < limite)).rowcount
+        db.commit()
+    return {"eventos_borrados": eventos}

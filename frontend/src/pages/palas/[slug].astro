@@ -165,7 +165,7 @@ const datosEstructurados = [
                   <div class="precio-accion">
                     <a
                       class="btn btn-l btn-azul"
-                      href={rutas.tienda(mejor.id)}
+                      href={rutas.tienda(mejor.id, { origen: "ficha" })}
                       rel="sponsored nofollow noopener"
                       aria-label={`Ir a la tienda ${nombreTienda(mejor.tienda)}, enlace de afiliado`}
                     >
@@ -258,7 +258,7 @@ const datosEstructurados = [
                       ) : (
                         <a
                           class:list={["btn ir", esMejor ? "btn-azul" : "btn-contorno"]}
-                          href={rutas.tienda(oferta.id)}
+                          href={rutas.tienda(oferta.id, { origen: "ficha" })}
                           rel="sponsored nofollow noopener"
                           aria-label={`Ir a ${tienda}, enlace de afiliado`}
                         >

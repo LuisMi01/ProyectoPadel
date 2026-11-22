@@ -4,6 +4,24 @@
  */
 export type FiltroForma = "redonda" | "lagrima" | "diamante" | "junior";
 
+/** Desde dónde se sale a la tienda (lo registra la API con el clic). */
+export type OrigenSalida = "recomendacion" | "ficha" | "catalogo" | "cuenta";
+
+export interface Salida {
+  origen: OrigenSalida;
+  /** Puesto de la pala en la recomendación (1 = la mejor). */
+  posicion?: number;
+  /** Id de la recomendación guardada en la API. */
+  recomendacion?: number | null;
+}
+
+function salidaATienda(ofertaId: number, { origen, posicion, recomendacion }: Salida): string {
+  const parametros = new URLSearchParams({ origen });
+  if (posicion) parametros.set("pos", String(posicion));
+  if (recomendacion) parametros.set("rec", String(recomendacion));
+  return `/ir/${ofertaId}/?${parametros}`;
+}
+
 export const rutas = {
   inicio: "/",
   comoFunciona: "/#como-funciona",
@@ -23,9 +41,8 @@ export const rutas = {
   palasPorForma: (forma: FiltroForma) => `/palas/?forma=${forma}`,
   pala: (slug: string) => `/palas/${slug}/`,
   palaPrecios: (slug: string) => `/palas/${slug}/#precios`,
-  /** Salida a tienda: página intermedia que registra el clic y redirige. */
-  tienda: (ofertaId: number, posicion?: number) =>
-    posicion ? `/ir/${ofertaId}/?pos=${posicion}` : `/ir/${ofertaId}/`,
+  /** Salida a tienda: página intermedia que pasa por la API (registra el clic) y redirige. */
+  tienda: salidaATienda,
 
   guias: "/guias/",
   guia: (slug: string) => `/guias/${slug}/`,
