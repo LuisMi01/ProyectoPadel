@@ -30,7 +30,9 @@ Ciclo de una petición: uvicorn → FastAPI (router) → Pydantic (`schemas.py`)
 - `models/`: tablas en dos esquemas de PostgreSQL (docs/BASE_DE_DATOS.md): `public` (catálogo,
   usuarios, recomendaciones, `vocab_map`) y `staging` (catálogos de tiendas en bruto: `staging.py`).
 - `jobs/`: crons `python -m app.jobs daily|weekly|monthly [--solo tarea]`.
-- Acceso sin contraseña: `token_acceso` (enlace por email) → `sesion` en cookie httpOnly. Solo se guardan hashes.
+- Acceso sin contraseña (docs/ACCESO.md): `token_acceso` (enlace por correo) → `sesion` en cookie
+  httpOnly. Crear cuenta e iniciar sesión son el mismo paso. Solo se guardan hashes. Correo por SMTP
+  (`core/correo.py`); en local se escribe en la terminal.
 
 ### Frontend (`frontend/src/`)
 

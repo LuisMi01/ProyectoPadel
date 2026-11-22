@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Response, status
 
-from app.api.deps import COOKIE_SESION, DB, UsuarioActual
+from app.api.deps import DB, UsuarioActual, borrar_cookie_sesion
 from app.schemas import (
     AlertaIn,
     AlertaOut,
@@ -27,7 +27,7 @@ def consultar_perfil(usuario: UsuarioActual):
 @perfil.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def borrar_cuenta(usuario: UsuarioActual, db: DB, response: Response) -> None:
     servicio.borrar_cuenta(db, usuario)
-    response.delete_cookie(COOKIE_SESION)
+    borrar_cookie_sesion(response)
 
 
 @palas.get("", response_model=list[PalaGuardadaOut])
