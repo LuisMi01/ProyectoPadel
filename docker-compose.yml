@@ -1,0 +1,20 @@
+# PostgreSQL local para desarrollo (en producción: servicio Postgres de Railway, Ámsterdam).
+# Arranque:  docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: padel
+      POSTGRES_PASSWORD: padel
+      POSTGRES_DB: padel
+    ports:
+      - "5432:5432"
+    volumes:
+      - padel-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U padel"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  padel-db:

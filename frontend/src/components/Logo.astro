@@ -1,0 +1,17 @@
+---
+import { rutas } from "@/lib/rutas";
+
+interface Props {
+  /** Sobre fondo oscuro (blanco con punto lima) o claro (tinta con punto azul). */
+  tono: "oscuro" | "claro";
+  /** El logo del pie compacto es algo más pequeño. */
+  pequeno?: boolean;
+}
+
+const { tono, pequeno = false } = Astro.props;
+---
+
+<a href={rutas.inicio} class:list={["logo", tono, { pequeno }]} aria-label="palaideal, ir al inicio">
+  <span class="punto" aria-hidden="true"></span>
+  <span>pala<span class="fino">ideal</span></span>
+</a>

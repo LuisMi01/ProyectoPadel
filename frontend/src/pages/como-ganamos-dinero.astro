@@ -1,0 +1,31 @@
+---
+import { CATALOGO_DE_EJEMPLO } from "@/data/catalogo";
+import type { Bloque } from "@/data/guias";
+import { comoGanamosDinero as pagina } from "@/data/legal";
+import Texto from "@/layouts/Texto.astro";
+import { rutas } from "@/lib/rutas";
+
+// Mientras el catálogo sea de ejemplo, conviene decirlo aquí también.
+const aviso: Bloque[] = CATALOGO_DE_EJEMPLO
+  ? [
+      {
+        tipo: "nota",
+        titulo: "Ahora mismo",
+        texto:
+          "El catálogo que ves es de ejemplo: todavía no hay tiendas conectadas ni comisiones. Esta página explica cómo funcionará cuando las haya.",
+      },
+    ]
+  : [];
+---
+
+<Texto
+  titulo={pagina.titulo}
+  tituloPestana="Cómo ganamos dinero"
+  descripcion={pagina.resumen}
+  kicker={pagina.kicker}
+  resumen={pagina.resumen}
+  migas={[{ texto: "Inicio", href: rutas.inicio }]}
+  activo="transparencia"
+  bloques={[...aviso, ...pagina.bloques]}
+  lateral="legal"
+/>

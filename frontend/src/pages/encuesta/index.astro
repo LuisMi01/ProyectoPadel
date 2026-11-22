@@ -1,0 +1,15 @@
+---
+import "@/styles/encuesta.css";
+import Encuesta from "@/components/Encuesta";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base
+  titulo="Cuestionario · encuentra tu pala"
+  descripcion="Responde 6 preguntas sobre tu juego y te decimos qué pala de pádel te conviene."
+  cabecera="ninguna"
+  pie="ninguno"
+>
+  <!-- La isla pinta su propia cabecera (con el progreso) y el <main>. -->
+  <Encuesta client:load />
+</Base>

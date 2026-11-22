@@ -1,0 +1,107 @@
+---
+/** Lista de guías en filas: categoría, título y flecha (portada, índice de guías y «sigue leyendo»). */
+import Icono from "@/components/Icono";
+import type { Guia } from "@/data/guias";
+import { rutas } from "@/lib/rutas";
+
+interface Props {
+  guias: Guia[];
+  /** Muestra el resumen bajo el título (índice de guías). */
+  conResumen?: boolean;
+  class?: string;
+}
+
+const { guias, conResumen = false, class: clase } = Astro.props;
+---
+
+<div class:list={["lista-guias", clase]}>
+  {
+    guias.map(({ slug, categoria, titulo, resumen }) => (
+      <a class="fila" href={rutas.guia(slug)}>
+        <span class="etiqueta cat">{categoria}</span>
+        <span class="texto">
+          <span class="nombre">{titulo}</span>
+          {conResumen && <span class="resumen">{resumen}</span>}
+        </span>
+        <Icono nombre="flecha" tamano={26} class="arr" />
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .lista-guias {
+    display: flex;
+    flex-direction: column;
+    border-top: 1.5px solid var(--tinta);
+  }
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 8px 32px;
+    padding: 26px 16px;
+    border-bottom: 1px solid var(--borde);
+    text-decoration: none;
+    color: var(--tinta);
+    transition:
+      background-color 0.18s,
+      padding-left 0.22s var(--curva);
+  }
+  .fila :global(.arr) {
+    transition: transform 0.22s var(--curva);
+  }
+  .fila:hover {
+    background-color: var(--tenue);
+    padding-left: 28px;
+  }
+  .fila:hover :global(.arr) {
+    transform: translateX(8px);
+  }
+  .cat {
+    flex: 0 0 130px;
+    color: var(--azul);
+  }
+  .texto {
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .nombre {
+    font-family: var(--f-titulo);
+    font-weight: 700;
+    font-size: clamp(22px, 2.4vw, 30px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .resumen {
+    max-width: 640px;
+    font-size: 16px;
+    color: var(--suave);
+    text-wrap: pretty;
+  }
+
+  /* En móvil la categoría sube encima del título y la flecha queda a la derecha. */
+  @media (max-width: 720px) {
+    .fila {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 16px;
+      padding: 22px 4px;
+    }
+    .fila:hover {
+      padding-left: 12px;
+    }
+    .cat,
+    .texto {
+      grid-column: 1;
+    }
+    .fila :global(.arr) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+  }
+</style>

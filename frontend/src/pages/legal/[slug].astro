@@ -1,0 +1,35 @@
+---
+import type { Bloque } from "@/data/guias";
+import { LEGAL_PROVISIONAL, type PaginaTexto, paginasLegales } from "@/data/legal";
+import Texto from "@/layouts/Texto.astro";
+import { rutas } from "@/lib/rutas";
+import { sitio } from "@/lib/sitio";
+
+export function getStaticPaths() {
+  return paginasLegales.map((pagina) => ({ params: { slug: pagina.slug }, props: { pagina } }));
+}
+
+const { pagina } = Astro.props as { pagina: PaginaTexto };
+
+const aviso: Bloque[] = LEGAL_PROVISIONAL
+  ? [
+      {
+        tipo: "nota",
+        titulo: "Texto provisional",
+        texto:
+          "Este texto está pendiente de revisión legal y de completar los datos del titular. No lo tomes todavía como la versión definitiva.",
+      },
+    ]
+  : [];
+---
+
+<Texto
+  titulo={pagina.titulo}
+  descripcion={pagina.resumen}
+  kicker={pagina.kicker}
+  resumen={pagina.resumen}
+  meta={`Última actualización: ${sitio.legalActualizado}`}
+  migas={[{ texto: "Inicio", href: rutas.inicio }]}
+  bloques={[...aviso, ...pagina.bloques]}
+  lateral="legal"
+/>

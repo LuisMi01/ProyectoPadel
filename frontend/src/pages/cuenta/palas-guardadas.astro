@@ -1,0 +1,8 @@
+---
+import { ListaGuardadas } from "@/components/Cuenta";
+import Cuenta from "@/layouts/Cuenta.astro";
+---
+
+<Cuenta titulo="Palas guardadas" entrada="Las palas que has marcado para volver a ellas, con su precio de hoy.">
+  <ListaGuardadas client:load />
+</Cuenta>

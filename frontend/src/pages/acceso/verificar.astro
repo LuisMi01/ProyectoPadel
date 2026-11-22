@@ -1,0 +1,10 @@
+---
+import VerificarAcceso from "@/components/VerificarAcceso";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base titulo="Verificando tu acceso" accion="cuestionario" pie="compacto" noindex>
+  <main id="contenido" class="contenedor pagina-estado">
+    <VerificarAcceso client:load />
+  </main>
+</Base>

@@ -1,0 +1,8 @@
+---
+import { ListaHistorial } from "@/components/Cuenta";
+import Cuenta from "@/layouts/Cuenta.astro";
+---
+
+<Cuenta titulo="Historial" entrada="Tus recomendaciones anteriores, para verlas otra vez con los precios al día.">
+  <ListaHistorial client:load />
+</Cuenta>

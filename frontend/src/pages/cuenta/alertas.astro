@@ -1,0 +1,8 @@
+---
+import { ListaAlertas } from "@/components/Cuenta";
+import Cuenta from "@/layouts/Cuenta.astro";
+---
+
+<Cuenta titulo="Avisos de precio" entrada="Dinos tu precio y te escribimos el día que alguna tienda lo alcance.">
+  <ListaAlertas client:load />
+</Cuenta>

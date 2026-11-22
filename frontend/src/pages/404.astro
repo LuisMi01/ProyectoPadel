@@ -1,0 +1,23 @@
+---
+import Icono from "@/components/Icono";
+import Base from "@/layouts/Base.astro";
+import { rutas } from "@/lib/rutas";
+---
+
+<Base titulo="Página no encontrada" accion="cuestionario" pie="compacto" noindex>
+  <main id="contenido" class="contenedor pagina-estado">
+    <div class="verificar s1">
+      <p class="kicker">Error 404</p>
+      <h1 class="titulo">Esta bola se ha ido fuera.</h1>
+      <p class="lead">La página que buscas no existe o ha cambiado de sitio. Desde aquí puedes seguir jugando.</p>
+      <div class="acciones">
+        <a class="btn btn-l btn-azul" href={rutas.encuesta}>
+          Empezar el cuestionario
+          <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
+        </a>
+        <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>Ver todas las palas</a>
+        <a class="lnk lnk-azul lnk-alto" href={rutas.inicio}>Volver al inicio</a>
+      </div>
+    </div>
+  </main>
+</Base>
