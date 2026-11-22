@@ -282,7 +282,11 @@ function FilaAlerta({ alerta, pala }: { alerta: Alerta; pala: Pala }) {
       </div>
       <div class="acciones">
         {cumplida && (
-          <a class="btn btn-m btn-azul" href={rutas.tienda(oferta.id)} rel="sponsored nofollow noopener">
+          <a
+            class="btn btn-m btn-azul"
+            href={rutas.tienda(oferta.id, { origen: "cuenta" })}
+            rel="sponsored nofollow noopener"
+          >
             Ir a la tienda
             <Icono nombre="salida" tamano={18} grosor={2.4} class="arr" />
           </a>
