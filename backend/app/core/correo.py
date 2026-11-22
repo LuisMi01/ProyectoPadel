@@ -41,6 +41,11 @@ def enviar(correo: Correo) -> None:
 
     ajustes = get_settings()
     if ajustes.correo_modo == "consola":
+        if not ajustes.es_local:
+            # Fuera de local nadie lee la consola, y el cuerpo lleva un enlace de acceso que no
+            # debe acabar en los logs. Mejor un error visible (503) que un "enviado" falso.
+            log.error("CORREO_MODO=consola fuera de local: configura CORREO_MODO=smtp")
+            raise ErrorCorreo("CORREO_MODO=consola solo se permite con ENTORNO=local")
         log.info("✉ Correo para %s — %s\n%s", correo.para, correo.asunto, correo.texto)
         return
 

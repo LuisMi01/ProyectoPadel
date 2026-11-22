@@ -141,3 +141,26 @@ def test_fallo_smtp_se_convierte_en_error_de_correo(monkeypatch):
     monkeypatch.setattr(correo.smtplib, "SMTP", no_conecta)
     with pytest.raises(correo.ErrorCorreo):
         correo.enviar(correo.Correo("a@b.es", "s", "t", "h"))
+
+
+def test_hash_ip_agrupa_ipv6_por_bloque_64():
+    from app.services.acceso import hash_ip
+
+    assert hash_ip("2001:db8:1:2::1") == hash_ip("2001:db8:1:2:ffff::9")  # mismo /64
+    assert hash_ip("2001:db8:1:2::1") != hash_ip("2001:db8:1:3::1")
+    assert hash_ip("203.0.113.1") != hash_ip("203.0.113.2")
+    assert hash_ip(None) is None
+    assert "203.0.113.1" not in hash_ip("203.0.113.1")
+
+
+def test_correo_en_consola_fuera_de_local_da_error(monkeypatch):
+    """Si en producción se olvida CORREO_MODO=smtp, se nota (503) en vez de fingir el envío."""
+    import pytest
+
+    from app.core import correo
+    from app.core.config import get_settings
+
+    ajustes = get_settings().model_copy(update={"entorno": "produccion", "correo_modo": "consola"})
+    monkeypatch.setattr(correo, "get_settings", lambda: ajustes)
+    with pytest.raises(correo.ErrorCorreo):
+        correo.enviar(correo.Correo("a@b.es", "s", "enlace secreto", "h"))

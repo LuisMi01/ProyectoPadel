@@ -37,6 +37,9 @@ class TokenAcceso(Base):
     email: Mapped[str] = mapped_column(String(320), index=True)
     hash: Mapped[str] = mapped_column(String(64), unique=True)
     expira: Mapped[datetime]
+    # Hash de la IP (o del bloque /64 en IPv6) que pidió el enlace, para limitar envíos por
+    # origen. Nunca la IP en claro; la fila se borra al caducar (jobs.daily.cleanup).
+    ip_hash: Mapped[str | None] = mapped_column(String(64), index=True)
 
 
 class PalaGuardada(Base):

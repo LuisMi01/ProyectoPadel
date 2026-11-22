@@ -8,7 +8,7 @@ recibe un enlace y, al abrirlo, entra. Si el correo no tenía cuenta, se crea en
 ```
 Web (/acceso/)                     API                                   Base de datos
 ──────────────                     ───                                   ─────────────
-correo ──► POST /acceso/enlace ──► límite: 5 enlaces/hora por correo
+correo ──► POST /acceso/enlace ──► límite: 5/hora por correo y 20/hora por IP
                                    token aleatorio ───────────────────► token_acceso (solo el hash, 15 min)
                                    correo con {WEB_URL}/acceso/verificar/?token=…
 ◄── 202 (exista o no la cuenta)
@@ -29,8 +29,8 @@ DELETE /perfil ───────────────► borra el usuario
 | Respuesta | Cuándo |
 |---|---|
 | `202` en `/acceso/enlace` | Siempre que se envía, exista o no la cuenta (no revela qué correos están registrados). |
-| `429` en `/acceso/enlace` | Más de `ENLACES_POR_HORA` enlaces para el mismo correo en una hora. |
-| `503` en `/acceso/enlace` | El servidor de correo ha fallado. No queda ningún token creado. |
+| `429` en `/acceso/enlace` | Más de `ENLACES_POR_HORA` enlaces para el mismo correo, o más de `ENLACES_POR_HORA_IP` desde la misma IP, en una hora. |
+| `503` en `/acceso/enlace` | El servidor de correo ha fallado, o `CORREO_MODO=consola` fuera de local. No queda ningún token creado. |
 | `400` en `/acceso/verificar` | Token inventado, caducado o ya usado. |
 | `403` en cualquier POST/DELETE | La cabecera `Origin` no está en `CORS_ORIGINS` (protección CSRF, `app/core/origen.py`). |
 
@@ -43,7 +43,10 @@ Código: `app/services/acceso.py`, `app/api/routes/acceso.py`, `app/core/correo.
 - El enlace caduca a los 15 minutos, sirve una vez y, al entrar, invalida los demás pedidos.
 - Cookie `HttpOnly` (JavaScript no puede leerla), `Secure` fuera de local y `SameSite=Lax`.
 - Las peticiones que cambian datos se rechazan si vienen de otra web (`Origin`).
-- Los correos no se escriben en los logs fuera de local, porque llevan enlaces de acceso.
+- Límite por IP (bloque /64 en IPv6) para que nadie use la API para enviar correos masivos. Solo se
+  guarda un hash de la IP, que desaparece al borrarse el enlace caducado.
+- `CORREO_MODO=consola` solo funciona en local: fuera da error, para que un despliegue mal configurado
+  se note y para que los enlaces de acceso no acaben en los logs.
 - Borrar la cuenta elimina sesiones, palas guardadas y avisos; las recomendaciones quedan anónimas.
 
 ## Configuración (`backend/.env`)
@@ -58,6 +61,7 @@ Código: `app/services/acceso.py`, `app/api/routes/acceso.py`, `app/core/correo.
 | `SMTP_SEGURIDAD` | `starttls` | `starttls` (587), `ssl` (465) o `ninguno`. |
 | `TOKEN_ACCESO_MINUTOS` | `15` | Validez del enlace. |
 | `ENLACES_POR_HORA` | `5` | Límite por correo. |
+| `ENLACES_POR_HORA_IP` | `20` | Límite por IP. |
 | `SESION_DIAS` | `30` | Duración de la sesión. |
 | `COOKIE_SAMESITE` | `lax` | Ver "Despliegue". |
 | `COOKIE_DOMINIO` | vacío | Normalmente vacío (la cookie queda en el dominio de la API). |
@@ -79,6 +83,18 @@ de la web. Con `SameSite=Lax`, el navegador solo la envía si la web y la API so
 Si de momento se usan los dominios de Vercel y Render, hace falta `COOKIE_SAMESITE=none` (con HTTPS),
 pero Safari y otros navegadores bloquean esas cookies de terceros y la sesión fallará para parte de
 los usuarios. Solución recomendada: dominio propio, con la API en el subdominio `api.`.
+
+### IP real detrás del proxy
+
+Render, Railway y similares ponen un proxy delante de la API. Para que el límite por IP vea la IP del
+usuario y no la del proxy, arranca uvicorn con:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+```
+
+`--forwarded-allow-ips='*'` solo es seguro si la API **no** es accesible directamente, sino solo a
+través del proxy de la plataforma (lo normal en Render y Railway).
 
 ## Desarrollo local
 

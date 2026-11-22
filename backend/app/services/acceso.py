@@ -4,6 +4,7 @@ Crear cuenta e iniciar sesión son el mismo paso: si el correo no tiene cuenta, 
 canjear el enlace. En la base de datos solo se guardan hashes de los tokens.
 """
 
+import ipaddress
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
@@ -18,14 +19,27 @@ from app.services.plantillas_correo import enlace_de_acceso
 
 
 class DemasiadosEnlaces(Exception):
-    """Se han pedido demasiados enlaces para el mismo correo en la última hora."""
+    """Se han pedido demasiados enlaces en la última hora (para ese correo o desde esa IP)."""
 
 
 def normalizar_email(email: str) -> str:
     return email.strip().lower()
 
 
-def solicitar_enlace(db: Session, email: str) -> None:
+def hash_ip(ip: str | None) -> str | None:
+    """Hash de la IP. En IPv6 se usa el bloque /64: una conexión suele tener uno entero."""
+    if not ip:
+        return None
+    try:
+        direccion = ipaddress.ip_address(ip)
+    except ValueError:
+        return hash_token(ip)
+    if direccion.version == 6:
+        return hash_token(str(ipaddress.ip_network(f"{direccion}/64", strict=False)))
+    return hash_token(str(direccion))
+
+
+def solicitar_enlace(db: Session, email: str, ip: str | None = None) -> None:
     """Crea un token de acceso y envía el enlace por correo.
 
     Responde igual exista o no la cuenta, para no revelar qué correos están registrados.
@@ -33,23 +47,28 @@ def solicitar_enlace(db: Session, email: str) -> None:
     """
     ajustes = get_settings()
     email = normalizar_email(email)
+    ip_hash = hash_ip(ip)
     ahora = datetime.now(UTC)
     duracion = timedelta(minutes=ajustes.token_acceso_minutos)
 
     # token_acceso no guarda la fecha de creación, pero expira = creación + duración, así
     # que "creado en la última hora" equivale a "expira después de ahora - 1 h + duración".
-    recientes = db.scalar(
-        select(func.count())
-        .select_from(TokenAcceso)
-        .where(
-            TokenAcceso.email == email, TokenAcceso.expira > ahora - timedelta(hours=1) + duracion
+    en_la_ultima_hora = TokenAcceso.expira > ahora - timedelta(hours=1) + duracion
+
+    def pedidos(condicion) -> int:
+        return db.scalar(
+            select(func.count()).select_from(TokenAcceso).where(condicion, en_la_ultima_hora)
         )
-    )
-    if recientes >= ajustes.enlaces_por_hora:
+
+    if pedidos(TokenAcceso.email == email) >= ajustes.enlaces_por_hora:
+        raise DemasiadosEnlaces
+    if ip_hash and pedidos(TokenAcceso.ip_hash == ip_hash) >= ajustes.enlaces_por_hora_ip:
         raise DemasiadosEnlaces
 
     token = generar_token()
-    db.add(TokenAcceso(email=email, hash=hash_token(token), expira=ahora + duracion))
+    db.add(
+        TokenAcceso(email=email, hash=hash_token(token), expira=ahora + duracion, ip_hash=ip_hash)
+    )
     db.flush()
 
     enlace = f"{ajustes.web_url.rstrip('/')}/acceso/verificar/?{urlencode({'token': token})}"

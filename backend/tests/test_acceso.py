@@ -141,3 +141,18 @@ def test_sesion_caducada(cliente, correos, db):
     assert entrar(cliente, correos).status_code == 204
     db.execute(update(Sesion).values(expira=datetime.now(UTC) - timedelta(seconds=1)))
     assert cliente.get("/perfil").status_code == 401
+
+
+def test_limite_de_enlaces_por_ip(cliente, correos, db):
+    """Desde una misma IP no se pueden pedir enlaces para miles de correos distintos."""
+    for i in range(20):
+        r = cliente.post("/acceso/enlace", json={"email": f"persona{i}@example.com"})
+        assert r.status_code == 202, (i, r.text)
+    assert cliente.post("/acceso/enlace", json={"email": "otra@example.com"}).status_code == 429
+    assert len(correos) == 20
+    # Se guarda el hash de la IP, nunca la IP.
+    assert all(len(h) == 64 for h in db.scalars(select(TokenAcceso.ip_hash)))
+
+    # Otra IP no está afectada.
+    otra_ip = TestClient(app, headers={"Origin": WEB}, client=("203.0.113.9", 5000))
+    assert otra_ip.post("/acceso/enlace", json={"email": "otra@example.com"}).status_code == 202
