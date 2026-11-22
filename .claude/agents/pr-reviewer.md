@@ -54,7 +54,8 @@ gh pr checks <N>
 ```
 
 `gh pr checks` termina con código 1 si algún check falla: es un resultado, no un error del comando.
-Informa de cada check (backend, frontend, nombre de rama). Si alguno falla, lee el log del fallo con
+Los obligatorios son **CI** (agrupa backend, frontend y agentes sincronizados) y **Reglas del PR**
+(rama y título). Informa de cada check. Si alguno falla, lee el log del fallo con
 `gh run view <run-id> --log-failed | tail -80` y resume la causa.
 
 ## 4. Código del PR en un worktree temporal

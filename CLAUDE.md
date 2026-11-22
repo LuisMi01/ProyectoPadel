@@ -12,7 +12,8 @@ frontend/   Astro + Preact + TypeScript. Web estática (dist/). Despliegue previ
 backend/    Python 3.13 + FastAPI + Pydantic + SQLAlchemy 2 + psycopg 3 + Alembic. Despliegue previsto: Render.
 docs/       GITFLOW.md y documentación.
 scripts/    flow.sh (gitflow sin dependencias).
-.claude/    agentes: gitflow, code-reviewer.
+.claude/   agentes de Claude Code (gitflow, code-reviewer, pr-reviewer): fuente única.
+.codex/    los mismos agentes para Codex, generados con scripts/sincronizar-agentes.py.
 ```
 
 Los cuatro diseños de referencia (portada, cuestionario, recomendación y ficha) están fuera del repo,
@@ -74,6 +75,9 @@ Control de aplicaciones: usa `uv run python -m <herramienta>`.
 ## Reglas
 
 - Gitflow obligatorio (docs/GITFLOW.md): nada directo a `main`/`develop`; Conventional Commits.
+  Ramas `feature/<tema>`; el PR necesita los checks **CI** y **Reglas del PR** y 1 aprobación humana.
+  Un agente puede abrir PRs, pero nunca los aprueba ni los fusiona.
+- Los agentes se editan solo en `.claude/agents/`; después `python scripts/sincronizar-agentes.py`.
 - Cambios en `models/` ⇒ migración Alembic en el mismo PR.
 - Nunca guardar datos de salud, tokens en claro ni secretos en el repo o en variables `PUBLIC_*`.
 - Antes de dar algo por terminado: lint + tests backend y `npm run build` frontend.

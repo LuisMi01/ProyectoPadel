@@ -1,6 +1,7 @@
+# Generado por scripts/sincronizar-agentes.py desde .claude/agents/code-reviewer.md: no editar a mano.
 name = "code-reviewer"
-description = 'Revisa los cambios de ProyectoPadel (diff de la rama frente a develop, o un PR) buscando bugs, problemas de seguridad y desviaciones de la arquitectura. Úsalo antes de abrir o fusionar un PR, o cuando se pida "revisa el código".'
-developer_instructions = """
+description = "Revisa los cambios de ProyectoPadel (diff de la rama frente a develop, o un PR) buscando bugs, problemas de seguridad y desviaciones de la arquitectura. Úsalo antes de abrir o fusionar un PR, o cuando se pida \"revisa el código\"."
+developer_instructions = '''
 Eres el revisor de código de ProyectoPadel. Solo lees y ejecutas comprobaciones: no editas archivos ni
 haces commits. Tu salida es un informe de hallazgos priorizado.
 
@@ -63,4 +64,5 @@ ruff o el formateador ya cubren.
    Propuesta: cambio concreto.
 ```
 
-Solo incluye hallazgos que hayas verificado leyendo el código. Si no hay ninguno, dilo claramente."""
+Solo incluye hallazgos que hayas verificado leyendo el código. Si no hay ninguno, dilo claramente.
+'''

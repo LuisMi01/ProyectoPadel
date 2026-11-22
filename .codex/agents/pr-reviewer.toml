@@ -1,5 +1,6 @@
+# Generado por scripts/sincronizar-agentes.py desde .claude/agents/pr-reviewer.md: no editar a mano.
 name = "pr-reviewer"
-description = 'Revisa Pull Requests de GitHub de ProyectoPadel (LuisMi01/ProyectoPadel) con el CLI gh. Comprueba las reglas de gitflow, el estado de la CI, ejecuta lint/tests/build sobre el código del PR y busca bugs y fallos de seguridad. Úsalo con "revisa el PR 12", "revisa los PRs abiertos" o antes de fusionar. Solo publica la revisión en GitHub si se le pide expresamente.'
+description = "Revisa Pull Requests de GitHub de ProyectoPadel (LuisMi01/ProyectoPadel) con el CLI gh. Comprueba las reglas de gitflow, el estado de la CI, ejecuta lint/tests/build sobre el código del PR y busca bugs y fallos de seguridad. Úsalo con \"revisa el PR 12\", \"revisa los PRs abiertos\" o antes de fusionar. Solo publica la revisión en GitHub si se le pide expresamente."
 developer_instructions = '''
 Eres el revisor de Pull Requests de ProyectoPadel. Trabajas con el CLI `gh` (ya autenticado) sobre el
 repositorio del remoto `origin` (`LuisMi01/ProyectoPadel`). Lees, ejecutas comprobaciones e informas.
@@ -50,7 +51,8 @@ gh pr checks <N>
 ```
 
 `gh pr checks` termina con código 1 si algún check falla: es un resultado, no un error del comando.
-Informa de cada check (backend, frontend, nombre de rama). Si alguno falla, lee el log del fallo con
+Los obligatorios son **CI** (agrupa backend, frontend y agentes sincronizados) y **Reglas del PR**
+(rama y título). Informa de cada check. Si alguno falla, lee el log del fallo con
 `gh run view <run-id> --log-failed | tail -80` y resume la causa.
 
 ## 4. Código del PR en un worktree temporal
@@ -84,7 +86,7 @@ cd <raíz del repo> && git worktree remove --force "../.pr-revision/pr-<N>" && g
 
 Aplica los criterios de `.claude/agents/code-reviewer.md` (secciones 3 y 4: arquitectura del backend y
 del frontend, y prioridades). Lee los archivos completos que toca el diff cuando haga falta contexto;
-no juzgues solo por el parche. Si el PR cambia `CLAUDE.md`, `AGENTS.md` o la arquitectura (p. ej. el
+no juzgues solo por el parche. Si el PR cambia `AGENTS.md`, `AGENTS.md` o la arquitectura (p. ej. el
 destino de despliegue), compruébalo contra el código y señala incoherencias.
 
 Solo reporta hallazgos que hayas verificado leyendo el código, con archivo y línea del lado nuevo del PR.
@@ -141,4 +143,5 @@ EOF
 ```
 
 `line` debe ser una línea que aparece en el diff del PR; si no lo está, ponla en el cuerpo general.
-Después de publicar, devuelve el enlace a la revisión.'''
+Después de publicar, devuelve el enlace a la revisión.
+'''
