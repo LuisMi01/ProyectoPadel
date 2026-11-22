@@ -34,8 +34,10 @@ case "$tipo:$accion" in
       git push -u origin "$rama" --force-with-lease
       if ! command -v gh >/dev/null; then
         echo "✓ Rama subida. Abre el PR $rama → $DEVELOP en GitHub."
-      elif gh pr view "$rama" --json url --jq .url 2>/dev/null; then
-        echo "✓ El PR ya existía: se ha actualizado con el push."
+      elif abierto=$(gh pr list --head "$rama" --state open --json url --jq '.[0].url // empty') \
+           && [[ -n "$abierto" ]]; then
+        # Solo cuenta un PR abierto: uno ya fusionado o cerrado con el mismo nombre no sirve.
+        echo "✓ El PR ya existía y se ha actualizado con el push: $abierto"
       else
         gh pr create --base "$DEVELOP" --head "$rama" --fill
         echo "✓ PR abierto. Revisa que el título siga Conventional Commits."
