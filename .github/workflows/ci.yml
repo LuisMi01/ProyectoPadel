@@ -6,32 +6,31 @@ on:
   push:
     branches: [develop, main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  rama:
-    name: Nombre de rama (gitflow)
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validar origen y destino
-        env:
-          HEAD: ${{ github.head_ref }}
-          BASE: ${{ github.base_ref }}
-        run: |
-          case "$BASE:$HEAD" in
-            develop:feature/*|develop:release/*|develop:hotfix/*|develop:dependabot/*) ;;
-            main:release/*|main:hotfix/*) ;;
-            *) echo "::error::'$HEAD' no puede ir a '$BASE' (ver docs/GITFLOW.md)"; exit 1 ;;
-          esac
-
   backend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: padel
+          POSTGRES_PASSWORD: padel
+          POSTGRES_DB: padel
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U padel" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://padel:padel@localhost:5432/padel
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -39,8 +38,13 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
-      - name: Migraciones generan SQL válido
-        run: uv run alembic upgrade head --sql > /dev/null
+      - name: Migraciones (subir, bajar y volver a subir en PostgreSQL real)
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Los modelos y las migraciones coinciden
+        run: uv run alembic check
 
   frontend:
     runs-on: ubuntu-latest
@@ -56,3 +60,26 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
+
+  agentes:
+    name: Agentes IA sincronizados
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: .codex/agents se genera desde .claude/agents
+        run: python3 scripts/sincronizar-agentes.py --comprobar
+
+  # Único check que exige la protección de ramas: así se pueden añadir o renombrar
+  # jobs sin tocar la configuración de GitHub.
+  ci:
+    name: CI
+    if: always()
+    needs: [backend, frontend, agentes]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Todos los jobs en verde
+        env:
+          RESULTADOS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTADOS"
+          for r in $RESULTADOS; do [ "$r" = success ] || exit 1; done

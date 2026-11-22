@@ -64,4 +64,5 @@ npm run dev                              # http://localhost:4321
 ## Flujo de trabajo
 
 Gitflow con `main`, `develop`, `feature/*`, `release/*` y `hotfix/*`. Ver [docs/GITFLOW.md](docs/GITFLOW.md).
-Los agentes de Claude Code `gitflow` y `code-reviewer` están en `.claude/agents/`.
+Agentes IA (`gitflow`, `code-reviewer`, `pr-reviewer`) en `.claude/agents/`, con su versión para Codex en
+`.codex/agents/` generada por `scripts/sincronizar-agentes.py`.

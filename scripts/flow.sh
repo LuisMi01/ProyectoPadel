@@ -32,7 +32,14 @@ case "$tipo:$accion" in
     git rebase "$DEVELOP"
     if hay_remoto; then
       git push -u origin "$rama" --force-with-lease
-      echo "✓ Abre el PR: $rama → $DEVELOP  (gh pr create --base $DEVELOP --fill)"
+      if ! command -v gh >/dev/null; then
+        echo "✓ Rama subida. Abre el PR $rama → $DEVELOP en GitHub."
+      elif gh pr view "$rama" --json url --jq .url 2>/dev/null; then
+        echo "✓ El PR ya existía: se ha actualizado con el push."
+      else
+        gh pr create --base "$DEVELOP" --head "$rama" --fill
+        echo "✓ PR abierto. Revisa que el título siga Conventional Commits."
+      fi
     else
       echo "✓ Rebase hecho. Sin remoto 'origin': fusiona con 'git switch $DEVELOP && git merge --squash $rama'"
     fi

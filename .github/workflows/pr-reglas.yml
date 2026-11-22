@@ -1,0 +1,72 @@
+# Reglas de gitflow para cada Pull Request (ver docs/GITFLOW.md).
+# Va aparte de ci.yml porque también debe ejecutarse al editar el título del PR,
+# sin relanzar los tests.
+name: Reglas del PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  reglas:
+    name: Reglas del PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rama de origen y destino
+        env:
+          ORIGEN: ${{ github.head_ref }}
+          DESTINO: ${{ github.base_ref }}
+        run: |
+          case "$DESTINO:$ORIGEN" in
+            develop:feature/*|develop:release/*|develop:hotfix/*|develop:dependabot/*) exit 0 ;;
+            main:release/*|main:hotfix/*) exit 0 ;;
+          esac
+
+          echo "::error title=Rama no válida::'$ORIGEN' no puede fusionarse en '$DESTINO'. Mira el resumen del job para arreglarlo."
+          {
+            echo "## ✗ La rama \`$ORIGEN\` no puede ir a \`$DESTINO\`"
+            echo
+            echo "| Destino | Ramas de origen permitidas |"
+            echo "|---|---|"
+            echo "| \`develop\` | \`feature/<tema>\`, \`release/X.Y.Z\`, \`hotfix/X.Y.Z\` |"
+            echo "| \`main\` | \`release/X.Y.Z\`, \`hotfix/X.Y.Z\` |"
+            echo
+            echo "Relanzar el job o cambiar el **título** del PR no lo arregla: hay que **renombrar la rama**."
+            echo "GitHub no deja cambiar la rama de un PR abierto, así que se crea la rama nueva y un PR nuevo:"
+            echo
+            echo '```bash'
+            echo "git switch $ORIGEN"
+            echo "git branch -m feature/<tema>                # p. ej. feature/web-palaideal"
+            echo "git push -u origin feature/<tema>"
+            echo "gh pr create --base develop --fill          # PR nuevo"
+            echo "gh pr close <número del PR antiguo> --delete-branch"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Título en Conventional Commits
+        if: always()
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+        run: |
+          patron='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: .{1,72}$'
+          if [[ "$TITULO" =~ $patron ]]; then exit 0; fi
+
+          echo "::error title=Título no válido::'$TITULO' no sigue Conventional Commits. Edita el título del PR."
+          {
+            echo "## ✗ Título del PR no válido"
+            echo
+            echo "El título se convierte en el mensaje del commit al fusionar (squash), así que sigue el mismo formato:"
+            echo
+            echo '```'
+            echo "<tipo>(<ámbito>): <resumen en minúsculas>"
+            echo "feat(frontend): web de palaideal según los diseños"
+            echo '```'
+            echo
+            echo "Tipos: \`feat fix docs style refactor perf test build ci chore revert\`."
+            echo "Al editar el título este check se vuelve a ejecutar solo."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1

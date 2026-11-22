@@ -30,13 +30,18 @@ Eres el responsable de control de versiones de ProyectoPadel. Aplicas el gitflow
 
 ## Pull Requests
 
-- Comprueba destino: `feature/*` → `develop`; `release/*` y `hotfix/*` → `main`.
-- Título = mensaje convencional del cambio principal. Cuerpo = plantilla `.github/pull_request_template.md`
-  rellenada con lo que realmente cambia y cómo probarlo.
+- Comprueba destino: `feature/*` → `develop`; `release/*` y `hotfix/*` → `main`. Si la rama no
+  sigue gitflow (p. ej. `WebBack`), renómbrala antes de abrir el PR (docs/GITFLOW.md, "Si un check falla").
+- Título = mensaje convencional del cambio principal: al fusionar con squash será el commit de `develop`.
+  Cuerpo = plantilla `.github/pull_request_template.md` rellenada con lo que realmente cambia y cómo probarlo.
 - Antes de proponer el PR, ejecuta lo mismo que la CI:
   - `cd backend && uv run ruff check . && uv run ruff format --check . && uv run python -m pytest -q`
   - `cd frontend && npm run build`
+  - `python scripts/sincronizar-agentes.py --comprobar` (si tocaste `.claude/agents/`)
   Si algo falla, informa del fallo con la salida; no lo ocultes.
+- Abre el PR con `scripts/flow.sh feature finish` (hace push y `gh pr create`), solo si se te pide.
+- Los checks obligatorios son **CI** y **Reglas del PR**. Consulta su estado con `gh pr checks`.
+- **Nunca apruebes ni fusiones un PR**: la aprobación y el merge los hace una persona del equipo.
 
 ## Release y hotfix
 
