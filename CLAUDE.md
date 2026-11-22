@@ -27,7 +27,8 @@ Ciclo de una petición: uvicorn → FastAPI (router) → Pydantic (`schemas.py`)
 - `api/routes/`: un archivo por grupo de la tabla *Peticiones* (recomendaciones, tienda, analítica,
   acceso, cuenta, internas). Solo validan y delegan.
 - `services/`: lógica de negocio. Lo no implementado lanza `core.errores.Pendiente` → HTTP 501.
-- `models/`: tablas del modelo relacional de Figma (catálogo, usuarios, recomendaciones).
+- `models/`: tablas en dos esquemas de PostgreSQL (docs/BASE_DE_DATOS.md): `public` (catálogo,
+  usuarios, recomendaciones, `vocab_map`) y `staging` (catálogos de tiendas en bruto: `staging.py`).
 - `jobs/`: crons `python -m app.jobs daily|weekly|monthly [--solo tarea]`.
 - Acceso sin contraseña: `token_acceso` (enlace por email) → `sesion` en cookie httpOnly. Solo se guardan hashes.
 

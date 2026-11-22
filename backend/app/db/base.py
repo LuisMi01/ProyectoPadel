@@ -1,7 +1,13 @@
 from datetime import datetime
+from enum import StrEnum
 
 from sqlalchemy import DateTime, MetaData
 from sqlalchemy.orm import DeclarativeBase
+
+# Esquemas de la base de datos (docs/BASE_DE_DATOS.md):
+#   public  -> datos limpios que usa la aplicación.
+#   staging -> catálogos de las tiendas tal como llegan, antes de normalizar.
+ESQUEMA_STAGING = "staging"
 
 # Nombres de constraints deterministas para que Alembic genere migraciones estables.
 NAMING_CONVENTION = {
@@ -11,6 +17,12 @@ NAMING_CONVENTION = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
+
+
+def en(valores: type[StrEnum], columna: str) -> str:
+    """Expresión SQL de un CHECK que limita la columna a los valores de un StrEnum."""
+    lista = ", ".join(f"'{v.value}'" for v in valores)
+    return f"{columna} IN ({lista})"
 
 
 class Base(DeclarativeBase):
