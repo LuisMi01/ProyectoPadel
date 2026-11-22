@@ -5,27 +5,34 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import Icono from "@/components/Icono";
-import { type Balance, type Forma, textoBalance, textoForma } from "@/lib/catalogo";
+import { type Forma, textoForma } from "@/lib/catalogo";
 import {
+  type BalanceFino,
   MOMENTOS,
-  PREGUNTAS,
   type Paso,
   type Pregunta,
+  type PuntoDulce,
   type Reanudacion,
   type Respuestas,
   SIN_SALUD,
   type Salud,
+  TEXTO_BALANCE_FINO,
+  TEXTO_CARAS,
+  TEXTO_PUNTO_DULCE,
   ZONAS,
   borrarProgreso,
   cargarProgreso,
+  definicion,
   guardarFinal,
   guardarProgreso,
   leerFinal,
   perfilOrientativo,
   progreso,
   responder,
+  respuestasRecorridas,
   resumen,
   siguientePaso,
+  textoMomento,
 } from "@/lib/encuesta";
 import { rutas } from "@/lib/rutas";
 
@@ -114,7 +121,7 @@ export default function Encuesta() {
   const alTeclear = useRef<(letra: number) => boolean>(() => false);
   alTeclear.current = (letra) => {
     if (!esPregunta(paso)) return false;
-    const opcion = PREGUNTAS[paso].opciones[letra];
+    const opcion = definicion(paso, respuestas).opciones[letra];
     if (!opcion) return false;
     elegir(paso, opcion.id);
     return true;
@@ -134,6 +141,7 @@ export default function Encuesta() {
 
   const avance = progreso(paso, respuestas);
   const zonaLista = Boolean(salud.zona && salud.momento && salud.consentimiento);
+  const def = esPregunta(paso) ? definicion(paso, respuestas) : null;
 
   return (
     <>
@@ -175,17 +183,15 @@ export default function Encuesta() {
             </div>
           )}
 
-          {esPregunta(paso) && (
+          {def && esPregunta(paso) && (
             <div class="enc-pregunta" key={paso}>
-              <p class="kicker">
-                {paso === "camino" ? "Antes de empezar" : `${avance.rotulo} · ${PREGUNTAS[paso].nombre}`}
-              </p>
+              <p class="kicker">{paso === "camino" ? "Antes de empezar" : `${avance.rotulo} · ${def.nombre}`}</p>
               <h1 class="titulo" ref={titulo} tabIndex={-1}>
-                {PREGUNTAS[paso].pregunta}
+                {def.pregunta}
               </h1>
-              <p class="enc-ayuda">{PREGUNTAS[paso].ayuda}</p>
+              <p class="enc-ayuda">{def.ayuda}</p>
               <div class="enc-opciones" role="group" aria-label="Opciones de respuesta">
-                {PREGUNTAS[paso].opciones.map((opcion, i) => (
+                {def.opciones.map((opcion, i) => (
                   <button
                     type="button"
                     class="opt"
@@ -241,7 +247,7 @@ export default function Encuesta() {
                       aria-pressed={salud.momento === momento}
                       onClick={() => setEstado({ ...estado, salud: { ...salud, momento } })}
                     >
-                      {momento}
+                      {textoMomento(momento, respuestas)}
                     </button>
                   ))}
                 </div>
@@ -316,7 +322,7 @@ export default function Encuesta() {
           )}
         </div>
 
-        <PalaTomandoForma respuestas={respuestas} />
+        <PalaTomandoForma respuestas={respuestasRecorridas(respuestas, historial)} salud={salud} />
       </main>
     </>
   );
@@ -331,15 +337,22 @@ const SILUETA: Record<Forma, { alto: number; radio: string; punto: number }> = {
   diamante: { alto: 268, radio: "42% 42% 50% 50% / 28% 28% 72% 72%", punto: 304 },
 };
 
-const ALTURA_BALANCE: Record<Balance, number> = { bajo: 203, medio: 294, alto: 385 };
+/** Altura del cursor de balance para cada uno de los cinco niveles (de bajo a alto). */
+const ALTURA_BALANCE: Record<BalanceFino, number> = { 0: 203, 1: 248.5, 2: 294, 3: 339.5, 4: 385 };
+
+/** Diámetro del punto dulce: cuanto más grande, más perdona los golpes descentrados. */
+const DIAMETRO_PUNTO: Record<PuntoDulce, number> = { grande: 60, medio: 46, pequeño: 34 };
 
 const u = (unidades: number) => `calc(var(--u) * ${unidades})`;
 
-function PalaTomandoForma({ respuestas }: { respuestas: Respuestas }) {
-  const perfil = perfilOrientativo(respuestas);
+function PalaTomandoForma({ respuestas, salud }: { respuestas: Respuestas; salud: Salud }) {
+  const perfil = perfilOrientativo(respuestas, salud);
   // Mientras no se sabe la forma, se dibuja una lágrima con trazo discontinuo.
   const silueta = SILUETA[perfil.forma ?? "lagrima"];
-  const balance = ALTURA_BALANCE[perfil.balance ?? "medio"];
+  const balance = ALTURA_BALANCE[perfil.balance ?? 2];
+  // El punto dulce crece o encoge sin moverse de su centro.
+  const diametro = DIAMETRO_PUNTO[perfil.puntoDulce ?? "medio"];
+  const centro = silueta.punto + DIAMETRO_PUNTO.medio / 2;
 
   return (
     <aside class="enc-pala" aria-label="Perfil de pala orientativo">
@@ -354,12 +367,22 @@ function PalaTomandoForma({ respuestas }: { respuestas: Respuestas }) {
           <div class="tapon" />
           <div
             class={perfil.forma ? "cabeza" : "cabeza sin-definir"}
+            data-caras={perfil.caras ?? undefined}
             style={{ height: u(silueta.alto), borderRadius: silueta.radio }}
           >
             <div class="agujeros" />
           </div>
           <div class="puente" />
-          <div class="punto-dulce" style={{ bottom: u(silueta.punto), opacity: perfil.forma ? 1 : 0 }} />
+          <div
+            class="punto-dulce"
+            style={{
+              width: u(diametro),
+              height: u(diametro),
+              left: u(115 - diametro / 2),
+              bottom: u(centro - diametro / 2),
+              opacity: perfil.forma ? 1 : 0,
+            }}
+          />
           <div class="eje" />
           <span class="marca" style={{ bottom: u(384) }}>
             ALTO
@@ -370,7 +393,7 @@ function PalaTomandoForma({ respuestas }: { respuestas: Respuestas }) {
           <span class="marca" style={{ bottom: u(202) }}>
             BAJO
           </span>
-          <div class="cursor" style={{ bottom: u(balance), opacity: perfil.balance ? 1 : 0.3 }} />
+          <div class="cursor" style={{ bottom: u(balance), opacity: perfil.balance !== null ? 1 : 0.3 }} />
           <span class="marca titulo-eje">BALANCE</span>
         </div>
 
@@ -381,15 +404,23 @@ function PalaTomandoForma({ respuestas }: { respuestas: Respuestas }) {
           </div>
           <div>
             <dt>Balance</dt>
-            <dd>{perfil.balance ? textoBalance[perfil.balance] : "—"}</dd>
+            <dd>{perfil.balance !== null ? TEXTO_BALANCE_FINO[perfil.balance] : "—"}</dd>
+          </div>
+          <div>
+            <dt>Punto dulce</dt>
+            <dd>{perfil.puntoDulce ? TEXTO_PUNTO_DULCE[perfil.puntoDulce] : "—"}</dd>
+          </div>
+          <div>
+            <dt>Núcleo</dt>
+            <dd>{perfil.nucleo ?? "—"}</dd>
           </div>
           <div>
             <dt>Peso</dt>
             <dd>{perfil.peso ?? "—"}</dd>
           </div>
           <div>
-            <dt>Núcleo</dt>
-            <dd>{perfil.nucleo ?? "—"}</dd>
+            <dt>Caras</dt>
+            <dd>{perfil.caras ? TEXTO_CARAS[perfil.caras] : "—"}</dd>
           </div>
         </dl>
         <p class="enc-nota">

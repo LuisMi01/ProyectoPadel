@@ -1,22 +1,22 @@
 /**
  * Flujo del cuestionario (máquina de estados pura, sin DOM).
  *
- *   Antes de empezar ─> 1. Experiencia ─┬─ ≥ 6 meses ─> 2. Frecuencia -> 3. Estilo ─┐
- *                                       └─ < 6 meses ───────────────────────────────┴─> Molestias
+ *   Antes de empezar ─> 1. Experiencia ─┬─ ya juega ──────> 2. Frecuencia -> 3. Estilo ─┐
+ *                                       └─ nunca o casi nunca ─────────────────────────┴─> Molestias
  *   Molestias ─┬─ sí ─> Zona y momento (con consentimiento) ─┐
  *              └─ no / prefiero no contestar ────────────────┴─> Edad -> Presupuesto -> fin
  *
  * Las molestias son un dato de salud: sirven para calcular la recomendación y
  * no se guardan con el progreso ni en el historial (ver SALUD más abajo).
  */
-import type { Balance, Forma } from "@/lib/catalogo";
+import type { Caras, Forma } from "@/lib/catalogo";
 
 export type Pregunta = "camino" | "exp" | "frec" | "estilo" | "mol" | "edad" | "ppto";
 export type Paso = Pregunta | "zona" | "fin";
 
 export interface Respuestas {
   camino?: "primera" | "cambio";
-  exp?: "lt6" | "m6a2" | "gt2";
+  exp?: "nunca" | "lt6" | "m6a2" | "gt2";
   frec?: "1" | "2-3" | "4+";
   estilo?: "control" | "mixto" | "potencia";
   mol?: "no" | "si" | "nc";
@@ -81,10 +81,12 @@ export const PREGUNTAS: Record<Pregunta, DefPregunta> = {
     ayuda: "Cuenta desde que juegas con cierta regularidad.",
     opciones: [
       {
-        id: "lt6",
-        titulo: "Menos de 6 meses",
-        detalle: "Nos saltamos frecuencia y estilo: todavía se están formando.",
+        id: "nunca",
+        titulo: "Nunca, o solo unas pocas veces",
+        detalle: "Nos saltamos frecuencia y estilo: todavía no hay.",
+        chip: "Empiezo de cero",
       },
+      { id: "lt6", titulo: "Menos de 6 meses", detalle: "Jugando con cierta regularidad." },
       { id: "m6a2", titulo: "Entre 6 meses y 2 años" },
       { id: "gt2", titulo: "Más de 2 años" },
     ],
@@ -160,12 +162,36 @@ export const PREGUNTAS: Record<Pregunta, DefPregunta> = {
   },
 };
 
+/**
+ * Quien no ha jugado no puede notar molestias «al jugar», pero sí traer el brazo
+ * tocado de otro deporte o del trabajo: misma pregunta, otros textos.
+ */
+const MOLESTIAS_SIN_HABER_JUGADO: Pick<DefPregunta, "pregunta" | "ayuda"> = {
+  pregunta: "¿Tienes alguna molestia o lesión en codo, hombro, muñeca o espalda?",
+  ayuda: "Aunque no hayas jugado: si ya te molesta, conviene empezar con una pala más blanda y ligera.",
+};
+
+const MOMENTOS_SIN_HABER_JUGADO: Partial<Record<Momento, string>> = {
+  "Mientras juego": "Al hacer deporte o esfuerzo",
+};
+
+/** Textos de la pregunta según lo ya contestado. */
+export function definicion(pregunta: Pregunta, r: Respuestas): DefPregunta {
+  const base = PREGUNTAS[pregunta];
+  return pregunta === "mol" && r.exp === "nunca" ? { ...base, ...MOLESTIAS_SIN_HABER_JUGADO } : base;
+}
+
+/** Texto de cada «cuándo aparece». El valor guardado no cambia; solo lo que se lee. */
+export function textoMomento(momento: Momento, r: Respuestas): string {
+  return (r.exp === "nunca" && MOMENTOS_SIN_HABER_JUGADO[momento]) || momento;
+}
+
 export const PRIMER_PASO: Paso = "camino";
 
 /** Preguntas numeradas según las respuestas actuales, en orden (sin «camino»). */
 export function recorrido(r: Respuestas): Paso[] {
   const pasos: Paso[] = ["exp"];
-  if (r.exp !== "lt6") pasos.push("frec", "estilo");
+  if (r.exp !== "nunca") pasos.push("frec", "estilo");
   pasos.push("mol");
   if (r.mol === "si") pasos.push("zona");
   pasos.push("edad", "ppto");
@@ -183,7 +209,7 @@ export function siguientePaso(paso: Paso, r: Respuestas): Paso {
 /** Aplica una respuesta y limpia las que dejan de tener sentido. */
 export function responder<P extends Pregunta>(r: Respuestas, pregunta: P, valor: Respuestas[P]): Respuestas {
   const nuevas: Respuestas = { ...r, [pregunta]: valor };
-  if (pregunta === "exp" && valor === "lt6") {
+  if (pregunta === "exp" && valor === "nunca") {
     delete nuevas.frec;
     delete nuevas.estilo;
   }
@@ -257,52 +283,132 @@ export function tope(r: Respuestas): number {
 }
 
 // --- Perfil orientativo («Tu pala, tomando forma») ----------------------------
+// Se afina con cada respuesta. Es orientativo: la recomendación final la calcula
+// lib/recomendador.ts con el catálogo, con reglas parecidas pero más finas.
+
+/** Balance en cinco niveles: 0 bajo · 1 medio-bajo · 2 medio · 3 medio-alto · 4 alto. */
+export type BalanceFino = 0 | 1 | 2 | 3 | 4;
+export type PuntoDulce = "grande" | "medio" | "pequeño";
+
+export const TEXTO_BALANCE_FINO: Record<BalanceFino, string> = {
+  0: "Bajo",
+  1: "Medio-bajo",
+  2: "Medio",
+  3: "Medio-alto",
+  4: "Alto",
+};
+
+export const TEXTO_CARAS: Record<Caras, string> = {
+  fibra: "Fibra",
+  hibrida: "Híbrida",
+  carbono: "Carbono",
+};
+
+export const TEXTO_PUNTO_DULCE: Record<PuntoDulce, string> = {
+  grande: "Grande",
+  medio: "Medio",
+  pequeño: "Pequeño",
+};
 
 export interface PerfilPala {
   forma: Forma | null;
-  balance: Balance | null;
+  balance: BalanceFino | null;
+  puntoDulce: PuntoDulce | null;
   peso: string | null;
   nucleo: string | null;
+  caras: Caras | null;
 }
 
-/** Lo que se va sabiendo de la pala a medida que se contesta. */
-export function perfilOrientativo(r: Respuestas): PerfilPala {
+const PUNTO_DE: Record<Forma, PuntoDulce> = { redonda: "grande", lagrima: "medio", diamante: "pequeño" };
+
+/**
+ * Respuestas de las preguntas ya recorridas. Al volver atrás se conservan las de después
+ * (para no tener que repetirlas), pero el dibujo no las tiene en cuenta hasta volver a pasar.
+ */
+export function respuestasRecorridas(r: Respuestas, historial: Paso[]): Respuestas {
+  const recorridas: Respuestas = {};
+  for (const paso of historial) {
+    if (paso !== "zona" && paso !== "fin" && r[paso] !== undefined) {
+      Object.assign(recorridas, { [paso]: r[paso] });
+    }
+  }
+  return recorridas;
+}
+
+/** Lo que se va sabiendo de la pala a medida que se contesta (`salud` solo vive en esta pestaña). */
+export function perfilOrientativo(r: Respuestas, salud: Salud = SIN_SALUD): PerfilPala {
   let forma: Forma | null = null;
-  let balance: Balance | null = null;
+  let balance: BalanceFino | null = null;
   let peso: string | null = null;
   let nucleo: string | null = null;
+  let caras: Caras | null = null;
 
-  if (r.exp === "lt6" || r.estilo === "control") {
+  // 0. Punto de partida: quien cambia de pala suele buscar mejores materiales que la que tiene.
+  if (r.camino === "primera") caras = "fibra";
+  else if (r.camino === "cambio") caras = "hibrida";
+
+  // 1. Experiencia: quien no ha jugado nunca necesita la pala que más perdona.
+  if (r.exp === "nunca") {
     forma = "redonda";
-    balance = "bajo";
-  } else if (r.estilo === "mixto") {
-    forma = "lagrima";
-    balance = "medio";
-  } else if (r.estilo === "potencia") {
-    const avanzado = r.exp === "gt2";
-    forma = avanzado ? "diamante" : "lagrima";
-    balance = avanzado ? "alto" : "medio";
+    balance = 0;
+    nucleo = "Blando-medio";
+    peso = "355–370 g";
+    caras = "fibra";
   }
 
-  if (r.mol === "si") {
-    nucleo = "Blando";
-    peso = "345–360 g";
-    if (forma === "diamante") {
-      forma = "lagrima";
-      balance = "medio";
-    }
-  } else if (r.mol) {
-    nucleo = forma === "diamante" ? "Medio-duro" : "Medio";
+  // 2. Frecuencia: cuánto uso tiene que aguantar (material de las caras).
+  if (r.frec === "1") caras = "fibra";
+  else if (r.frec === "2-3") caras = "hibrida";
+  else if (r.frec === "4+") caras = "carbono";
+
+  // 3. Estilo: forma y balance según la experiencia y, con ellos, núcleo y peso.
+  //    Con menos de 6 meses nunca un diamante: la técnica todavía se está formando.
+  const novato = r.exp === "lt6";
+  const avanzado = r.exp === "gt2";
+  if (r.estilo === "control") {
+    forma = "redonda";
+    balance = avanzado ? 1 : 0;
+  } else if (r.estilo === "mixto") {
+    forma = "lagrima";
+    balance = novato ? 1 : 2;
+  } else if (r.estilo === "potencia") {
+    forma = avanzado ? "diamante" : "lagrima";
+    balance = avanzado ? 4 : novato ? 2 : 3;
+  }
+  if (r.estilo) {
+    nucleo = forma === "diamante" ? "Medio-duro" : novato ? "Blando-medio" : "Medio";
     peso = forma === "diamante" ? "365–375 g" : "355–370 g";
   }
 
-  if (r.edad === "junior") {
-    forma = "redonda";
-    balance = "bajo";
-    peso = "300–330 g";
+  // 4. Molestias: más blanda, más ligera, nunca un diamante y como mucho caras híbridas
+  //    (el carbono es más rígido y transmite más vibración). El detalle afina más.
+  if (r.mol === "si") {
+    nucleo = "Blando";
+    peso = "345–360 g";
+    if (caras === "carbono") caras = "hibrida";
+    if (forma === "diamante") forma = "lagrima";
+    if (balance !== null) balance = Math.min(balance, 2) as BalanceFino;
+    if ((salud.zona === "Codo" || salud.zona === "Muñeca") && balance !== null) {
+      balance = Math.max(0, balance - 1) as BalanceFino; // menos palanca sobre el brazo
+    }
+    if (salud.zona === "Hombro" || salud.zona === "Espalda") peso = "340–355 g";
+    if (salud.momento === "Casi siempre") nucleo = "Muy blando";
   }
 
-  return { forma, balance, peso, nucleo };
+  // 5. Edad: una junior manda sobre todo lo anterior.
+  if (r.edad === "junior") {
+    forma = "redonda";
+    balance = 0;
+    peso = "300–330 g";
+    if (nucleo !== "Muy blando") nucleo = "Blando";
+    caras = "fibra";
+  }
+
+  // 6. Presupuesto: limita los materiales.
+  if (r.ppto === "80") caras = "fibra";
+  else if (r.ppto === "150" && caras === "carbono") caras = "hibrida";
+
+  return { forma, balance, puntoDulce: forma ? PUNTO_DE[forma] : null, peso, nucleo, caras };
 }
 
 // --- Persistencia -------------------------------------------------------------
