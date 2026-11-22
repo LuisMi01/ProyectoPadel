@@ -20,6 +20,7 @@ import {
   borrarCuenta,
   borrarDatosLocales,
   cerrarSesion,
+  cerrarTodasLasSesiones,
   eliminarAlerta,
   eliminarDelHistorial,
   historial,
@@ -80,6 +81,17 @@ export function PanelPerfil() {
     location.reload();
   }
 
+  async function salirDeTodos() {
+    setOcupado(true);
+    try {
+      await cerrarTodasLasSesiones();
+      location.reload();
+    } catch {
+      setOcupado(false);
+      setMensaje("No hemos podido cerrar las sesiones. Inténtalo de nuevo en unos minutos.");
+    }
+  }
+
   async function borrarLaCuenta() {
     setOcupado(true);
     try {
@@ -118,6 +130,11 @@ export function PanelPerfil() {
             <button type="button" class="btn btn-m btn-contorno" onClick={salir} disabled={ocupado}>
               Cerrar sesión
             </button>
+            {estado.tipo === "activa" && (
+              <button type="button" class="lnk" onClick={salirDeTodos} disabled={ocupado}>
+                Cerrar sesión en todos los dispositivos
+              </button>
+            )}
             {confirmar === "cuenta" ? (
               <span class="cta-confirmar pop" role="alert">
                 <span>Se borran tu cuenta y lo guardado en este navegador.</span>

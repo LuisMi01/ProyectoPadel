@@ -226,6 +226,12 @@ export async function cerrarSesion(): Promise<void> {
   }
 }
 
+/** Cierra la sesión en todos los dispositivos (también en este). */
+export async function cerrarTodasLasSesiones(): Promise<void> {
+  await post<void>("/acceso/cerrar-todas");
+  recordar(null);
+}
+
 /** Borra la cuenta en el servidor y lo guardado en este navegador. */
 export async function borrarCuenta(): Promise<void> {
   await borrar<void>("/perfil");

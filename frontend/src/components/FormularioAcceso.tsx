@@ -45,12 +45,15 @@ export default function FormularioAcceso({ boton = "Enviarme el enlace", idCampo
       await pedirEnlace(direccion);
       setEstado({ tipo: "enviado" });
     } catch (error) {
-      const invalido = error instanceof ErrorApi && error.estado === 422;
+      const codigo = error instanceof ErrorApi ? error.estado : 0;
       setEstado({
         tipo: "error",
-        mensaje: invalido
-          ? "Ese correo no parece válido. Revísalo e inténtalo de nuevo."
-          : "No hemos podido enviar el enlace. Inténtalo de nuevo en unos minutos.",
+        mensaje:
+          codigo === 422
+            ? "Ese correo no parece válido. Revísalo e inténtalo de nuevo."
+            : codigo === 429
+              ? "Ya te hemos enviado varios enlaces. Busca el último en tu correo (también en spam) o espera unos minutos para pedir otro."
+              : "No hemos podido enviar el enlace. Inténtalo de nuevo en unos minutos.",
       });
     }
   }
