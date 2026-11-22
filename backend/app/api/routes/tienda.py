@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 
 from app.api.deps import DB
@@ -14,9 +14,9 @@ def ir_a_la_tienda(
     db: DB,
     origen: OrigenClic | None = None,
     rec: int | None = None,
-    pos: int | None = None,
+    pos: int | None = Query(default=None, ge=1, le=50),
 ):
-    """Registra el clic y redirige a la tienda.
+    """Registra el clic y redirige a la tienda con el enlace de afiliado.
 
     Sin `origen`: se toma recomendación si llega `rec` y ficha en caso contrario.
     """

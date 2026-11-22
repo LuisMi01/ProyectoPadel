@@ -1,13 +1,16 @@
 ---
 /**
  * Salida a tienda. Todos los botones «Ir a la tienda» pasan por aquí.
- * Si la oferta tiene URL, redirige a la tienda. En el catálogo de ejemplo no
- * la tiene, y la página explica a dónde llevaría el botón.
+ * Si la oferta tiene URL, redirige a la tienda: con API, a través de
+ * GET /tienda/{oferta}, que registra el clic (con la recomendación, el puesto y
+ * el origen que traiga la URL) y añade el enlace de afiliado; sin API, directa.
+ * En el catálogo de ejemplo no hay URL, y la página explica a dónde llevaría.
  */
 import Icono from "@/components/Icono";
 import { Silueta } from "@/components/dibujos";
 import { nombreTienda, palas } from "@/data/catalogo";
 import Base from "@/layouts/Base.astro";
+import { API_URL } from "@/lib/api";
 import { type Oferta, type Pala, euros, textoDisponibilidad } from "@/lib/catalogo";
 import { rutas } from "@/lib/rutas";
 
@@ -19,10 +22,18 @@ export function getStaticPaths() {
 
 const { pala, oferta } = Astro.props as { pala: Pala; oferta: Oferta };
 const tienda = nombreTienda(oferta.tienda);
+const porApi = API_URL && oferta.url ? `${API_URL}/tienda/${oferta.id}` : null;
 ---
 
 <Base titulo={`Ir a ${tienda} · ${pala.nombre}`} accion="cuestionario" activo="palas" pie="compacto" noindex>
-  {oferta.url && <meta slot="head" http-equiv="refresh" content={`0;url=${oferta.url}`} />}
+  {oferta.url && !porApi && <meta slot="head" http-equiv="refresh" content={`0;url=${oferta.url}`} />}
+  {
+    porApi && (
+      <noscript slot="head">
+        <meta http-equiv="refresh" content={`0;url=${porApi}`} />
+      </noscript>
+    )
+  }
 
   <main id="contenido" class="contenedor salida">
     <div class="texto s1">
@@ -35,7 +46,7 @@ const tienda = nombreTienda(oferta.tienda);
               Vas a salir de palaideal. Es un enlace de afiliado: si compras, la tienda nos paga una comisión y a ti te
               cuesta lo mismo.
             </p>
-            <a class="btn btn-l btn-azul" href={oferta.url} rel="sponsored nofollow noopener">
+            <a id="continuar" class="btn btn-l btn-azul" href={porApi ?? oferta.url} rel="sponsored nofollow noopener">
               Continuar a {tienda}
               <Icono nombre="salida" tamano={20} grosor={2.4} class="arr" />
             </a>
@@ -91,6 +102,28 @@ const tienda = nombreTienda(oferta.tienda);
       </dl>
     </aside>
   </main>
+
+  {
+    porApi && (
+      <script is:inline define:vars={{ destino: porApi }}>
+        // Pasa a la API lo que dice la URL (origen, puesto y recomendación), solo si es válido.
+        const desde = new URLSearchParams(location.search);
+        const hacia = new URLSearchParams();
+        for (const [clave, patron] of [
+          ["origen", /^[a-z]+$/],
+          ["pos", /^\d+$/],
+          ["rec", /^\d+$/],
+        ]) {
+          const valor = desde.get(clave);
+          if (valor && patron.test(valor)) hacia.set(clave, valor);
+        }
+        const consulta = hacia.toString();
+        const url = consulta ? `${destino}?${consulta}` : destino;
+        document.getElementById("continuar")?.setAttribute("href", url);
+        location.replace(url);
+      </script>
+    )
+  }
 </Base>
 
 <style>

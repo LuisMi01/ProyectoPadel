@@ -1,6 +1,8 @@
 /**
  * Isla Preact de la recomendación: calcula el resultado a partir de las
  * respuestas del cuestionario y lo muestra con sus ofertas y alternativas.
+ * Si hay API, la registra (sin molestias), pinta la explicación con IA y los
+ * botones de tienda llevan el id para que el clic cuente para esta recomendación.
  */
 import { useEffect, useState } from "preact/hooks";
 
@@ -36,6 +38,7 @@ import {
 import { type Respuestas, type Salud, etiquetas, leerFinal, tope } from "@/lib/encuesta";
 import { type Alternativa, type Recomendacion as Resultado, recomendar } from "@/lib/recomendador";
 import { rutas } from "@/lib/rutas";
+import { type OrigenExplicacion, explicacionEnFlujo, registrarEnServidor } from "@/lib/servidor";
 
 type Estado =
   | { tipo: "cargando" }
@@ -170,6 +173,18 @@ function Resultados({
   const { mejor, motivos, alternativas, nota, titular } = resultado;
   const [avisoAbierto, setAvisoAbierto] = useState(false);
   const precio = precioDesde(mejor);
+  // Id en la API. Solo se registra la recomendación recién hecha, no la que se vuelve a ver del historial.
+  const [recId, setRecId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (guardadaEl || !hayApi) return;
+    let vigente = true;
+    const ids = [mejor.id, ...alternativas.map((a) => a.pala.id)];
+    registrarEnServidor(id, respuestas, ids).then((nuevo) => vigente && setRecId(nuevo));
+    return () => {
+      vigente = false;
+    };
+  }, [id]);
 
   return (
     <main id="contenido" class="contenedor rec-main">
@@ -259,9 +274,10 @@ function Resultados({
                 <span>{nota}</span>
               </p>
             )}
+            {recId !== null && <Explicacion recomendacion={recId} />}
           </div>
 
-          <Ofertas pala={mejor} />
+          <Ofertas pala={mejor} recomendacion={recId} />
 
           <div class="rec-acciones">
             <div class="rec-botones">
@@ -293,15 +309,56 @@ function Resultados({
           </h2>
           <div class="rec-rejilla">
             {alternativas.map((alt, i) => (
-              <TarjetaAlternativa key={alt.pala.slug} alt={alt} puesto={i + 2} />
+              <TarjetaAlternativa key={alt.pala.slug} alt={alt} puesto={i + 2} recomendacion={recId} />
             ))}
           </div>
         </section>
       )}
 
       <GuardarRecomendacion />
-      <Valoracion id={id} />
+      <Valoracion id={id} recomendacion={recId} />
     </main>
+  );
+}
+
+/** Explicación en pocas palabras, según la IA la va escribiendo. Si la API falla, no se muestra. */
+function Explicacion({ recomendacion }: { recomendacion: number }) {
+  const [texto, setTexto] = useState("");
+  const [origen, setOrigen] = useState<OrigenExplicacion | null>(null);
+  const [fallo, setFallo] = useState(false);
+
+  useEffect(() => {
+    const control = new AbortController();
+    explicacionEnFlujo(
+      recomendacion,
+      {
+        alEscribir: setTexto,
+        alTerminar: (definitivo, de) => {
+          setTexto(definitivo);
+          setOrigen(de);
+        },
+      },
+      control.signal,
+    ).catch(() => {
+      if (!control.signal.aborted) setFallo(true);
+    });
+    return () => control.abort();
+  }, [recomendacion]);
+
+  if (fallo) return null;
+  // Mientras llega por trozos solo puede ser de la IA; al final, «fin» dice de dónde sale.
+  const conIa = origen === null ? texto !== "" : origen === "ia" || origen === "cache";
+  return (
+    <div class="rec-ia" aria-busy={origen === null}>
+      <h3 class="subtitulo">En pocas palabras</h3>
+      {texto ? <p>{texto}</p> : <p class="cargando">Preparando la explicación…</p>}
+      {conIa && (
+        <p class="aviso">
+          <Icono nombre="info" tamano={16} color="#1747C9" />
+          <span>Texto redactado con IA a partir de los datos de las palas.</span>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -320,9 +377,10 @@ function Barra({ nombre, valor, retraso }: { nombre: string; valor: number; retr
 }
 
 /** Caja de ofertas: la mejor destacada y el resto en filas. */
-function Ofertas({ pala }: { pala: Pala }) {
+function Ofertas({ pala, recomendacion }: { pala: Pala; recomendacion: number | null }) {
   const mejor = mejorOferta(pala);
   const resto = ofertasOrdenadas(pala).filter((o) => o !== mejor);
+  const salida = { origen: "recomendacion", posicion: 1, recomendacion } as const;
 
   return (
     <div class="ofertas" id="ofertas">
@@ -338,7 +396,7 @@ function Ofertas({ pala }: { pala: Pala }) {
           </div>
           <a
             class="btn btn-l btn-azul"
-            href={rutas.tienda(mejor.id, 1)}
+            href={rutas.tienda(mejor.id, salida)}
             rel="sponsored nofollow noopener"
             aria-label={`Ir a la tienda ${nombreTienda(mejor.tienda)}, enlace de afiliado`}
           >
@@ -348,13 +406,13 @@ function Ofertas({ pala }: { pala: Pala }) {
         </div>
       )}
       {resto.map((oferta) => (
-        <FilaOferta key={oferta.id} oferta={oferta} />
+        <FilaOferta key={oferta.id} oferta={oferta} href={rutas.tienda(oferta.id, salida)} />
       ))}
     </div>
   );
 }
 
-function FilaOferta({ oferta }: { oferta: Oferta }) {
+function FilaOferta({ oferta, href }: { oferta: Oferta; href: string }) {
   const tienda = nombreTienda(oferta.tienda);
   const contenido = (
     <>
@@ -371,7 +429,7 @@ function FilaOferta({ oferta }: { oferta: Oferta }) {
   return (
     <a
       class="ofr"
-      href={rutas.tienda(oferta.id, 1)}
+      href={href}
       rel="sponsored nofollow noopener"
       aria-label={`Ir a la tienda ${tienda}, ${euros(oferta.precio)}, enlace de afiliado`}
     >
@@ -380,7 +438,15 @@ function FilaOferta({ oferta }: { oferta: Oferta }) {
   );
 }
 
-function TarjetaAlternativa({ alt, puesto }: { alt: Alternativa; puesto: number }) {
+function TarjetaAlternativa({
+  alt,
+  puesto,
+  recomendacion,
+}: {
+  alt: Alternativa;
+  puesto: number;
+  recomendacion: number | null;
+}) {
   const { pala, etiqueta, ganas, pierdes } = alt;
   const oferta = mejorOferta(pala);
 
@@ -419,7 +485,7 @@ function TarjetaAlternativa({ alt, puesto }: { alt: Alternativa; puesto: number 
           {oferta && (
             <a
               class="btn btn-m btn-tinta"
-              href={rutas.tienda(oferta.id, puesto)}
+              href={rutas.tienda(oferta.id, { origen: "recomendacion", posicion: puesto, recomendacion })}
               rel="sponsored nofollow noopener"
               aria-label={`Ir a la tienda ${nombreTienda(oferta.tienda)} para ${pala.nombre}, enlace de afiliado`}
             >
@@ -468,7 +534,7 @@ function GuardarRecomendacion() {
   );
 }
 
-function Valoracion({ id }: { id: string }) {
+function Valoracion({ id, recomendacion }: { id: string; recomendacion: number | null }) {
   const [voto, setVoto] = useState<Voto | null>(null);
 
   useEffect(() => setVoto(entradaHistorial(id)?.voto ?? null), [id]);
@@ -479,6 +545,11 @@ function Valoracion({ id }: { id: string }) {
     // La valoración también se envía a la API, sin bloquear ni molestar si no responde.
     if (hayApi) {
       post("/eventos", { tipo: "recomendacion_valorada", datos: { util: nuevo === "si" } }).catch(() => {});
+    }
+    // Y, si está registrada, unida a esta recomendación (la API puntúa de 1 a 5).
+    if (recomendacion !== null) {
+      const puntuacion = nuevo === "si" ? 5 : 2;
+      post(`/recomendaciones/${recomendacion}/valoracion`, { puntuacion }).catch(() => {});
     }
   }
 

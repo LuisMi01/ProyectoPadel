@@ -30,7 +30,13 @@ from app.services.tienda import registrar_salida
 def catalogo(db):
     """Una pala con un SKU y una tienda."""
     familia = FamiliaModelo(marca="Bullpadel", nombre="Vertex")
-    modelo = Modelo(familia=familia, anio=2025, atributos={"forma": "diamante"})
+    modelo = Modelo(
+        familia=familia,
+        nombre="Vertex 04",
+        slug="vertex-04",
+        anio=2025,
+        atributos={"forma": "diamante"},
+    )
     sku = Sku(modelo=modelo, ean="8435000000001")
     tienda = Tienda(nombre="Tienda A", dominios=["tienda-a.example"])
     db.add_all([familia, modelo, sku, tienda])
@@ -106,16 +112,16 @@ def test_consulta_de_publicacion_del_documento(db, catalogo):
     """La consulta de docs/BASE_DE_DATOS.md publica y luego actualiza la oferta."""
     sku, tienda = catalogo
     publicar = text("""
-        INSERT INTO public.oferta (sku_id, tienda_id, precio, disponible, url)
+        INSERT INTO public.oferta (sku_id, tienda_id, precio, disponibilidad, url)
         SELECT pf.sku_id, i.tienda_id,
                replace(replace(pf.datos->>'precio', ' €', ''), ',', '.')::numeric,
-               (pf.datos->>'stock')::int > 0,
+               CASE WHEN (pf.datos->>'stock')::int > 0 THEN 'stock' ELSE 'agotada' END,
                pf.datos->>'url'
         FROM staging.producto_feed pf
         JOIN staging.importacion i ON i.id = pf.importacion_id
         WHERE pf.importacion_id = :importacion AND pf.sku_id IS NOT NULL
         ON CONFLICT (sku_id, tienda_id)
-        DO UPDATE SET precio = EXCLUDED.precio, disponible = EXCLUDED.disponible,
+        DO UPDATE SET precio = EXCLUDED.precio, disponibilidad = EXCLUDED.disponibilidad,
                       url = EXCLUDED.url
     """)
 
@@ -131,7 +137,7 @@ def test_consulta_de_publicacion_del_documento(db, catalogo):
     db.refresh(ofertas[0])
     assert len(ofertas) == 1  # ON CONFLICT actualiza en lugar de duplicar
     assert ofertas[0].precio == Decimal("259.00")
-    assert ofertas[0].disponible is False
+    assert ofertas[0].disponibilidad == "agotada"
 
 
 def test_salida_a_tienda_desde_ficha_con_enlace_de_afiliado(db, catalogo):
@@ -172,7 +178,7 @@ def test_limpieza_conserva_importaciones_con_revision_pendiente(db, catalogo):
     ids = set(db.scalars(select(Importacion.id)))
     assert vieja_limpia.id not in ids
     assert {vieja_revisando.id, reciente.id} <= ids
-    assert borrados["importaciones antiguas"] >= 1
+    assert borrados["importaciones"] >= 1
 
     # Resuelta la revisión, la siguiente limpieza ya la borra.
     db.execute(

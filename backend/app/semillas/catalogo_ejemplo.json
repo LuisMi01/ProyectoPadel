@@ -1,0 +1,988 @@
+{
+  "tiendas": [
+    {
+      "id": "a",
+      "nombre": "Tienda A"
+    },
+    {
+      "id": "b",
+      "nombre": "Tienda B"
+    },
+    {
+      "id": "c",
+      "nombre": "Tienda C"
+    }
+  ],
+  "palas": [
+    {
+      "id": 1,
+      "slug": "redonda-control-360",
+      "marca": "Marca A",
+      "nombre": "Redonda Control 360",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 360,
+      "pesoMin": 350,
+      "pesoMax": 370,
+      "dureza": 2,
+      "nucleo": "EVA blanda",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        1,
+        2
+      ],
+      "control": 5,
+      "tolerancia": 5,
+      "potencia": 2,
+      "resumen": "Pala redonda de balance bajo y núcleo blando. Para quien empieza o prefiere control y comodidad antes que pegada.",
+      "paraTi": [
+        "Empiezas a jugar o llevas menos de un año.",
+        "Juegas a colocar la bola más que a rematar.",
+        "Quieres una pala que no te cargue el brazo."
+      ],
+      "mejorOtra": [
+        "Buscas la máxima pegada en el remate.",
+        "Compites a nivel avanzado y quieres más salida de bola."
+      ],
+      "ofertas": [
+        {
+          "id": 101,
+          "tienda": "a",
+          "precio": 129.95,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 102,
+          "tienda": "b",
+          "precio": 134,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 103,
+          "tienda": "c",
+          "precio": 139.9,
+          "disponibilidad": "ultimas",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 139.9
+        },
+        {
+          "hace": 70,
+          "precio": 134
+        },
+        {
+          "hace": 56,
+          "precio": 119.95
+        },
+        {
+          "hace": 49,
+          "precio": 134
+        },
+        {
+          "hace": 20,
+          "precio": 129.95
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "slug": "redonda-inicio-355",
+      "marca": "Marca B",
+      "nombre": "Redonda Inicio 355",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 355,
+      "pesoMin": 345,
+      "pesoMax": 365,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 1,
+      "nivel": [
+        1,
+        1
+      ],
+      "control": 4,
+      "tolerancia": 5,
+      "potencia": 2,
+      "resumen": "Redonda sencilla y ligera para dar los primeros pasos sin gastar de más. Perdona mucho y se mueve fácil.",
+      "paraTi": [
+        "Es tu primera pala y no quieres gastar mucho.",
+        "Juegas de vez en cuando, con amigos.",
+        "Buscas algo fácil de mover y que perdone."
+      ],
+      "mejorOtra": [
+        "Juegas tres o más veces por semana: se te quedará corta pronto.",
+        "Quieres más salida de bola en los golpes de ataque."
+      ],
+      "ofertas": [
+        {
+          "id": 201,
+          "tienda": "b",
+          "precio": 79.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 202,
+          "tienda": "a",
+          "precio": 84.95,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 203,
+          "tienda": "c",
+          "precio": 89,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 89.9
+        },
+        {
+          "hace": 60,
+          "precio": 84.95
+        },
+        {
+          "hace": 25,
+          "precio": 79.9
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "slug": "redonda-confort-350",
+      "marca": "Marca C",
+      "nombre": "Redonda Confort 350",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 350,
+      "pesoMin": 340,
+      "pesoMax": 360,
+      "dureza": 1,
+      "nucleo": "EVA muy blanda",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        1,
+        2
+      ],
+      "control": 5,
+      "tolerancia": 5,
+      "potencia": 1,
+      "resumen": "La redonda más blanda y ligera del catálogo. Pensada para quien quiere cuidar el brazo por encima de todo.",
+      "paraTi": [
+        "Notas molestias en el codo, el hombro o la muñeca.",
+        "Prefieres comodidad y control antes que pegada.",
+        "Quieres una pala ligera que no canse."
+      ],
+      "mejorOtra": [
+        "Te gusta definir el punto con el remate.",
+        "Buscas un tacto firme: esta pala es muy blanda."
+      ],
+      "ofertas": [
+        {
+          "id": 301,
+          "tienda": "c",
+          "precio": 139,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 302,
+          "tienda": "a",
+          "precio": 144.9,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 149
+        },
+        {
+          "hace": 45,
+          "precio": 139
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "slug": "redonda-carbono-365",
+      "marca": "Marca A",
+      "nombre": "Redonda Carbono 365",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 365,
+      "pesoMin": 355,
+      "pesoMax": 375,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "carbono",
+      "carasTexto": "Carbono 3K",
+      "gama": 3,
+      "nivel": [
+        2,
+        3
+      ],
+      "control": 5,
+      "tolerancia": 4,
+      "potencia": 3,
+      "resumen": "Redonda con caras de carbono: el control de siempre con más salida de bola y más duración. Para quien juega mucho y no renuncia a la precisión.",
+      "paraTi": [
+        "Juegas a menudo y basas tu juego en el control.",
+        "Quieres una pala que dure varias temporadas.",
+        "Buscas precisión con algo más de salida de bola."
+      ],
+      "mejorOtra": [
+        "Estás empezando: no vas a notar la diferencia de materiales.",
+        "Tu golpe ganador es el remate."
+      ],
+      "ofertas": [
+        {
+          "id": 401,
+          "tienda": "a",
+          "precio": 189,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 402,
+          "tienda": "b",
+          "precio": 194.95,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 403,
+          "tienda": "c",
+          "precio": 184.9,
+          "disponibilidad": "agotada",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 209
+        },
+        {
+          "hace": 65,
+          "precio": 199
+        },
+        {
+          "hace": 30,
+          "precio": 189
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "slug": "redonda-basica-350",
+      "marca": "Marca C",
+      "nombre": "Redonda Básica 350",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 350,
+      "pesoMin": 340,
+      "pesoMax": 360,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 1,
+      "nivel": [
+        1,
+        1
+      ],
+      "control": 4,
+      "tolerancia": 4,
+      "potencia": 1,
+      "resumen": "La redonda más económica del catálogo. Suficiente para probar si el pádel te engancha antes de gastar más.",
+      "paraTi": [
+        "Quieres probar el pádel gastando lo mínimo.",
+        "Vas a jugar de forma ocasional.",
+        "Buscas una pala ligera y sin complicaciones."
+      ],
+      "mejorOtra": [
+        "Ya juegas todas las semanas: te compensa subir un escalón.",
+        "Quieres que la pala te ayude a sacar la bola del fondo."
+      ],
+      "ofertas": [
+        {
+          "id": 501,
+          "tienda": "c",
+          "precio": 59.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 502,
+          "tienda": "b",
+          "precio": 62.5,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 64.9
+        },
+        {
+          "hace": 40,
+          "precio": 59.9
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "slug": "lagrima-polivalente-365",
+      "marca": "Marca B",
+      "nombre": "Lágrima Polivalente 365",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "lagrima",
+      "balance": "medio",
+      "peso": 365,
+      "pesoMin": 355,
+      "pesoMax": 375,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "hibrida",
+      "carasTexto": "Carbono y fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        2,
+        3
+      ],
+      "control": 4,
+      "tolerancia": 3,
+      "potencia": 4,
+      "resumen": "Lágrima de balance medio: un poco de todo. Para quien ya lleva un tiempo jugando y quiere defender y atacar con la misma pala.",
+      "paraTi": [
+        "Llevas más de seis meses y juegas con regularidad.",
+        "Defiendes cuando toca y atacas cuando puedes.",
+        "Quieres más pegada sin irte a un diamante."
+      ],
+      "mejorOtra": [
+        "Estás empezando: una redonda te perdonará más.",
+        "Arrastras molestias: mejor un núcleo más blando."
+      ],
+      "ofertas": [
+        {
+          "id": 601,
+          "tienda": "b",
+          "precio": 149,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 602,
+          "tienda": "a",
+          "precio": 152.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 603,
+          "tienda": "c",
+          "precio": 159.95,
+          "disponibilidad": "ultimas",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 164.9
+        },
+        {
+          "hace": 75,
+          "precio": 159
+        },
+        {
+          "hace": 35,
+          "precio": 149
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "slug": "lagrima-basica-360",
+      "marca": "Marca C",
+      "nombre": "Lágrima Básica 360",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "lagrima",
+      "balance": "medio",
+      "peso": 360,
+      "pesoMin": 350,
+      "pesoMax": 370,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 1,
+      "nivel": [
+        1,
+        2
+      ],
+      "control": 3,
+      "tolerancia": 4,
+      "potencia": 3,
+      "resumen": "Lágrima económica para quien empieza a atacar más y no quiere gastar mucho. Más pegada que una redonda básica.",
+      "paraTi": [
+        "Llevas unos meses y empiezas a subir a la red.",
+        "Quieres algo más de pegada con poco presupuesto.",
+        "Juegas una o dos veces por semana."
+      ],
+      "mejorOtra": [
+        "Buscas el máximo control: mejor una redonda.",
+        "Juegas mucho: los materiales se quedan justos."
+      ],
+      "ofertas": [
+        {
+          "id": 701,
+          "tienda": "c",
+          "precio": 74.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 702,
+          "tienda": "a",
+          "precio": 79,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 84.9
+        },
+        {
+          "hace": 50,
+          "precio": 79.9
+        },
+        {
+          "hace": 15,
+          "precio": 74.9
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "slug": "lagrima-confort-355",
+      "marca": "Marca A",
+      "nombre": "Lágrima Confort 355",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "lagrima",
+      "balance": "medio",
+      "peso": 355,
+      "pesoMin": 345,
+      "pesoMax": 365,
+      "dureza": 2,
+      "nucleo": "EVA blanda",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        2,
+        3
+      ],
+      "control": 4,
+      "tolerancia": 4,
+      "potencia": 3,
+      "resumen": "Lágrima de núcleo blando: pegada suficiente sin castigar el brazo. Para quien ataca pero arrastra molestias.",
+      "paraTi": [
+        "Te gusta atacar, pero notas molestias al jugar.",
+        "Quieres una lágrima cómoda y ligera.",
+        "Prefieres salida de bola fácil a un tacto seco."
+      ],
+      "mejorOtra": [
+        "Buscas la máxima pegada: el núcleo blando la limita.",
+        "Estás empezando: una redonda te lo pondrá más fácil."
+      ],
+      "ofertas": [
+        {
+          "id": 801,
+          "tienda": "a",
+          "precio": 119,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 802,
+          "tienda": "b",
+          "precio": 124.95,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 803,
+          "tienda": "c",
+          "precio": 129,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 134
+        },
+        {
+          "hace": 55,
+          "precio": 124.95
+        },
+        {
+          "hace": 22,
+          "precio": 119
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "slug": "lagrima-carbono-370",
+      "marca": "Marca C",
+      "nombre": "Lágrima Carbono 370",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "lagrima",
+      "balance": "medio",
+      "peso": 370,
+      "pesoMin": 360,
+      "pesoMax": 375,
+      "dureza": 4,
+      "nucleo": "EVA media-dura",
+      "caras": "carbono",
+      "carasTexto": "Carbono 12K",
+      "gama": 3,
+      "nivel": [
+        3,
+        3
+      ],
+      "control": 4,
+      "tolerancia": 3,
+      "potencia": 4,
+      "resumen": "Lágrima de gama alta, con caras de carbono y núcleo firme. Para jugadores avanzados que quieren precisión y pegada a partes iguales.",
+      "paraTi": [
+        "Llevas años jugando y tienes la técnica asentada.",
+        "Juegas mucho y quieres una pala que aguante.",
+        "Buscas un tacto firme y preciso."
+      ],
+      "mejorOtra": [
+        "Llevas poco tiempo: el núcleo firme no perdona.",
+        "Notas molestias: es dura para un brazo tocado."
+      ],
+      "ofertas": [
+        {
+          "id": 901,
+          "tienda": "c",
+          "precio": 229,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 902,
+          "tienda": "b",
+          "precio": 239,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 903,
+          "tienda": "a",
+          "precio": 244.95,
+          "disponibilidad": "ultimas",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 249
+        },
+        {
+          "hace": 45,
+          "precio": 239
+        },
+        {
+          "hace": 12,
+          "precio": 229
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "slug": "diamante-ataque-365",
+      "marca": "Marca A",
+      "nombre": "Diamante Ataque 365",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "diamante",
+      "balance": "alto",
+      "peso": 365,
+      "pesoMin": 355,
+      "pesoMax": 375,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "hibrida",
+      "carasTexto": "Carbono y fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        2,
+        3
+      ],
+      "control": 3,
+      "tolerancia": 2,
+      "potencia": 4,
+      "resumen": "Diamante asequible: balance alto y pegada, con un núcleo más amable que el de los diamantes de competición.",
+      "paraTi": [
+        "Tu juego pasa por la red y el remate.",
+        "Quieres probar un diamante sin gastar de más.",
+        "Tienes ya cierta técnica de golpeo."
+      ],
+      "mejorOtra": [
+        "Llevas menos de un año: el punto dulce es pequeño.",
+        "Notas molestias: el balance alto carga más el brazo."
+      ],
+      "ofertas": [
+        {
+          "id": 1001,
+          "tienda": "a",
+          "precio": 139.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1002,
+          "tienda": "c",
+          "precio": 144,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 154.9
+        },
+        {
+          "hace": 60,
+          "precio": 149.9
+        },
+        {
+          "hace": 28,
+          "precio": 139.9
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "slug": "diamante-potencia-370",
+      "marca": "Marca B",
+      "nombre": "Diamante Potencia 370",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "diamante",
+      "balance": "alto",
+      "peso": 370,
+      "pesoMin": 365,
+      "pesoMax": 375,
+      "dureza": 4,
+      "nucleo": "EVA media-dura",
+      "caras": "carbono",
+      "carasTexto": "Carbono 3K",
+      "gama": 3,
+      "nivel": [
+        3,
+        3
+      ],
+      "control": 2,
+      "tolerancia": 2,
+      "potencia": 5,
+      "resumen": "Diamante de balance alto para rematar. Mucha pegada arriba a cambio de exigir técnica y brazo.",
+      "paraTi": [
+        "Llevas más de dos años y buscas el remate.",
+        "Juegas en la red siempre que puedes.",
+        "Tienes el brazo sano y la técnica hecha."
+      ],
+      "mejorOtra": [
+        "Basas tu juego en la defensa y la colocación.",
+        "Arrastras molestias en codo u hombro."
+      ],
+      "ofertas": [
+        {
+          "id": 1101,
+          "tienda": "b",
+          "precio": 199,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1102,
+          "tienda": "a",
+          "precio": 205,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1103,
+          "tienda": "c",
+          "precio": 209.9,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 219
+        },
+        {
+          "hace": 70,
+          "precio": 209
+        },
+        {
+          "hace": 40,
+          "precio": 189
+        },
+        {
+          "hace": 33,
+          "precio": 209
+        },
+        {
+          "hace": 10,
+          "precio": 199
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "slug": "diamante-pro-375",
+      "marca": "Marca C",
+      "nombre": "Diamante Pro 375",
+      "temporada": 2026,
+      "junior": false,
+      "forma": "diamante",
+      "balance": "alto",
+      "peso": 375,
+      "pesoMin": 370,
+      "pesoMax": 380,
+      "dureza": 5,
+      "nucleo": "EVA dura",
+      "caras": "carbono",
+      "carasTexto": "Carbono 18K",
+      "gama": 3,
+      "nivel": [
+        3,
+        3
+      ],
+      "control": 3,
+      "tolerancia": 1,
+      "potencia": 5,
+      "resumen": "El diamante más exigente del catálogo: duro, con el peso en cabeza y sin concesiones. Solo si compites y tienes el golpe hecho.",
+      "paraTi": [
+        "Compites y entrenas varias veces por semana.",
+        "Quieres la máxima pegada y un tacto seco.",
+        "Golpeas casi siempre en el centro de la pala."
+      ],
+      "mejorOtra": [
+        "No compites: hay palas igual de potentes y más fáciles.",
+        "Has tenido molestias: es la pala más dura del catálogo."
+      ],
+      "ofertas": [
+        {
+          "id": 1201,
+          "tienda": "c",
+          "precio": 279,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1202,
+          "tienda": "b",
+          "precio": 289,
+          "disponibilidad": "ultimas",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 299
+        },
+        {
+          "hace": 50,
+          "precio": 289
+        },
+        {
+          "hace": 18,
+          "precio": 279
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "slug": "junior-redonda-310",
+      "marca": "Marca B",
+      "nombre": "Junior Redonda 310",
+      "temporada": 2026,
+      "junior": true,
+      "forma": "redonda",
+      "balance": "bajo",
+      "peso": 310,
+      "pesoMin": 300,
+      "pesoMax": 320,
+      "dureza": 2,
+      "nucleo": "EVA blanda",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 1,
+      "nivel": [
+        1,
+        2
+      ],
+      "control": 4,
+      "tolerancia": 5,
+      "potencia": 1,
+      "resumen": "Pala junior redonda, más corta y ligera. Para que los más pequeños muevan la pala sin esfuerzo y cojan técnica.",
+      "paraTi": [
+        "Es para un niño o una niña de menos de 14 años.",
+        "Empieza a jugar o va a clases una vez por semana.",
+        "Buscáis una pala ligera que no canse el brazo."
+      ],
+      "mejorOtra": [
+        "Ya compite y entrena varias veces por semana.",
+        "Tiene 14 años o más: le irá mejor una pala de adulto ligera."
+      ],
+      "ofertas": [
+        {
+          "id": 1301,
+          "tienda": "b",
+          "precio": 49.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1302,
+          "tienda": "a",
+          "precio": 52,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 54.9
+        },
+        {
+          "hace": 30,
+          "precio": 49.9
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "slug": "junior-lagrima-325",
+      "marca": "Marca A",
+      "nombre": "Junior Lágrima 325",
+      "temporada": 2026,
+      "junior": true,
+      "forma": "lagrima",
+      "balance": "medio",
+      "peso": 325,
+      "pesoMin": 315,
+      "pesoMax": 335,
+      "dureza": 3,
+      "nucleo": "EVA media",
+      "caras": "fibra",
+      "carasTexto": "Fibra de vidrio",
+      "gama": 2,
+      "nivel": [
+        2,
+        3
+      ],
+      "control": 3,
+      "tolerancia": 4,
+      "potencia": 3,
+      "resumen": "Pala junior de lágrima para quien ya entrena y compite: algo más de pegada sin dejar de ser ligera.",
+      "paraTi": [
+        "Tiene menos de 14 años y ya entrena con regularidad.",
+        "Empieza a atacar y a jugar torneos.",
+        "La redonda junior se le ha quedado corta."
+      ],
+      "mejorOtra": [
+        "Está empezando: la redonda junior perdona más.",
+        "Tiene 14 años o más y la fuerza de un adulto."
+      ],
+      "ofertas": [
+        {
+          "id": 1401,
+          "tienda": "a",
+          "precio": 69.9,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1402,
+          "tienda": "c",
+          "precio": 74.5,
+          "disponibilidad": "stock",
+          "url": null
+        },
+        {
+          "id": 1403,
+          "tienda": "b",
+          "precio": 76,
+          "disponibilidad": "stock",
+          "url": null
+        }
+      ],
+      "historico": [
+        {
+          "hace": 90,
+          "precio": 79.9
+        },
+        {
+          "hace": 42,
+          "precio": 74.9
+        },
+        {
+          "hace": 14,
+          "precio": 69.9
+        }
+      ]
+    }
+  ]
+}

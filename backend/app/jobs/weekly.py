@@ -1,17 +1,22 @@
-"""Tareas semanales."""
+"""Tareas semanales (lunes)."""
 
-import logging
+from typing import Any
 
-log = logging.getLogger(__name__)
-
-
-def check_links() -> None:
-    log.info("pendiente: comprobar que las URLs de oferta siguen vivas")
+from app.adapters.enlaces import ComprobadorEnlacesHTTP
+from app.db.session import SessionLocal
+from app.services import enlaces
 
 
-def evaluate_recommender() -> None:
-    log.info("pendiente: evaluar el recomendador con los clics de la semana")
+def check_links() -> dict[str, Any]:
+    """Comprueba la página de cada oferta y oculta las que no existen dos semanas seguidas."""
+    comprobador = ComprobadorEnlacesHTTP()
+    try:
+        with SessionLocal() as db:
+            return enlaces.comprobar_ofertas(db, comprobador)
+    finally:
+        comprobador.cerrar()
 
 
-def weekly_digest() -> None:
-    log.info("pendiente: resumen semanal (alertas de precio alcanzadas)")
+def weekly_digest() -> dict[str, Any]:
+    """Resumen semanal por correo al equipo (llega con el envío de correo, junto a los usuarios)."""
+    return {"omitida": "pendiente (necesita el envío de correo)"}

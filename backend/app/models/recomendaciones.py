@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, func
+from sqlalchemy import CheckConstraint, ForeignKey, Numeric, SmallInteger, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -42,6 +42,9 @@ class RecShown(Base):
 class OrigenClic(StrEnum):
     RECOMENDACION = "recomendacion"
     FICHA = "ficha"
+    CATALOGO = "catalogo"
+    # Desde la página de cuenta de la web (palas guardadas e historial).
+    CUENTA = "cuenta"
     PALAS_GUARDADAS = "palas_guardadas"
     ALERTA_PRECIO = "alerta_precio"
 
@@ -74,3 +77,33 @@ class Comision(Base):
     )
     importe: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     estado: Mapped[str] = mapped_column(String(30), default="pendiente")
+
+
+class Feedback(Base):
+    """Valoración de una recomendación (POST /recomendaciones/{id}/valoracion)."""
+
+    __tablename__ = "feedback"
+    __table_args__ = (CheckConstraint("puntuacion BETWEEN 1 AND 5", name="puntuacion_rango"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    recomendacion_id: Mapped[int] = mapped_column(
+        ForeignKey("recomendacion.id", ondelete="CASCADE"), index=True
+    )
+    puntuacion: Mapped[int] = mapped_column(SmallInteger)
+    comentario: Mapped[str | None] = mapped_column(String(1000))
+    fecha: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class ExplicacionCache(Base):
+    """Explicaciones con IA ya generadas, para no pagar dos veces el mismo texto.
+
+    `clave` = hash del grupo de perfil, la versión de fichas, la del prompt y el modelo.
+    """
+
+    __tablename__ = "explicacion_cache"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clave: Mapped[str] = mapped_column(String(64), unique=True)
+    texto: Mapped[str] = mapped_column(Text)
+    modelo: Mapped[str] = mapped_column(String(50))
+    creada: Mapped[datetime] = mapped_column(server_default=func.now())

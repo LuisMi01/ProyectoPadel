@@ -102,5 +102,8 @@ class RevisionPendiente(Base):
     motivo: Mapped[str] = mapped_column(String(30))
     estado: Mapped[str] = mapped_column(String(20), server_default=EstadoRevision.PENDIENTE)
     creado_en: Mapped[datetime] = mapped_column(server_default=func.now())
+    # Pala nueva: ficha que propone la IA (jobs.daily.extract_specs) para revisarla. Al aprobarla
+    # se crea el modelo con estos datos.
+    propuesta: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     producto_feed: Mapped[ProductoFeed] = relationship(back_populates="revisiones")

@@ -9,7 +9,16 @@ from app.models.catalogo import (
     Tienda,
     VocabMap,
 )
-from app.models.recomendaciones import Comision, OrigenClic, RecClick, Recomendacion, RecShown
+from app.models.recomendaciones import (
+    Comision,
+    ExplicacionCache,
+    Feedback,
+    OrigenClic,
+    RecClick,
+    Recomendacion,
+    RecShown,
+)
+from app.models.sistema import Evento, JobRun, MetricaDiaria
 from app.models.staging import (
     EstadoImportacion,
     EstadoRevision,
@@ -25,8 +34,13 @@ __all__ = [
     "Comision",
     "EstadoImportacion",
     "EstadoRevision",
+    "Evento",
+    "ExplicacionCache",
     "FamiliaModelo",
+    "Feedback",
     "Importacion",
+    "JobRun",
+    "MetricaDiaria",
     "Modelo",
     "MotivoRevision",
     "Oferta",
