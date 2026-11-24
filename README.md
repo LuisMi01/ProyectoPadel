@@ -21,17 +21,20 @@ Pendiente en el backend: motor de recomendación, catálogo real (feeds de tiend
 
 ## Despliegue
 
-- **Frontend (Vercel):** web estática; toda la configuración está en `frontend/vercel.json`
-  (Astro, `npm ci`, `npm run build`, `dist/`, barra final en las URL, cabeceras de seguridad y caché).
+- **Frontend (Vercel):** web estática; toda la configuración está en `vercel.json`, en la raíz del
+  repositorio (`npm ci` y `npm run build` dentro de `frontend/`, salida `frontend/dist`, barra final en
+  las URL, cabeceras de seguridad y caché).
   1. *Add New → Project* e importar el repositorio de GitHub.
-  2. *Root Directory*: `frontend` (lo único que no se puede fijar en `vercel.json`). El resto se lee de ahí.
+  2. *Root Directory*: vacío (la raíz del repositorio). Vercel solo lee el `vercel.json` de esa carpeta;
+     si se pone `frontend`, lo ignora.
   3. *Production Branch* (Settings → Git): `main`. Cada PR y `develop` generan una *preview*.
-  4. Variables de entorno (opcionales):
+  4. *Node.js Version* (Settings → Build and Deployment): `24.x`, la misma que la CI. Con la raíz del
+     repositorio como *Root Directory*, Vercel no lee el `engines` de `frontend/package.json`.
+  5. Variables de entorno (opcionales):
      - `PUBLIC_API_URL`: URL del backend. Sin ella la web se publica sin acceso por correo.
      - `SITE_URL`: dominio propio (p. ej. `https://palaideal.es`). Sin ella, las canónicas usan el
        dominio `*.vercel.app` de producción del proyecto.
-  - Node 24 (`engines` en `package.json`, el mismo que la CI).
-  - Solo se construye si el commit cambia algo dentro de `frontend/` (`ignoreCommand`).
+  - Solo se construye si el commit cambia algo en `frontend/` o en `vercel.json` (`ignoreCommand`).
 - **Backend (Render):** servicio web con `uvicorn app.main:app` y una base PostgreSQL. Hay que definir
   `ENTORNO` (distinto de `local`), `DATABASE_URL` y `CORS_ORIGINS` con el dominio del frontend.
 - La sesión viaja en una cookie `SameSite=Lax`: frontend y API deben compartir dominio (por ejemplo

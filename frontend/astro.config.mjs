@@ -4,7 +4,7 @@ import { defineConfig } from "astro/config";
 import { loadEnv } from "vite";
 
 // Web estática: Astro genera HTML en dist/ y cualquier alojamiento estático lo sirve
-// (Vercel con vercel.json; wrangler.jsonc queda de la configuración anterior en Cloudflare).
+// (Vercel con el vercel.json de la raíz del repositorio; wrangler.jsonc queda de la configuración anterior en Cloudflare).
 // La interactividad vive solo en islas Preact (cuestionario, recomendación, cuenta).
 
 /**
