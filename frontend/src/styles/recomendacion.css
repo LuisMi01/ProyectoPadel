@@ -104,10 +104,8 @@
   align-items: center;
   gap: 12px;
   margin: 0;
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--lima);
 }
 
@@ -157,7 +155,7 @@
 .rec-barras .pista {
   height: 8px;
   border-radius: 4px;
-  background: rgba(8, 21, 53, 0.45);
+  background: var(--pista-noche);
   overflow: hidden;
 }
 
@@ -237,10 +235,9 @@
 
 .rec-porque .respuesta {
   flex: 0 0 190px;
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  line-height: 1.9;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
   color: var(--azul);
 }
 
@@ -375,7 +372,7 @@ a.ofr:hover {
 }
 
 .ofr .precio {
-  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
@@ -445,10 +442,8 @@ a.ofr:hover {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--azul);
 }
 
@@ -476,11 +471,9 @@ a.ofr:hover {
 
 .alt dt {
   flex: 0 0 70px;
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  line-height: 2;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.8;
   color: var(--suave);
 }
 

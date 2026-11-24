@@ -37,7 +37,6 @@ const porApi = API_URL && oferta.url ? `${API_URL}/tienda/${oferta.id}` : null;
 
   <main id="contenido" class="contenedor salida">
     <div class="texto s1">
-      <p class="kicker">Salida a tienda</p>
       {
         oferta.url ? (
           <>
@@ -70,7 +69,7 @@ const porApi = API_URL && oferta.url ? `${API_URL}/tienda/${oferta.id}` : null;
         )
       }
       <p class="nota">
-        <Icono nombre="info" tamano={20} color="#1747C9" />
+        <Icono nombre="info" tamano={20} color="var(--azul)" />
         <span>
           La comisión no cambia el precio ni el orden de nuestras recomendaciones.{" "}
           <a class="lnk lnk-azul" href={rutas.comoGanamosDinero}>Cómo ganamos dinero</a>
@@ -204,10 +203,8 @@ const porApi = API_URL && oferta.url ? `${API_URL}/tienda/${oferta.id}` : null;
     border-top: 1px solid var(--borde);
   }
   dt {
-    font-family: var(--f-mono);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--suave);
   }
   dd {

@@ -128,7 +128,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     align-items: center;
     height: 44px;
     padding: 0 18px;
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border: 1.5px solid var(--linea-clara);
     border-radius: 10px;
     font-size: 16px;
     font-weight: 600;
@@ -152,7 +152,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     justify-content: center;
     width: 44px;
     height: 44px;
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border: 1.5px solid var(--linea-clara);
     border-radius: 10px;
     cursor: pointer;
     list-style: none;
@@ -182,7 +182,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     border-radius: 18px;
     background: var(--noche);
     color: var(--blanco);
-    box-shadow: 0 28px 44px -24px rgba(8, 21, 53, 0.7);
+    box-shadow: 0 28px 44px -24px var(--sombra-noche-fuerte);
     animation: pop 0.25s var(--curva) both;
   }
   .claro .panel {
@@ -190,13 +190,13 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     border: 1px solid var(--borde);
     background: var(--blanco);
     color: var(--tinta);
-    box-shadow: 0 28px 44px -28px rgba(10, 27, 61, 0.45);
+    box-shadow: 0 28px 44px -28px var(--sombra);
   }
   .panel a {
     display: flex;
     align-items: center;
     min-height: 54px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 1px solid var(--hilo-claro);
     font-family: var(--f-titulo);
     font-size: 21px;
     font-weight: 700;

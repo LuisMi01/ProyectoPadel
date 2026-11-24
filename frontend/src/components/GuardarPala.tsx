@@ -19,7 +19,7 @@ export function BotonGuardar({ slug }: { slug: string }) {
       aria-pressed={guardada}
       onClick={() => alternarGuardada(slug)}
     >
-      <Icono nombre="marcador" tamano={18} relleno={guardada ? "#D9F53B" : "none"} />
+      <Icono nombre="marcador" tamano={18} relleno={guardada ? "var(--lima)" : "none"} />
       {guardada ? "Guardada" : "Guardar pala"}
     </button>
   );

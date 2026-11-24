@@ -51,7 +51,7 @@ function AvisoSinCuenta({ texto }: { texto: string }) {
   if (conSesion) return null;
   return (
     <p class="cta-aviso">
-      <Icono nombre="info" tamano={20} color="#1747C9" />
+      <Icono nombre="info" tamano={20} color="var(--azul)" />
       <span>
         {texto}{" "}
         <a class="lnk lnk-azul" href={rutas.acceso}>
@@ -155,7 +155,6 @@ export function PanelPerfil() {
       ) : (
         <div class="cta-sesion invitado dk">
           <div class="quien">
-            <span class="kicker">Sin cuenta</span>
             <h2 class="titulo">Estás usando palaideal sin registrarte.</h2>
             <p>
               Lo que guardas se queda en este navegador. Si accedes con tu correo podremos escribirte cuando baje el
@@ -164,7 +163,6 @@ export function PanelPerfil() {
           </div>
           <a class="btn btn-l btn-lima" href={rutas.acceso}>
             Acceder con tu correo
-            <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
           </a>
         </div>
       )}
@@ -249,7 +247,6 @@ export function ListaGuardadas() {
       >
         <a class="btn btn-l btn-azul" href={rutas.encuesta}>
           Hacer el cuestionario
-          <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
         </a>
         <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>
           Ver todas las palas
@@ -340,7 +337,6 @@ export function ListaAlertas() {
       >
         <a class="btn btn-l btn-azul" href={rutas.palas}>
           Ver todas las palas
-          <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
         </a>
         <a class="lnk lnk-azul lnk-alto" href={rutas.palasGuardadas}>
           Ir a mis palas guardadas
@@ -390,7 +386,6 @@ function FilaHistorial({ entrada }: { entrada: EntradaHistorial }) {
       <div class="acciones">
         <a class="btn btn-m btn-tinta" href={rutas.recomendacionGuardada(entrada.id)}>
           Ver recomendación
-          <Icono nombre="flecha" tamano={18} grosor={2.4} class="arr" />
         </a>
         <button type="button" class="lnk" onClick={() => eliminarDelHistorial(entrada.id)}>
           Quitar del historial
@@ -414,7 +409,6 @@ export function ListaHistorial() {
       >
         <a class="btn btn-l btn-azul" href={rutas.encuesta}>
           Hacer el cuestionario
-          <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
         </a>
       </Vacio>
     );

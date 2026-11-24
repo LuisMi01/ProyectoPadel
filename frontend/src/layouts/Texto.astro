@@ -4,7 +4,6 @@
  * Cabecera con migas y titular, columna de texto y una tarjeta lateral.
  */
 import Bloques from "@/components/Bloques.astro";
-import Icono from "@/components/Icono";
 import type { Bloque } from "@/data/guias";
 import Base from "@/layouts/Base.astro";
 import { type SeccionNav, pieLegal, rutas } from "@/lib/rutas";
@@ -75,12 +74,10 @@ const enlacesLegales = [{ texto: "Cómo ganamos dinero", href: rutas.comoGanamos
       {
         lateral === "cuestionario" ? (
           <aside class="lateral dk" aria-label="Cuestionario">
-            <p class="kicker">Recomendador</p>
             <h2 class="titulo">¿Prefieres que te lo digamos nosotros?</h2>
             <p>Seis preguntas sobre cómo juegas y te enseñamos tres palas, con su precio en cada tienda.</p>
             <a class="btn btn-l btn-lima" href={rutas.encuesta}>
               Empezar el cuestionario
-              <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
             </a>
           </aside>
         ) : (
@@ -185,7 +182,14 @@ const enlacesLegales = [{ texto: "Cómo ganamos dinero", href: rutas.comoGanamos
   }
   .lateral .btn {
     margin-top: 6px;
-    white-space: normal;
+  }
+  /* En pantallas muy estrechas el botón ocupa todo el ancho para que su texto quepa en una línea. */
+  @media (max-width: 400px) {
+    .lateral .btn {
+      width: 100%;
+      padding-inline: 16px;
+      font-size: 16px;
+    }
   }
 
   .indice {

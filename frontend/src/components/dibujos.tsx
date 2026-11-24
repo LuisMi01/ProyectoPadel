@@ -45,18 +45,17 @@ export function Silueta({ forma, ancho, cara = "tenue", trazo = 6, punto = 11, a
       viewBox="0 0 160 210"
       style={{ flex: "none" }}
     >
-      <rect x="68" y="146" width="24" height="58" rx="5" fill="#0A1B3D" />
+      <rect x="68" y="146" width="24" height="58" rx="5" style="fill: var(--tinta)" />
       <path
         d={contorno}
-        fill={cara === "blanca" ? "#FFFFFF" : "#E3EAF4"}
-        stroke="#0A1B3D"
         stroke-width={trazo}
         stroke-linejoin="round"
+        style={`fill: ${cara === "blanca" ? "var(--blanco)" : "var(--tenue)"}; stroke: var(--tinta)`}
       />
       {anillo && (
-        <circle class="spot" cx="80" cy={puntoY} r={punto + 3} fill="none" stroke="#1747C9" stroke-width="2.5" />
+        <circle class="spot" cx="80" cy={puntoY} r={punto + 3} fill="none" stroke-width="2.5" style="stroke: var(--azul)" />
       )}
-      <circle cx="80" cy={puntoY} r={punto} fill="#1747C9" />
+      <circle cx="80" cy={puntoY} r={punto} style="fill: var(--azul)" />
     </svg>
   );
 }
@@ -119,16 +118,16 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase
     <svg class={clase} role="img" aria-label={etiqueta} viewBox="0 0 320 420">
       <defs>
         <pattern id={patron} width="30" height="30" patternUnits="userSpaceOnUse">
-          <circle cx="7.5" cy="7.5" r="4.8" fill="#1747C9" />
-          <circle cx="22.5" cy="22.5" r="4.8" fill="#1747C9" />
+          <circle cx="7.5" cy="7.5" r="4.8" style="fill: var(--azul)" />
+          <circle cx="22.5" cy="22.5" r="4.8" style="fill: var(--azul)" />
         </pattern>
         <clipPath id={recorte}>
           <ellipse cx={cara.cx} cy={cara.cy} rx={cara.rx} ry={cara.ry} />
         </clipPath>
       </defs>
-      <rect x="138" y="288" width="44" height="120" rx="9" fill="#081535" />
-      <rect x="131" y="394" width="58" height="18" rx="8" fill="#D9F53B" />
-      <path d={contorno} fill="#FFFFFF" />
+      <rect x="138" y="288" width="44" height="120" rx="9" style="fill: var(--noche)" />
+      <rect x="131" y="394" width="58" height="18" rx="8" style="fill: var(--lima)" />
+      <path d={contorno} style="fill: var(--blanco)" />
       <rect
         class={animada ? "holes" : undefined}
         x={cara.cx - cara.rx}
@@ -143,21 +142,19 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase
         pathLength={animada ? 1 : undefined}
         d={contorno}
         fill="none"
-        stroke="#081535"
         stroke-width="8"
-        stroke-linejoin="round"
+        stroke-linejoin="round" style="stroke: var(--noche)"
       />
-      <path d="M140 262 L180 262 L160 292 Z" fill="#1747C9" stroke="#081535" stroke-width="4.5" stroke-linejoin="round" />
+      <path d="M140 262 L180 262 L160 292 Z" stroke-width="4.5" stroke-linejoin="round" style="fill: var(--azul); stroke: var(--noche)" />
       <circle
         class={animada ? "ring tarde" : "ring"}
         cx="160"
         cy={puntoY}
         r="20"
         fill="none"
-        stroke="#081535"
-        stroke-width="2.5"
+        stroke-width="2.5" style="stroke: var(--noche)"
       />
-      <circle cx="160" cy={puntoY} r="20" fill="#D9F53B" stroke="#081535" stroke-width="3" />
+      <circle cx="160" cy={puntoY} r="20" stroke-width="3" style="fill: var(--lima); stroke: var(--noche)" />
     </svg>
   );
 }

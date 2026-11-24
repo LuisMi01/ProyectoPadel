@@ -19,7 +19,6 @@ const ventajas = [
 >
   <main id="contenido" class="contenedor acceso">
     <div class="texto s1">
-      <p class="kicker">Acceso</p>
       <h1 class="titulo">Entra con tu correo, sin contraseña.</h1>
       <p class="lead">
         Te enviamos un enlace de acceso. Si todavía no tienes cuenta, se crea al entrar. La cuenta es opcional: el
@@ -29,7 +28,7 @@ const ventajas = [
         {
           ventajas.map((texto) => (
             <li>
-              <Icono nombre="check" grosor={2.6} color="#1747C9" />
+              <Icono nombre="check" grosor={2.6} color="var(--azul)" />
               <span>{texto}</span>
             </li>
           ))
@@ -39,7 +38,7 @@ const ventajas = [
     </div>
 
     <section class="tarjeta dk s2" aria-labelledby="titulo-enlace">
-      <Icono nombre="sobre" tamano={30} grosor={1.8} color="#D9F53B" />
+      <Icono nombre="sobre" tamano={30} grosor={1.8} color="var(--lima)" />
       <h2 id="titulo-enlace" class="titulo">Te enviamos un enlace</h2>
       <p>Escribe tu correo y abre el enlace desde este mismo navegador.</p>
       <FormularioAcceso client:load idCampo="correo-acceso" />

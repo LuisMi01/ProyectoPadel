@@ -17,11 +17,11 @@ const g = graficoPrecio(Astro.props.pala);
   </div>
   <div class="lienzo">
     <svg role="img" aria-label={g.descripcion} viewBox="0 0 860 290">
-      <g stroke="#D3DBE6" stroke-width="1">
+      <g stroke-width="1" style="stroke: var(--borde)">
         {g.marcasY.map(({ y }) => <path d={`M60 ${y} H840`} />)}
-        <path d="M60 240 H840" stroke="#0A1B3D"></path>
+        <path d="M60 240 H840" style="stroke: var(--tinta)"></path>
       </g>
-      <g class="ejes" font-size="13" fill="#46566F">
+      <g class="ejes" font-size="18" style="fill: var(--suave)">
         {
           g.marcasY.map(({ y, texto }) => (
             <text x="48" y={y + 4} text-anchor="end">
@@ -34,28 +34,27 @@ const g = graficoPrecio(Astro.props.pala);
         <text x="580" y="266" text-anchor="middle">30</text>
         <text x="840" y="266" text-anchor="end">hoy</text>
       </g>
-      <path class="ar" d={g.area} fill="#E6EDFD"></path>
+      <path class="ar" d={g.area} style="fill: var(--azul-tinte)"></path>
       <path
         class="ln"
         pathLength="1"
         d={g.linea}
         fill="none"
-        stroke="#1747C9"
         stroke-width="3.5"
         stroke-linejoin="round"
-        stroke-linecap="round"></path>
-      <g class="ar rotulos" font-size="15" font-weight="700" fill="#0A1B3D">
+        stroke-linecap="round" style="stroke: var(--azul)"></path>
+      <g class="ar rotulos" font-size="18" font-weight="700" style="fill: var(--tinta)">
         {
           g.minimo && (
             <>
-              <circle cx={g.minimo.x} cy={g.minimo.y} r="7" fill="#D9F53B" stroke="#0A1B3D" stroke-width="2.5" />
+              <circle cx={g.minimo.x} cy={g.minimo.y} r="7" stroke-width="2.5" style="fill: var(--lima); stroke: var(--tinta)" />
               <text x={g.minimo.x} y={g.minimo.y + 28} text-anchor={g.minimo.ancla}>
                 {g.minimo.texto}
               </text>
             </>
           )
         }
-        <circle cx={g.hoy.x} cy={g.hoy.y} r="7" fill="#1747C9" stroke="#FFFFFF" stroke-width="2.5"></circle>
+        <circle cx={g.hoy.x} cy={g.hoy.y} r="7" stroke-width="2.5" style="fill: var(--azul); stroke: var(--blanco)"></circle>
         <text x={g.hoy.x - 12} y={g.hoy.y - 14} text-anchor="end">{g.hoy.texto}</text>
       </g>
     </svg>
@@ -100,10 +99,17 @@ const g = graficoPrecio(Astro.props.pala);
     height: auto;
   }
   .ejes {
-    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
   }
   .rotulos {
     font-family: var(--f-texto);
+  }
+  /* Halo del color de la tarjeta: los rótulos se leen aunque crucen un escalón de la línea. */
+  .rotulos text {
+    paint-order: stroke;
+    stroke: var(--blanco);
+    stroke-width: 6px;
+    stroke-linejoin: round;
   }
   .ln {
     stroke-dasharray: 1;

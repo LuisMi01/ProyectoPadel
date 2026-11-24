@@ -67,8 +67,9 @@ const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pal
         case "nota":
           return (
             <aside class="nota">
-              <p class="etiqueta">{bloque.titulo}</p>
-              <p>{bloque.texto}</p>
+              <p>
+                <strong>{/[.?!:…]$/.test(bloque.titulo) ? bloque.titulo : `${bloque.titulo}.`}</strong> {bloque.texto}
+              </p>
             </aside>
           );
         case "palas":
@@ -177,11 +178,8 @@ const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pal
   }
   thead th {
     padding: 14px 14px 12px 0;
-    font-family: var(--f-mono);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
     color: var(--suave);
   }
   tbody tr {
@@ -215,7 +213,7 @@ const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pal
     margin: 0;
     text-wrap: pretty;
   }
-  .nota .etiqueta {
+  .nota strong {
     color: var(--azul);
   }
 

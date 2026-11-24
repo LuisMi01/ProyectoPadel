@@ -1,7 +1,6 @@
 /** Isla de /acceso/verificar/: canjea el token del enlace por una sesión. */
 import { useEffect, useState } from "preact/hooks";
 
-import Icono from "@/components/Icono";
 import { ErrorApi } from "@/lib/api";
 import { verificarEnlace } from "@/lib/cuenta";
 import { rutas } from "@/lib/rutas";
@@ -45,7 +44,6 @@ export default function VerificarAcceso() {
   if (estado === "verificando" || estado === "dentro") {
     return (
       <div class="verificar" role="status">
-        <p class="kicker">Acceso</p>
         <h1 class="titulo">{estado === "dentro" ? "Ya estás dentro." : "Comprobando tu enlace…"}</h1>
         <p class="lead">
           {estado === "dentro" ? "Te llevamos a tu cuenta." : "Es solo un momento. No cierres esta pestaña."}
@@ -57,13 +55,11 @@ export default function VerificarAcceso() {
   const { titulo, texto } = TEXTOS[estado];
   return (
     <div class="verificar" role="alert">
-      <p class="kicker">Acceso</p>
       <h1 class="titulo">{titulo}</h1>
       <p class="lead">{texto}</p>
       <div class="acciones">
         <a class="btn btn-l btn-azul" href={rutas.acceso}>
           Pedir otro enlace
-          <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
         </a>
         <a class="lnk lnk-azul lnk-alto" href={rutas.inicio}>
           Volver al inicio
