@@ -613,8 +613,9 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
   }
 
   /* --- Formas --- */
+  /* El aire hasta Guías lo pone solo esta sección, el mismo que hay entre la tabla y las formas. */
   .formas {
-    padding-bottom: clamp(72px, 9vw, 120px);
+    padding-bottom: clamp(64px, 8vw, 104px);
   }
   .cabeza-formas {
     margin-bottom: 48px;
@@ -677,47 +678,10 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     }
   }
 
-  /* --- Transparencia --- */
-  .transparencia {
-    background: var(--noche);
-    color: var(--blanco);
-  }
-  .transparencia > .contenedor {
-    padding-block: clamp(64px, 8vw, 112px);
-  }
-  .transparencia h2 {
-    margin-bottom: 56px;
-    max-width: 900px;
-    font-size: clamp(34px, 4.6vw, 64px);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-  }
-  .columnas {
-    gap: 40px 48px;
-  }
-  .columnas > div {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding-top: 24px;
-    border-top: 1.5px solid var(--linea-noche);
-  }
-  .columnas h3 {
-    font-size: 25px;
-  }
-  .columnas p {
-    margin: 0;
-    color: var(--sobre-noche);
-  }
-  .columnas a {
-    align-self: flex-start;
-    margin-top: auto;
-    font-size: 15.5px;
-  }
-
   /* --- Guías --- */
+  /* Sin aire arriba: ya lo deja la sección de formas. */
   .guias {
-    padding-block: clamp(64px, 8vw, 112px);
+    padding-block: 0 clamp(64px, 8vw, 112px);
   }
   .cabeza-guias {
     display: flex;
