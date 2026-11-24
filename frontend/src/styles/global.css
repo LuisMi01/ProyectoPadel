@@ -70,7 +70,7 @@
   --f-texto: "Instrument Sans Variable", "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 
-  --ancho: 1240px;
+  --ancho: 1426px; /* 1240px del diseño + 15 % */
   --margen: clamp(20px, 5vw, 56px);
   --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
   color-scheme: light;
