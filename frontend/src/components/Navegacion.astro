@@ -6,19 +6,16 @@
  */
 import Icono from "@/components/Icono";
 import Logo from "@/components/Logo.astro";
-import { type SeccionNav, navTransparencia, navegacion, rutas } from "@/lib/rutas";
+import { type SeccionNav, navegacion, rutas } from "@/lib/rutas";
 
 interface Props {
   tono: "oscuro" | "claro";
   /** Botón de la derecha: acceso a la cuenta o llamada al cuestionario. */
   accion?: "acceder" | "cuestionario";
   activo?: SeccionNav;
-  /** La portada añade «Cómo ganamos dinero» a los enlaces. */
-  conTransparencia?: boolean;
 }
 
-const { tono, accion = "acceder", activo, conTransparencia = false } = Astro.props;
-const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacion;
+const { tono, accion = "acceder", activo } = Astro.props;
 ---
 
 <nav aria-label="Principal" class:list={["nav", tono]}>
@@ -26,7 +23,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
 
   <div class="navlinks">
     {
-      enlaces.map(({ id, texto, href }) => (
+      navegacion.map(({ id, texto, href }) => (
         <a class="nv" href={href} aria-current={activo === id ? "page" : undefined}>
           {texto}
         </a>
@@ -54,7 +51,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
       </summary>
       <div class="panel">
         {
-          [...navegacion, navTransparencia].map(({ id, texto, href }) => (
+          navegacion.map(({ id, texto, href }) => (
             <a href={href} aria-current={activo === id ? "page" : undefined}>
               {texto}
             </a>

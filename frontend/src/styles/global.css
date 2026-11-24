@@ -6,7 +6,6 @@
 /* Hallmark · waive 49b · two lines at most, at 320px only · product names such as Lágrima Polivalente 365 and the link Seguir sin cuenta y ver lo guardado en este navegador are real phrases that cannot shorten, and the project keeps them as written */
 /* Hallmark · dismissed 11 · the lift and its shadow are one signal, on whole-card links (palas, guías, cuenta) and buttons only, never on an image */
 /* Hallmark · dismissed 49 · Cerrar sesión en todos los dispositivos is a text-link button on its own line; on a phone it wraps whole, it is not a button label */
-/* Hallmark · dismissed F2 · the three dots in Navegacion.astro are the spread operator in [...navegacion, navTransparencia], not prose */
 /* Hallmark · answered F3 · text-wrap: balance is set once here on h1, h2, h3 and .titulo, and every page rule inherits it */
 /* Hallmark · answered F19 · Bricolage at 800 and 700 for display, Instrument Sans from 400 to 600 for text, as in the reference designs; cutting to three weights is a restyle */
 /* Hallmark · dropped the eyebrows Recomendador de palas de pádel, Catálogo, Guías, Recomendador, Acceso, Tu cuenta, Sin cuenta, Antes de empezar, Pregunta y nombre, Completado, Tu recomendación, Salida a tienda · 54 names them; each heading below already says it */
