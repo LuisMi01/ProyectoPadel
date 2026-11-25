@@ -43,7 +43,7 @@ _RESPUESTAS = {
     },
     "edad": {"adulto": "Tiene 14 años o más", "junior": "Tiene menos de 14 años"},
     "ppto": {
-        "80": "Presupuesto máximo: 80 €",
+        "100": "Presupuesto máximo: 100 €",
         "150": "Presupuesto máximo: 150 €",
         "250": "Presupuesto máximo: 250 €",
         "max": "Sin tope de presupuesto",

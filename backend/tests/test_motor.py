@@ -41,8 +41,8 @@ def test_mismo_resultado_que_el_frontend(caso):
 
 
 def test_sin_palas_dentro_del_tope_devuelve_none():
-    caras = [p for p in CATALOGO if min(o.precio for o in p.ofertas) > 80]
-    assert recomendar(Respuestas(exp="gt2", ppto="80", edad="adulto"), None, caras) is None
+    caras = [p for p in CATALOGO if min(o.precio for o in p.ofertas) > 100]
+    assert recomendar(Respuestas(exp="gt2", ppto="100", edad="adulto"), None, caras) is None
 
 
 @pytest.mark.parametrize("frec", ["1", "2-3", "4+"])

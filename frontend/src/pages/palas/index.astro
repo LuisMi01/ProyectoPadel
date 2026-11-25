@@ -32,7 +32,7 @@ const formas: { id: FiltroForma | "todas"; texto: string; href: string }[] = [
 
 const topes = [
   { id: "", texto: "Cualquier precio" },
-  { id: "80", texto: "Hasta 80 €" },
+  { id: "100", texto: "Hasta 100 €" },
   { id: "150", texto: "Hasta 150 €" },
   { id: "250", texto: "Hasta 250 €" },
 ];
@@ -181,7 +181,7 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
   const vacio = document.getElementById("vacio")!;
 
   const FORMAS = ["todas", "redonda", "lagrima", "diamante", "junior"];
-  const TOPES = ["", "80", "150", "250"];
+  const TOPES = ["", "100", "150", "250"];
   const ORDENES = ["", "precio-asc", "precio-desc"];
 
   const inicial = new URLSearchParams(location.search);

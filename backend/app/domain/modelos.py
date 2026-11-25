@@ -15,7 +15,7 @@ Frecuencia = Literal["1", "2-3", "4+"]
 Estilo = Literal["control", "mixto", "potencia"]
 RespuestaMolestias = Literal["no", "si", "nc"]
 Edad = Literal["adulto", "junior"]
-Presupuesto = Literal["80", "150", "250", "max"]
+Presupuesto = Literal["100", "150", "250", "max"]
 
 Zona = Literal["Codo", "Hombro", "Muñeca", "Espalda"]
 Momento = Literal["Mientras juego", "Al día siguiente", "Casi siempre"]

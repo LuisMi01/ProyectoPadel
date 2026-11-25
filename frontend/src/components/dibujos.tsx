@@ -8,7 +8,7 @@ import type { Forma } from "@/lib/catalogo";
 
 const SILUETAS: Record<Forma, { contorno: string; puntoY: number }> = {
   redonda: {
-    contorno: "M80 10 C116 10 142 38 142 74 C142 110 118 128 94 152 L66 152 C42 128 18 110 18 74 C18 38 44 10 80 10 Z",
+    contorno: "M80 10 C117 10 145 40 145 78 C145 115 121 139 94 152 L66 152 C39 139 15 115 15 78 C15 40 43 10 80 10 Z",
     puntoY: 80,
   },
   lagrima: {
@@ -73,7 +73,7 @@ interface Geometria {
 const PALAS: Record<Forma, Geometria> = {
   redonda: {
     contorno:
-      "M160 20 C232 20 284 76 284 148 C284 220 236 256 188 304 L132 304 C84 256 36 220 36 148 C36 76 88 20 160 20 Z",
+      "M160 20 C234 20 290 80 290 156 C290 230 242 278 188 304 L132 304 C78 278 30 230 30 156 C30 80 86 20 160 20 Z",
     cara: { cx: 160, cy: 150, rx: 88, ry: 92 },
     puntoY: 156,
     descripcion: "forma redonda con el punto dulce centrado",

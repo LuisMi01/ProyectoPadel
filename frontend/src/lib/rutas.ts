@@ -50,6 +50,8 @@ export const rutas = {
   comoGanamosDinero: "/como-ganamos-dinero/",
   afiliacion: "/legal/afiliacion/",
   avisoLegal: "/legal/aviso-legal/",
+  /** El correo de contacto está con los datos del titular. */
+  contacto: "/legal/aviso-legal/",
   privacidad: "/legal/privacidad/",
   cookies: "/legal/cookies/",
 
@@ -93,7 +95,6 @@ export const pieColumnas = [
     enlaces: [
       { texto: "Acceder", href: rutas.acceso },
       { texto: "Palas guardadas", href: rutas.palasGuardadas },
-      { texto: "Avisos de precio", href: rutas.alertas },
     ],
   },
   {
@@ -109,6 +110,7 @@ export const pieColumnas = [
       { texto: "Aviso legal", href: rutas.avisoLegal },
       { texto: "Privacidad", href: rutas.privacidad },
       { texto: "Cookies", href: rutas.cookies },
+      { texto: "Contacto", href: rutas.contacto },
     ],
   },
 ] as const;
