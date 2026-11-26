@@ -2,6 +2,23 @@
  * Guías de la web. El contenido va en bloques tipados (no en Markdown) para
  * poder enlazar con rutas.* y con el catálogo sin escribir URLs a mano.
  */
+import type { Balance, Caras, Forma } from "@/lib/catalogo";
+
+/**
+ * Lo que una guía pide a una pala (components/Bloques.astro). Lo que no se pone no se mira.
+ * Siempre son palas de adulto que alguna tienda tiene disponibles.
+ */
+export interface CriteriosPalas {
+  formas?: Forma[];
+  balances?: Balance[];
+  /** Dureza máxima del núcleo: 2 es blando y 3, medio. */
+  durezaMax?: 1 | 2 | 3 | 4 | 5;
+  pesoMax?: number;
+  caras?: Caras[];
+  /** Precio de la mejor oferta, en euros. */
+  precioMin?: number;
+  precioMax?: number;
+}
 
 export type Bloque =
   | { tipo: "p"; texto: string }
@@ -12,8 +29,15 @@ export type Bloque =
   | { tipo: "tabla"; cabecera: string[]; filas: string[][] }
   /** Recuadro destacado: avisos y resúmenes. */
   | { tipo: "nota"; titulo: string; texto: string }
-  /** Tarjetas de palas del catálogo, por slug. */
-  | { tipo: "palas"; titulo: string; slugs: string[] };
+  /**
+   * Palas del catálogo que cumplen lo que pide la guía, de la más barata a la más cara: con un
+   * grupo de criterios, hasta tres; con varios, la más barata de cada uno. Debajo del título se
+   * explica qué cumplen. `slugs` fija palas a mano y, si está, manda sobre los criterios.
+   */
+  | { tipo: "palas"; titulo: string; criterios: CriteriosPalas[]; slugs?: string[] };
+
+/** «Punto dulce amplio»: redonda o lágrima, nunca diamante. */
+const PERDONA: Forma[] = ["redonda", "lagrima"];
 
 export interface Guia {
   slug: string;
@@ -29,244 +53,6 @@ export interface Guia {
 }
 
 export const guias: Guia[] = [
-  {
-    slug: "redonda-lagrima-o-diamante",
-    categoria: "Formas",
-    titulo: "Pala redonda, lágrima o diamante: cuál te conviene",
-    resumen:
-      "La forma decide dónde queda el punto dulce y cuánto perdona la pala. Te explicamos qué cambia de una a otra y cómo elegir sin equivocarte.",
-    lectura: 5,
-    destacada: true,
-    bloques: [
-      {
-        tipo: "p",
-        texto:
-          "La forma de la cabeza es lo primero que se ve de una pala y lo que más condiciona cómo se comporta. No es una cuestión de estética: decide dos cosas muy concretas. La primera, dónde queda el punto dulce, que es la zona de la cara en la que la bola sale limpia y sin vibraciones. La segunda, hacia dónde se reparte el peso, lo que se llama balance.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "Hay tres formas básicas. Cada una mueve el punto dulce y el peso un poco más hacia arriba que la anterior, y con eso cambia la pala entera.",
-      },
-      { tipo: "h2", texto: "Redonda: control y margen de error" },
-      {
-        tipo: "p",
-        texto:
-          "En una pala redonda el punto dulce es amplio y queda en el centro de la cara. El peso se concentra cerca del puño (balance bajo), así que la pala se mueve con facilidad y llega a tiempo a las bolas rápidas.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "Es la forma que más perdona: aunque no golpees justo en el centro, la bola sale razonablemente bien. A cambio, es la que menos pegada da en el remate. Es la elección habitual para empezar, para quien juega a colocar la bola y para quien arrastra molestias en el brazo.",
-      },
-      { tipo: "h2", texto: "Lágrima: un poco de todo" },
-      {
-        tipo: "p",
-        texto:
-          "La lágrima sube el punto dulce un poco y lo hace algo más pequeño. El balance queda en el medio. El resultado es una pala polivalente: defiende bien desde el fondo y tiene pegada suficiente cuando subes a la red.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "Es el paso natural cuando ya llevas un tiempo jugando y empiezas a atacar más, pero todavía no quieres renunciar a la tolerancia de una redonda.",
-      },
-      { tipo: "h2", texto: "Diamante: pegada a cambio de exigencia" },
-      {
-        tipo: "p",
-        texto:
-          "En el diamante el punto dulce es pequeño y está en la parte alta de la cara, y el peso se va hacia la cabeza (balance alto). Eso hace de palanca en los golpes por arriba: más pegada en el remate y en la víbora.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "El precio es claro: perdona poco cuando no golpeas en el centro, cuesta más moverla en defensa y le exige más al brazo. Tiene sentido si llevas años jugando, tu juego pasa por la red y no tienes molestias.",
-      },
-      { tipo: "h2", texto: "Las tres, de un vistazo" },
-      {
-        tipo: "tabla",
-        cabecera: ["Forma", "Punto dulce", "Balance", "Lo mejor", "Lo peor"],
-        filas: [
-          ["Redonda", "Amplio y centrado", "Bajo", "Control y tolerancia", "Menos pegada"],
-          ["Lágrima", "Medio, algo más arriba", "Medio", "Sirve para todo", "No destaca en nada"],
-          ["Diamante", "Pequeño y alto", "Alto", "Pegada en el remate", "Perdona poco y carga el brazo"],
-        ],
-      },
-      { tipo: "h2", texto: "Cómo decidir" },
-      {
-        tipo: "lista",
-        elementos: [
-          "Si no has jugado nunca, redonda: lo que más ayuda mientras aprendes es que la pala perdone.",
-          "Si llevas menos de seis meses, redonda o una lágrima suave según cómo juegues, pero todavía no un diamante: tu golpe se está formando.",
-          "Si juegas a aguantar la bola y esperar el fallo, redonda, lleves el tiempo que lleves.",
-          "Si haces un poco de todo, lágrima.",
-          "Si buscas el remate y llevas más de dos años, diamante. Si llevas menos, mejor una lágrima: tendrás pegada sin castigarte los golpes descentrados.",
-          "Si notas molestias en codo, hombro o muñeca, descarta el diamante aunque te guste atacar.",
-        ],
-      },
-      {
-        tipo: "nota",
-        titulo: "El error más habitual",
-        texto:
-          "Comprar un diamante porque es la pala que lleva un jugador profesional. Esas palas están pensadas para quien golpea casi siempre en el centro. Con menos técnica, lo normal es jugar peor y acabar con el brazo cargado.",
-      },
-      {
-        tipo: "palas",
-        titulo: "Una pala de cada forma",
-        slugs: ["redonda-control-360", "lagrima-polivalente-365", "diamante-potencia-370"],
-      },
-    ],
-  },
-  {
-    slug: "que-pala-usar-si-te-duele-el-codo",
-    categoria: "Molestias",
-    titulo: "Qué pala usar si te duele el codo",
-    resumen:
-      "Una pala no cura una lesión, pero una pala inadecuada la empeora. Qué buscar y qué evitar si notas molestias en el codo, el hombro o la muñeca.",
-    lectura: 5,
-    destacada: true,
-    bloques: [
-      {
-        tipo: "nota",
-        titulo: "Antes de nada",
-        texto:
-          "Esta guía habla de material, no de medicina. Si el dolor dura más de unos días o aparece también fuera de la pista, lo primero es que te vea un fisioterapeuta o un médico. Una pala no sustituye a un tratamiento.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "El dolor en la cara externa del codo es una de las molestias más frecuentes entre quienes juegan al pádel. Suele venir de una suma de cosas: técnica, carga de partidos, descanso y también material. La pala es solo una parte, pero es la más fácil de cambiar.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "La idea general es sencilla: cuanta menos vibración llegue al brazo y menos palanca haga la pala, mejor.",
-      },
-      { tipo: "h2", texto: "Qué buscar" },
-      {
-        tipo: "definiciones",
-        elementos: [
-          {
-            termino: "Núcleo blando",
-            texto:
-              "Una goma blanda absorbe parte del impacto en lugar de transmitirlo al brazo. Es lo que más se nota.",
-          },
-          {
-            termino: "Balance bajo o medio",
-            texto:
-              "Con el peso cerca del puño la pala hace menos palanca sobre el codo y cuesta menos frenarla después de cada golpe.",
-          },
-          {
-            termino: "Forma redonda",
-            texto:
-              "Los golpes descentrados son los que más vibran. Un punto dulce amplio reduce cuántos de tus golpes lo son.",
-          },
-          {
-            termino: "Un peso contenido",
-            texto:
-              "Una pala pesada cansa antes el brazo. Pero cuidado con irse al extremo contrario: una pala demasiado ligera absorbe peor el impacto y obliga a acelerar más el gesto.",
-          },
-          {
-            termino: "Caras de fibra de vidrio",
-            texto: "Son más flexibles que las de carbono y dan un tacto más amable.",
-          },
-        ],
-      },
-      { tipo: "h2", texto: "Qué evitar" },
-      {
-        tipo: "lista",
-        elementos: [
-          "Palas de diamante con balance alto: son las que más cargan el brazo.",
-          "Núcleos duros y tactos secos, habituales en las palas de competición.",
-          "Las palas más pesadas de cada gama.",
-          "Seguir jugando con una pala rota o con el núcleo fatigado: ha perdido su capacidad de absorber el golpe.",
-        ],
-      },
-      { tipo: "h2", texto: "Más allá de la pala" },
-      {
-        tipo: "lista",
-        elementos: [
-          "Revisa el grosor de la empuñadura. Si es demasiado fina, aprietas más de la cuenta en cada golpe; uno o dos overgrips lo corrigen.",
-          "Cambia las bolas a tiempo. Una bola gastada o mojada pesa más y bota menos, y cada golpe exige más fuerza.",
-          "Calienta antes de jugar y respeta los descansos entre partidos.",
-          "Si puedes, que un monitor revise tu técnica: golpear tarde o con el brazo rígido carga mucho el codo.",
-        ],
-      },
-      {
-        tipo: "nota",
-        titulo: "Cómo lo tratamos en el cuestionario",
-        texto:
-          "Si nos dices que notas molestias, priorizamos núcleo blando, menos peso y balance bajo. Es un dato de salud: lo usamos solo para calcular tu recomendación y no lo guardamos. Puedes saltarte la pregunta.",
-      },
-      {
-        tipo: "palas",
-        titulo: "Palas cómodas del catálogo",
-        slugs: ["redonda-confort-350", "redonda-control-360", "lagrima-confort-355"],
-      },
-    ],
-  },
-  {
-    slug: "palas-para-empezar-por-menos-de-100-euros",
-    categoria: "Presupuesto",
-    titulo: "Palas para empezar por menos de 100 €",
-    resumen:
-      "Para empezar no hace falta gastar más de 100 €. Qué puedes esperar en ese rango, en qué fijarte y cuándo compensa subir de precio.",
-    lectura: 4,
-    destacada: true,
-    bloques: [
-      {
-        tipo: "p",
-        texto:
-          "La primera pala no tiene que ser cara. Durante los primeros meses lo que más ayuda es una pala ligera, que perdone y que no te cargue el brazo, y eso se encuentra de sobra por debajo de 100 €.",
-      },
-      { tipo: "h2", texto: "Qué te llevas por menos de 100 €" },
-      {
-        tipo: "p",
-        texto:
-          "En este rango las palas suelen tener caras de fibra de vidrio y un núcleo de goma EVA de dureza media o blanda. Son materiales sencillos, pero adecuados para aprender: la fibra de vidrio es flexible y ayuda a sacar la bola aunque todavía no tengas un golpe potente.",
-      },
-      {
-        tipo: "p",
-        texto:
-          "Lo que no vas a encontrar son caras de carbono ni núcleos de varias densidades. No los necesitas todavía: esas mejoras se notan cuando el golpe ya es regular.",
-      },
-      { tipo: "h2", texto: "En qué fijarte" },
-      {
-        tipo: "lista",
-        elementos: [
-          "Forma redonda: punto dulce amplio y centrado.",
-          "Balance bajo: el peso cerca del puño, para que la pala sea fácil de mover.",
-          "Un peso contenido, sin irte a las más pesadas de la gama.",
-          "Que venga con protector en el marco, o cuenta con ponérselo: los primeros meses la pala roza mucho la pared y el suelo.",
-        ],
-      },
-      { tipo: "h2", texto: "En qué no fijarte" },
-      {
-        tipo: "lista",
-        elementos: [
-          "El nombre del jugador que la anuncia. Las palas de iniciación de una marca no se parecen a las que llevan sus profesionales.",
-          "Las tecnologías con nombre propio. En esta gama casi todas hacen lo mismo.",
-          "La rugosidad de la cara. Sirve para dar efecto, y eso viene después.",
-        ],
-      },
-      { tipo: "h2", texto: "Cuándo compensa gastar más" },
-      {
-        tipo: "p",
-        texto:
-          "Si vas a jugar dos o tres veces por semana desde el principio, una pala de entre 100 y 150 € te durará más y no se te quedará corta en un año. Si no sabes todavía cuánto vas a jugar, empieza por una económica: siempre estás a tiempo de cambiar.",
-      },
-      {
-        tipo: "nota",
-        titulo: "Un truco para ahorrar",
-        texto:
-          "Los modelos de la temporada anterior suelen bajar de precio cuando sale la colección nueva, y la pala es la misma. En cada ficha te enseñamos el precio más bajo de los últimos 90 días para que sepas si hoy es buen momento.",
-      },
-      {
-        tipo: "palas",
-        titulo: "Palas del catálogo por menos de 100 €",
-        slugs: ["redonda-basica-350", "lagrima-basica-360", "redonda-inicio-355"],
-      },
-    ],
-  },
   {
     slug: "como-elegir-tu-primera-pala",
     categoria: "Primeros pasos",
@@ -339,8 +125,329 @@ export const guias: Guia[] = [
       },
       {
         tipo: "palas",
-        titulo: "Tres palas para empezar",
-        slugs: ["redonda-inicio-355", "redonda-control-360", "redonda-basica-350"],
+        titulo: "Palas para empezar",
+        // «Peso contenido»: 360 g o menos, como en la guía de hombro o espalda.
+        criterios: [{ formas: ["redonda"], balances: ["bajo"], durezaMax: 3, pesoMax: 360, precioMin: 60, precioMax: 130 }],
+      },
+    ],
+  },
+  {
+    slug: "redonda-lagrima-o-diamante",
+    categoria: "Formas",
+    titulo: "Pala redonda, lágrima o diamante: cuál te conviene",
+    resumen:
+      "La forma decide dónde queda el punto dulce y cuánto perdona la pala. Te explicamos qué cambia de una a otra y cómo elegir sin equivocarte.",
+    lectura: 5,
+    destacada: true,
+    bloques: [
+      {
+        tipo: "p",
+        texto:
+          "La forma de la cabeza es lo primero que se ve de una pala y lo que más condiciona cómo se comporta. No es una cuestión de estética: decide dos cosas muy concretas. La primera, dónde queda el punto dulce, que es la zona de la cara en la que la bola sale limpia y sin vibraciones. La segunda, hacia dónde se reparte el peso, lo que se llama balance.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "Hay tres formas básicas. Cada una mueve el punto dulce y el peso un poco más hacia arriba que la anterior, y con eso cambia la pala entera.",
+      },
+      { tipo: "h2", texto: "Redonda: control y margen de error" },
+      {
+        tipo: "p",
+        texto:
+          "En una pala redonda el punto dulce es amplio y queda en el centro de la cara. El peso se concentra cerca del puño (balance bajo), así que la pala se mueve con facilidad y llega a tiempo a las bolas rápidas.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "Es la forma que más perdona: aunque no golpees justo en el centro, la bola sale razonablemente bien. A cambio, es la que menos pegada da en el remate. Es la elección habitual para empezar y para quien juega a colocar la bola.",
+      },
+      { tipo: "h2", texto: "Lágrima: un poco de todo" },
+      {
+        tipo: "p",
+        texto:
+          "La lágrima sube el punto dulce un poco y lo hace algo más pequeño. El balance queda en el medio. El resultado es una pala polivalente: defiende bien desde el fondo y tiene pegada suficiente cuando subes a la red.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "Es la opción natural si haces un poco de todo y quieres atacar más, pero sin renunciar del todo a la tolerancia de una redonda.",
+      },
+      { tipo: "h2", texto: "Diamante: pegada a cambio de exigencia" },
+      {
+        tipo: "p",
+        texto:
+          "En el diamante el punto dulce es pequeño y está en la parte alta de la cara, y el peso se va hacia la cabeza (balance alto). Eso hace de palanca en los golpes por arriba: más pegada en el remate y en la víbora.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "El precio es claro: perdona poco cuando no golpeas en el centro, cuesta más moverla en defensa y le exige más al brazo. Tiene sentido si llevas años jugando, tu juego pasa por la red y no tienes molestias.",
+      },
+      { tipo: "h2", texto: "Las tres, de un vistazo" },
+      {
+        tipo: "tabla",
+        cabecera: ["Forma", "Punto dulce", "Balance", "Lo mejor", "Lo peor"],
+        filas: [
+          ["Redonda", "Amplio y centrado", "Bajo", "Control y tolerancia", "Menos pegada"],
+          ["Lágrima", "Medio, algo más arriba", "Medio", "Sirve para todo", "No destaca en nada"],
+          ["Diamante", "Pequeño y alto", "Alto", "Pegada en el remate", "Perdona poco y carga el brazo"],
+        ],
+      },
+      { tipo: "h2", texto: "Cómo decidir" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Si no has jugado nunca, redonda: lo que más ayuda mientras aprendes es que la pala perdone.",
+          "Si llevas menos de seis meses, redonda o una lágrima suave según cómo juegues, pero todavía no un diamante: tu golpe se está formando.",
+          "Si juegas a aguantar la bola y esperar el fallo, redonda, lleves el tiempo que lleves.",
+          "Si haces un poco de todo, lágrima.",
+          "Si buscas el remate y llevas más de dos años, diamante. Si llevas menos, mejor una lágrima: tendrás pegada sin castigarte los golpes descentrados.",
+          "Si notas molestias en codo, hombro, muñeca o espalda, descarta el diamante aunque te guste atacar.",
+        ],
+      },
+      {
+        tipo: "nota",
+        titulo: "El error más habitual",
+        texto:
+          "Comprar un diamante porque es la pala que lleva un jugador profesional. Esas palas están pensadas para quien golpea casi siempre en el centro. Con menos técnica, lo normal es jugar peor y acabar con el brazo cargado.",
+      },
+      {
+        tipo: "palas",
+        titulo: "Una pala de cada forma",
+        criterios: [{ formas: ["redonda"] }, { formas: ["lagrima"] }, { formas: ["diamante"] }],
+      },
+    ],
+  },
+  {
+    slug: "que-pala-usar-si-te-duele-el-codo",
+    categoria: "Molestias",
+    titulo: "Qué pala usar si te duele el codo o la muñeca",
+    resumen:
+      "Una pala no cura una lesión, pero una pala inadecuada puede empeorarla. Qué buscar y qué evitar si notas molestias en el codo o la muñeca.",
+    lectura: 5,
+    destacada: true,
+    bloques: [
+      {
+        tipo: "nota",
+        titulo: "Antes de nada",
+        texto:
+          "Esta guía habla de material, no de medicina. Si el dolor dura más de unos días o aparece también fuera de la pista, lo primero es que te vea un fisioterapeuta o un médico. Una pala no sustituye a un tratamiento.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "El codo es lo que más se lesiona jugando al pádel, y con la muñeca la pala se elige igual. Suele venir de una suma de cosas: técnica, carga de partidos, descanso y también material. La pala es solo una parte, pero es la más fácil de cambiar.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "La idea general es sencilla: cuanta menos vibración llegue al brazo y menos palanca haga la pala, mejor.",
+      },
+      { tipo: "h2", texto: "Qué buscar" },
+      {
+        tipo: "definiciones",
+        elementos: [
+          {
+            termino: "Núcleo blando",
+            texto:
+              "Una goma blanda absorbe parte del impacto en lugar de transmitirlo al brazo. Es lo que más se nota.",
+          },
+          {
+            termino: "Balance bajo o medio",
+            texto:
+              "Con el peso cerca del puño la pala hace menos palanca sobre el codo y la muñeca, y cuesta menos frenarla después de cada golpe.",
+          },
+          {
+            termino: "Punto dulce amplio",
+            texto:
+              "Los golpes descentrados son los que más vibran, y un punto dulce amplio reduce cuántos de tus golpes lo son. Busca una redonda o una lágrima, nunca un diamante.",
+          },
+          {
+            termino: "Un peso contenido",
+            texto:
+              "Una pala pesada cansa antes el brazo. Pero cuidado con irse al extremo contrario: una pala demasiado ligera absorbe peor el impacto y obliga a acelerar más el gesto.",
+          },
+          {
+            termino: "Caras de fibra de vidrio",
+            texto: "Son más flexibles que las de carbono y dan un tacto más amable.",
+          },
+        ],
+      },
+      { tipo: "h2", texto: "Qué evitar" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Palas de diamante con balance alto: son las que más cargan el brazo.",
+          "Núcleos duros y tactos secos, habituales en las palas de competición.",
+          "Las palas más pesadas de cada gama.",
+          "Seguir jugando con una pala rota o con el núcleo fatigado: ha perdido su capacidad de absorber el golpe.",
+        ],
+      },
+      { tipo: "h2", texto: "Más allá de la pala" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Revisa el grosor de la empuñadura. Si es demasiado fina, aprietas más de la cuenta en cada golpe; uno o dos overgrips lo corrigen.",
+          "Cambia las bolas a tiempo. Una bola gastada o mojada pesa más y bota menos, y cada golpe exige más fuerza.",
+          "Calienta antes de jugar y respeta los descansos entre partidos.",
+          "Si puedes, que un monitor revise tu técnica: golpear tarde o con el brazo rígido carga mucho el codo y la muñeca.",
+        ],
+      },
+      {
+        tipo: "nota",
+        titulo: "Cómo lo tratamos en el cuestionario",
+        texto:
+          "Si nos dices que notas molestias, priorizamos núcleo blando y menos peso. Si son en el codo o la muñeca, también balance bajo. Es un dato de salud: lo usamos solo para calcular tu recomendación y no lo guardamos. Puedes saltarte la pregunta.",
+      },
+      {
+        tipo: "palas",
+        titulo: "Palas cómodas del catálogo",
+        criterios: [{ formas: PERDONA, balances: ["bajo", "medio"], durezaMax: 2, pesoMax: 360, caras: ["fibra"] }],
+      },
+    ],
+  },
+  {
+    slug: "que-pala-usar-si-te-duele-el-hombro-o-la-espalda",
+    categoria: "Molestias",
+    titulo: "Qué pala usar si te duele el hombro o la espalda",
+    resumen:
+      "Una pala no cura una lesión, pero una pala inadecuada puede empeorarla. Qué buscar y qué evitar si notas molestias en el hombro o la espalda.",
+    lectura: 4,
+    bloques: [
+      {
+        tipo: "nota",
+        titulo: "Antes de nada",
+        texto:
+          "Esta guía habla de material, no de medicina. Si el dolor dura más de unos días o aparece también fuera de la pista, lo primero es que te vea un fisioterapeuta o un médico. Una pala no sustituye a un tratamiento.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "El hombro y la zona baja de la espalda están entre lo que más se lesiona jugando al pádel. Suele venir de una suma de cosas: técnica, carga de partidos, descanso y también material. La pala es solo una parte, pero es la más fácil de cambiar.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "La idea general es sencilla: cuanto menos pese la pala y menos se vaya ese peso hacia la cabeza, menos tienes que levantar y frenar en cada remate y cada bandeja.",
+      },
+      { tipo: "h2", texto: "Qué buscar" },
+      {
+        tipo: "definiciones",
+        elementos: [
+          {
+            termino: "Poco peso",
+            texto:
+              "Es lo que más cuenta aquí. En una pala de adulto, busca 360 g o menos: al final de un partido la diferencia se nota.",
+          },
+          {
+            termino: "Balance bajo o medio",
+            texto:
+              "Con el peso cerca del puño la pala cuesta menos de levantar y de frenar en los golpes por arriba.",
+          },
+          {
+            termino: "Núcleo blando",
+            texto:
+              "La bola sale con facilidad aunque no golpees fuerte, así que no necesitas forzar tanto el gesto.",
+          },
+          {
+            termino: "Punto dulce amplio",
+            texto:
+              "Perdona más los golpes descentrados. Busca una redonda o una lágrima, nunca un diamante.",
+          },
+        ],
+      },
+      { tipo: "h2", texto: "Qué evitar" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Palas de diamante con balance alto: el peso en la cabeza es lo que más cuesta mover por arriba.",
+          "Las palas más pesadas de cada gama. Recuerda que el protector y el overgrip también suman unos gramos.",
+          "Núcleos duros y tactos secos: para que la bola salga hay que golpear más fuerte.",
+        ],
+      },
+      { tipo: "h2", texto: "Más allá de la pala" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Calienta antes de jugar y respeta los descansos entre partidos.",
+          "Si el remate te molesta, no lo fuerces: juega una bandeja más suave o deja bajar la bola.",
+          "Cambia las bolas a tiempo. Una bola gastada o mojada pesa más y bota menos, y cada golpe exige más fuerza.",
+          "Si puedes, que un monitor revise tu técnica, sobre todo en los golpes por arriba.",
+        ],
+      },
+      {
+        tipo: "nota",
+        titulo: "Cómo lo tratamos en el cuestionario",
+        texto:
+          "Si nos dices que notas molestias, priorizamos núcleo blando y menos peso. Si son en el hombro o la espalda, damos ventaja a las palas de 360 g o menos. Es un dato de salud: lo usamos solo para calcular tu recomendación y no lo guardamos. Puedes saltarte la pregunta.",
+      },
+      {
+        tipo: "palas",
+        titulo: "Palas ligeras del catálogo",
+        criterios: [{ formas: PERDONA, balances: ["bajo", "medio"], durezaMax: 2, pesoMax: 360 }],
+      },
+    ],
+  },
+  {
+    slug: "palas-para-empezar-por-menos-de-100-euros",
+    categoria: "Presupuesto",
+    titulo: "Palas para empezar por menos de 100 €",
+    resumen:
+      "Para empezar no hace falta gastar más de 100 €. Qué puedes esperar en ese rango, en qué fijarte y cuándo compensa subir de precio.",
+    lectura: 4,
+    destacada: true,
+    bloques: [
+      {
+        tipo: "p",
+        texto:
+          "La primera pala no tiene que ser cara. Durante los primeros meses lo que más ayuda es una pala ligera, que perdone y que no te cargue el brazo, y eso se encuentra de sobra por debajo de 100 €.",
+      },
+      { tipo: "h2", texto: "Qué te llevas por menos de 100 €" },
+      {
+        tipo: "p",
+        texto:
+          "En este rango las palas suelen tener caras de fibra de vidrio y un núcleo de goma EVA de dureza media o blanda. Son materiales sencillos, pero adecuados para aprender: la fibra de vidrio es flexible y ayuda a sacar la bola aunque todavía no tengas un golpe potente.",
+      },
+      {
+        tipo: "p",
+        texto:
+          "Lo que no vas a encontrar son caras de carbono ni núcleos de varias densidades. No los necesitas todavía: esas mejoras se notan cuando el golpe ya es regular.",
+      },
+      { tipo: "h2", texto: "En qué fijarte" },
+      {
+        tipo: "lista",
+        elementos: [
+          "Forma redonda: punto dulce amplio y centrado.",
+          "Balance bajo: el peso cerca del puño, para que la pala sea fácil de mover.",
+          "Un peso contenido, sin irte a las más pesadas de la gama.",
+          "Que venga con protector en el marco, o cuenta con ponérselo: los primeros meses la pala roza mucho la pared y el suelo.",
+        ],
+      },
+      { tipo: "h2", texto: "En qué no fijarte" },
+      {
+        tipo: "lista",
+        elementos: [
+          "El nombre del jugador que la anuncia. Las palas de iniciación de una marca no se parecen a las que llevan sus profesionales.",
+          "Las tecnologías con nombre propio. En esta gama casi todas hacen lo mismo.",
+          "La rugosidad de la cara. Sirve para dar efecto, y eso viene después.",
+        ],
+      },
+      { tipo: "h2", texto: "Cuándo compensa gastar más" },
+      {
+        tipo: "p",
+        texto:
+          "Si vas a jugar dos o tres veces por semana desde el principio, una pala de entre 100 y 150 € te durará más y no se te quedará corta en un año. Si no sabes todavía cuánto vas a jugar, empieza por una económica: siempre estás a tiempo de cambiar.",
+      },
+      {
+        tipo: "nota",
+        titulo: "Un truco para ahorrar",
+        texto:
+          "Los modelos de la temporada anterior suelen bajar de precio cuando sale la colección nueva, y la pala es la misma. En cada ficha te enseñamos el precio más bajo de los últimos 90 días para que sepas si hoy es buen momento.",
+      },
+      {
+        tipo: "palas",
+        titulo: "Palas del catálogo por menos de 100 €",
+        criterios: [{ formas: ["redonda"], balances: ["bajo"], pesoMax: 360, precioMax: 100 }],
       },
     ],
   },

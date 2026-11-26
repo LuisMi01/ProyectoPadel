@@ -110,13 +110,11 @@ export default function Recomendacion() {
       return (
         <main id="contenido" class="contenedor rec-main">
           <section class="rec-vacio s1">
-            <p class="kicker">Tu recomendación</p>
             <h1 class="titulo t-pagina">Todavía no has hecho el cuestionario.</h1>
             <p>Son 6 preguntas sobre cómo juegas. Al terminar te decimos qué pala te conviene y por qué.</p>
             <div class="acciones">
               <a class="btn btn-xl btn-azul" href={rutas.encuesta}>
                 Empezar el cuestionario
-                <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
               </a>
               <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>
                 Ver todas las palas
@@ -131,7 +129,6 @@ export default function Recomendacion() {
       return (
         <main id="contenido" class="contenedor rec-main">
           <section class="rec-vacio s1">
-            <p class="kicker">Tu recomendación</p>
             <h1 class="titulo t-pagina">No hay ninguna pala que cumpla todo lo que pides.</h1>
             <p>
               {limite === Infinity
@@ -141,7 +138,6 @@ export default function Recomendacion() {
             <div class="acciones">
               <a class="btn btn-xl btn-azul" href={rutas.encuestaEditar}>
                 Cambiar respuestas
-                <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
               </a>
               <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>
                 Ver todas las palas
@@ -189,7 +185,6 @@ function Resultados({
   return (
     <main id="contenido" class="contenedor rec-main">
       <section class="rec-cabeza s1">
-        <p class="kicker">Tu recomendación</p>
         <h1 class="titulo t-pagina">{titular}</h1>
         <div class="rec-respuestas">
           <ul aria-label="Tus respuestas">
@@ -203,7 +198,7 @@ function Resultados({
         </div>
         {guardadaEl && (
           <p class="rec-info">
-            <Icono nombre="reloj" tamano={20} color="#1747C9" />
+            <Icono nombre="reloj" tamano={20} color="var(--azul)" />
             <span>
               Recomendación del {fechaLarga(guardadaEl)}, recalculada con los precios de hoy y sin el dato de
               molestias, que no guardamos.
@@ -211,7 +206,7 @@ function Resultados({
           </p>
         )}
         <p class="rec-info">
-          <Icono nombre="info" tamano={20} color="#1747C9" />
+          <Icono nombre="info" tamano={20} color="var(--azul)" />
           <span>
             Los botones «Ir a la tienda» son enlaces de afiliado: si compras, la tienda nos paga una comisión. A ti
             te cuesta lo mismo y no cambia el orden de esta lista.{" "}
@@ -225,7 +220,7 @@ function Resultados({
       <article class="rec-mejor s2" aria-labelledby="rec1">
         <div class="rec-panel dk">
           <svg class="linea" aria-hidden="true" viewBox="0 0 440 720" preserveAspectRatio="xMidYMid slice">
-            <path d="M-10 250 L450 250" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2.5" />
+            <path d="M-10 250 L450 250" fill="none" stroke-opacity="0.2" stroke-width="2.5" style="stroke: var(--blanco)" />
           </svg>
           <p class="rec-puesto">
             <span class="n">01</span>
@@ -270,7 +265,7 @@ function Resultados({
             </ul>
             {nota && (
               <p class="rec-nota">
-                <Icono nombre="info" tamano={18} color="#1747C9" />
+                <Icono nombre="info" tamano={18} color="var(--azul)" />
                 <span>{nota}</span>
               </p>
             )}
@@ -354,7 +349,7 @@ function Explicacion({ recomendacion }: { recomendacion: number }) {
       {texto ? <p>{texto}</p> : <p class="cargando">Preparando la explicación…</p>}
       {conIa && (
         <p class="aviso">
-          <Icono nombre="info" tamano={16} color="#1747C9" />
+          <Icono nombre="info" tamano={16} color="var(--azul)" />
           <span>Texto redactado con IA a partir de los datos de las palas.</span>
         </p>
       )}
@@ -420,7 +415,7 @@ function FilaOferta({ oferta, href }: { oferta: Oferta; href: string }) {
       <span class="lado">
         <span class="estado">{textoDisponibilidad[oferta.disponibilidad]}</span>
         <span class="precio">{euros(oferta.precio)}</span>
-        {oferta.disponibilidad !== "agotada" && <Icono nombre="salida" tamano={16} grosor={2.4} color="#1747C9" />}
+        {oferta.disponibilidad !== "agotada" && <Icono nombre="salida" tamano={16} grosor={2.4} color="var(--azul)" />}
       </span>
     </>
   );
@@ -513,7 +508,6 @@ function GuardarRecomendacion() {
         <div class="lado">
           <a class="btn btn-l btn-lima" href={rutas.historial}>
             Ver mi historial
-            <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
           </a>
         </div>
       </section>

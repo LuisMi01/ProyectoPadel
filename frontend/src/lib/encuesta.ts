@@ -21,7 +21,7 @@ export interface Respuestas {
   estilo?: "control" | "mixto" | "potencia";
   mol?: "no" | "si" | "nc";
   edad?: "adulto" | "junior";
-  ppto?: "80" | "150" | "250" | "max";
+  ppto?: "100" | "150" | "250" | "max";
 }
 
 export const ZONAS = ["Codo", "Hombro", "Muñeca", "Espalda"] as const;
@@ -154,7 +154,7 @@ export const PREGUNTAS: Record<Pregunta, DefPregunta> = {
     pregunta: "¿Cuánto quieres gastar como máximo?",
     ayuda: "No te enseñaremos nada por encima de ese precio.",
     opciones: [
-      { id: "80", titulo: "Hasta 80 €" },
+      { id: "100", titulo: "Hasta 100 €" },
       { id: "150", titulo: "Hasta 150 €" },
       { id: "250", titulo: "Hasta 250 €" },
       { id: "max", titulo: "Sin tope" },
@@ -405,7 +405,7 @@ export function perfilOrientativo(r: Respuestas, salud: Salud = SIN_SALUD): Perf
   }
 
   // 6. Presupuesto: limita los materiales.
-  if (r.ppto === "80") caras = "fibra";
+  if (r.ppto === "100") caras = "fibra";
   else if (r.ppto === "150" && caras === "carbono") caras = "hibrida";
 
   return { forma, balance, puntoDulce: forma ? PUNTO_DE[forma] : null, peso, nucleo, caras };

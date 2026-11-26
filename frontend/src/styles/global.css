@@ -1,3 +1,17 @@
+/* Hallmark · checked: 2026-11-23 · genre: editorial (inferred)
+ * floor: 0 FAIL · fixed: 72 (10a, 19, 34, 40, 48, 49a, 54, 62, 63, 67) and judged 18, 73, 75, 48 in SVG · structural: printed (3, 8, 9, 42, 44a, 44c, 58, 59, 77, 78, 79)
+ * finish-review: subagent · 5 findings · 5 resolved · gap: none
+ * built: the project · redesign: polish · v2.0.0 */
+/* Hallmark · waive 39b · large actions only, btn-xl 62px, btn-l 58px, the access field 56px, the questionnaire answers 86px · the cuestionario answers are tap targets with a title and a detail line, and the big buttons come from the reference designs, one or two per screen */
+/* Hallmark · waive 49b · two lines at most, at 320px only · product names such as Lágrima Polivalente 365 and the link Seguir sin cuenta y ver lo guardado en este navegador are real phrases that cannot shorten, and the project keeps them as written */
+/* Hallmark · dismissed 11 · the lift and its shadow are one signal, on whole-card links (palas, guías, cuenta) and buttons only, never on an image */
+/* Hallmark · dismissed 49 · Cerrar sesión en todos los dispositivos is a text-link button on its own line; on a phone it wraps whole, it is not a button label */
+/* Hallmark · answered F3 · text-wrap: balance is set once here on h1, h2, h3 and .titulo, and every page rule inherits it */
+/* Hallmark · answered F19 · Bricolage at 800 and 700 for display, Instrument Sans from 400 to 600 for text, as in the reference designs; cutting to three weights is a restyle */
+/* Hallmark · dropped the eyebrows Recomendador de palas de pádel, Catálogo, Guías, Recomendador, Acceso, Tu cuenta, Sin cuenta, Antes de empezar, Pregunta y nombre, Completado, Tu recomendación, Salida a tienda · 54 names them; each heading below already says it */
+/* Hallmark · reworded «—forma, balance, peso y núcleo—» to «(forma, balance, peso y núcleo)» on /palas/ · 19 names the dash */
+/* Hallmark · answered F20 · the guide shows one pala per shape, three cards in a two-column grid; moving the grid is layout, outside a polish */
+
 /*
  * Sistema de diseño de palaideal. Los valores salen de los cuatro diseños de
  * referencia (portada, cuestionario, recomendación y ficha).
@@ -14,7 +28,8 @@
   --azul: #1747c9;
   --lima: #d9f53b;
   --noche: #081535;
-  --blanco: #ffffff;
+  /* Blanco teñido hacia el azul de la marca (no es un blanco puro). */
+  --blanco: #f8fbff;
   --borde: #d3dbe6;
   --suave: #46566f;
   --tenue: #e3eaf4;
@@ -26,6 +41,29 @@
   --campo-noche: #0f2254;
   --inactivo: #c9d2df;
   --alerta: #b3261e;
+  --alerta-noche: #ff9a8f;
+  --alerta-noche-texto: #ffb4ab;
+  --placeholder: #6b7a93;
+  --placeholder-noche: #9fb1db;
+  /* Borde de campo: 3:1 contra el fondo y contra el blanco. */
+  --borde-campo: #7e8ba0;
+
+  /* Líneas y tramas sobre fondos oscuros. */
+  --linea-clara: rgba(255, 255, 255, 0.55);
+  --linea-clara-suave: rgba(255, 255, 255, 0.35);
+  --hilo-claro: rgba(255, 255, 255, 0.14);
+  --hilo-carbono: rgba(255, 255, 255, 0.07);
+  --pista-noche: rgba(8, 21, 53, 0.45);
+
+  /* Caras de la pala en el dibujo del cuestionario. */
+  --cara-hibrida: #dfe5f1;
+  --cara-carbono: #2a3143;
+
+  /* Sombras (siempre con desplazamiento y desenfoque). */
+  --sombra: rgba(10, 27, 61, 0.45);
+  --sombra-fuerte: rgba(10, 27, 61, 0.6);
+  --sombra-noche: rgba(8, 21, 53, 0.55);
+  --sombra-noche-fuerte: rgba(8, 21, 53, 0.7);
 
   --f-titulo: "Bricolage Grotesque Variable", "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
   --f-texto: "Instrument Sans Variable", "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -97,12 +135,18 @@ svg {
 }
 
 ::placeholder {
-  color: #6b7a93;
+  color: var(--placeholder);
   opacity: 1;
 }
 
 .dk ::placeholder {
-  color: #9fb1db;
+  color: var(--placeholder-noche);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 /* Las anclas no deben quedar pegadas al borde superior. */
@@ -236,12 +280,12 @@ svg {
   font-family: var(--f-mono);
 }
 
+/* Rótulos: la letra del texto, un paso más pequeña, en minúscula y sin espaciar. */
 .kicker {
   margin: 0;
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--f-texto);
+  font-size: 15px;
+  font-weight: 600;
   color: var(--azul);
 }
 
@@ -251,10 +295,9 @@ svg {
 }
 
 .etiqueta {
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--f-texto);
+  font-size: 14px;
+  font-weight: 500;
   color: var(--suave);
 }
 
@@ -332,16 +375,12 @@ svg {
 
 .btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 24px -12px rgba(8, 21, 53, 0.55);
+  box-shadow: 0 14px 24px -12px var(--sombra-noche);
 }
 
-.btn .arr {
-  flex: none;
-  transition: transform 0.18s var(--curva);
-}
-
-.btn:hover .arr {
-  transform: translateX(6px);
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .btn:disabled,
@@ -423,7 +462,11 @@ svg {
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 28px 44px -28px rgba(10, 27, 61, 0.45);
+  box-shadow: 0 28px 44px -28px var(--sombra);
+}
+
+.card:active {
+  transform: translateY(-2px);
 }
 
 /* Toda la tarjeta es clicable aunque el enlace sea solo el título. */
@@ -449,7 +492,7 @@ svg {
   padding: 6px 12px;
   border-radius: 8px;
   background: var(--tenue);
-  font-family: var(--f-mono);
+  font-family: var(--f-texto);
   font-size: 13px;
 }
 
@@ -459,11 +502,9 @@ svg {
   border-radius: 6px;
   background: var(--lima);
   color: var(--tinta);
-  font-family: var(--f-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--f-texto);
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -501,9 +542,17 @@ svg {
 
 .pala-mini .precio {
   margin-top: 4px;
-  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* En móviles estrechos, menos aire para que el nombre de la pala no se parta en tres líneas. */
+@media (max-width: 400px) {
+  .pala-mini {
+    gap: 14px;
+    padding: 18px;
+  }
 }
 
 /* Lo que va dentro de una tarjeta-enlace y tiene acción propia queda por encima. */
@@ -556,7 +605,7 @@ svg {
 }
 
 .dk .campo[aria-invalid="true"] {
-  border-color: #ff9a8f;
+  border-color: var(--alerta-noche);
 }
 
 /* Sin flechas en los campos numéricos de precio. */
@@ -587,7 +636,7 @@ input[type="number"].campo::-webkit-inner-spin-button {
 }
 
 .dk .aviso-form.error {
-  color: #ffb4ab;
+  color: var(--alerta-noche-texto);
 }
 
 .aviso-form.ok {

@@ -137,12 +137,10 @@ export default function Icono({
       width={tamano}
       height={tamano}
       viewBox="0 0 24 24"
-      fill={relleno}
-      stroke={color}
       stroke-width={grosor}
       stroke-linecap="round"
       stroke-linejoin="round"
-      style={{ flex: "none" }}
+      style={{ flex: "none", fill: relleno, stroke: color }}
     >
       {TRAZOS[nombre]}
     </svg>

@@ -90,6 +90,14 @@ const canonica = new URL(Astro.url.pathname, Astro.site);
   </body>
 </html>
 
+<style is:global>
+  /* El documento nunca desborda en horizontal: clip (no hidden, que rompe los sticky). */
+  html,
+  body {
+    overflow-x: clip;
+  }
+</style>
+
 <style>
   .cabecera {
     position: relative;

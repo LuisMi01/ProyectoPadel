@@ -1,5 +1,4 @@
 ---
-import Icono from "@/components/Icono";
 import ListaGuias from "@/components/ListaGuias.astro";
 import Navegacion from "@/components/Navegacion.astro";
 import { Silueta } from "@/components/dibujos";
@@ -21,16 +20,15 @@ const pasos = [
   },
   {
     titulo: "Compras donde quieras",
-    texto:
-      "Comparamos el precio en varias tiendas y te llevamos a la que la tiene más barata. Nosotros no vendemos nada.",
+    texto: "Comparamos el precio en varias tiendas y te llevamos a la que la tiene más barata.",
   },
 ];
 
 const preguntas = [
-  ["Experiencia", "Cuánto margen de error necesitas", "Forma y tamaño del punto dulce"],
-  ["Frecuencia", "Cuánto trabajo le das al brazo y a la pala", "Peso y resistencia de los materiales"],
-  ["Estilo", "Si construyes el punto o prefieres terminarlo", "Balance: bajo para control, alto para potencia"],
-  ["Molestias", "Si hay que cuidar codo, hombro o muñeca", "Núcleo más blando y menos peso"],
+  ["Experiencia", "Cuánto margen de error necesitas", "Nivel (de iniciación a avanzado) y núcleo"],
+  ["Frecuencia", "Cuánto uso le vas a dar a la pala", "Resistencia de los materiales"],
+  ["Estilo", "Si construyes el punto o prefieres terminarlo", "Forma, punto dulce y balance"],
+  ["Molestias", "Si hay que cuidar codo, hombro, muñeca o espalda", "Núcleo más blando y menos peso"],
   ["Edad", "Si hace falta una pala junior", "Tamaño y peso de la pala"],
   ["Presupuesto", "Tu tope de gasto", "Solo ves palas que puedes pagar"],
 ];
@@ -38,23 +36,45 @@ const preguntas = [
 const formas: { forma: Forma; punto: number; texto: string }[] = [
   {
     forma: "redonda",
-    punto: 9,
+    punto: 12,
     texto:
-      "Punto dulce amplio y centrado, balance bajo. Perdona los golpes descentrados. La elección habitual para empezar o si arrastras molestias.",
+      "Punto dulce amplio y centrado, balance bajo. Perdona los golpes descentrados. Lo habitual para empezar o si buscas control.",
   },
   {
     forma: "lagrima",
     punto: 9,
     texto:
-      "Punto dulce algo más arriba, balance medio. Un término medio entre control y pegada para cuando ya llevas un tiempo jugando.",
+      "Punto dulce medio y algo más arriba, balance medio. Un término medio entre control y pegada, para quien hace un poco de todo.",
   },
   {
     forma: "diamante",
     punto: 7,
     texto:
-      "Punto dulce pequeño y alto, balance en cabeza. Más pegada en el remate a cambio de perdonar menos y exigirle más al brazo.",
+      "Punto dulce pequeño y alto, balance alto. Más pegada en el remate a cambio de perdonar menos y exigirle más al brazo. Para quien lleva más de 2 años y no tiene molestias.",
   },
 ];
+
+// --- Dibujo del hero -----------------------------------------------------------
+
+/** Contorno de la pala: redonda, como la silueta de components/dibujos.tsx. */
+const contorno =
+  "M260 40 C348 40 415 110 415 199 C415 286 358 342 294 372 L226 372 C162 342 105 286 105 199 C105 110 172 40 260 40 Z";
+/** Coloca la pala en el dibujo; el recorte de los rótulos tiene que usar la misma. */
+const giro = "translate(110 10) rotate(-10 260 320)";
+
+/** Agujeros de la cara, al tresbolillo: solo los que caben enteros. */
+const agujeros: [number, number][] = [];
+for (let i = -6; i <= 6; i++) {
+  for (let j = -6; j <= 6; j++) {
+    const [x, y] = [18 * i, 18 * j];
+    if ((i + j) % 2 === 0 && (x / 108) ** 2 + (y / 106) ** 2 <= 1) agujeros.push([260 + x, 186 + y]);
+  }
+}
+
+/** Líneas que entran en la cara: blancas sobre la pista y oscuras sobre la pala. */
+const lineaPuntoDulce = "M346.7 198 L520 252 L546 252";
+const lineaNucleo = "M215 232 L136 268 L112 268";
+const lineaBalance = "M366.5 310 L150 392 L112 392";
 ---
 
 <Base
@@ -65,8 +85,8 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
 >
   <header class="hero dk">
     <svg class="court" aria-hidden="true" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
-      <g fill="none" stroke="#FFFFFF" stroke-opacity="0.26" stroke-width="3">
-        <path class="ct" pathLength="1" d="M700 96 L1600 96 L1600 716 L700 716 Z"></path>
+      <g fill="none" stroke-opacity="0.26" stroke-width="3" style="stroke: var(--blanco)">
+        <path class="ct" pathLength="1" d="M740 96 L1600 96 L1600 716 L740 716 Z"></path>
         <path class="ct" pathLength="1" style="animation-delay:.25s" d="M1150 96 L1150 716"></path>
         <path class="ct" pathLength="1" style="animation-delay:.45s" d="M880 96 L880 716"></path>
         <path class="ct" pathLength="1" style="animation-delay:.6s" d="M880 406 L1440 406"></path>
@@ -74,11 +94,10 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     </svg>
 
     <div class="contenedor hero-dentro">
-      <Navegacion tono="oscuro" accion="acceder" conTransparencia />
+      <Navegacion tono="oscuro" accion="acceder" />
 
       <div class="hero-cuerpo">
         <div class="hero-texto">
-          <p class="hero-kicker r1">Recomendador de palas de pádel</p>
           <h1 class="titulo r2">La pala que encaja con cómo juegas.</h1>
           <p class="hero-lead r3">
             Responde 6 preguntas sobre tu juego. Te decimos qué pala te conviene, por qué, y en qué tienda está más
@@ -87,14 +106,13 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
           <div class="hero-acciones r4">
             <a class="btn btn-xl btn-lima" href={rutas.encuesta}>
               Empezar el cuestionario
-              <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
             </a>
             <a class="lnk lnk-alto como" href={rutas.comoFunciona}>Cómo funciona</a>
           </div>
           <ul class="hero-puntos r4">
-            <li>6 preguntas</li>
+            <li>Gratis</li>
             <li>Sin registro</li>
-            <li>No vendemos palas</li>
+            <li>Precios de varias tiendas</li>
           </ul>
         </div>
 
@@ -105,16 +123,12 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
             aria-label="Dibujo técnico de una pala de pádel con las cinco variables que ajustamos: forma, punto dulce, balance, núcleo y peso"
           >
             <defs>
-              <pattern id="holes" width="36" height="36" patternUnits="userSpaceOnUse">
-                <circle cx="9" cy="9" r="5.6" fill="#1747C9"></circle>
-                <circle cx="27" cy="27" r="5.6" fill="#1747C9"></circle>
-              </pattern>
-              <clipPath id="face"><ellipse cx="260" cy="190" rx="112" ry="116"></ellipse></clipPath>
+              <clipPath id="dentro"><path d={contorno} transform={giro}></path></clipPath>
             </defs>
             <g class="recoil">
-              <g transform="translate(110 10) rotate(-10 260 320)">
-                <rect x="236" y="360" width="48" height="240" rx="9" fill="#081535"></rect>
-                <g stroke="#3D5FC0" stroke-width="3" stroke-linecap="round">
+              <g transform={giro}>
+                <rect x="236" y="360" width="48" height="240" rx="9" style="fill: var(--noche)"></rect>
+                <g stroke-width="3" stroke-linecap="round" style="stroke: var(--linea-noche)">
                   <path d="M238 420 L282 404"></path>
                   <path d="M238 450 L282 434"></path>
                   <path d="M238 480 L282 464"></path>
@@ -122,21 +136,19 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
                   <path d="M238 540 L282 524"></path>
                   <path d="M238 570 L282 554"></path>
                 </g>
-                <rect x="229" y="592" width="62" height="20" rx="8" fill="#D9F53B"></rect>
-                <path
-                  d="M260 40 C350 40 415 105 415 195 C415 285 345 320 294 372 L226 372 C175 320 105 285 105 195 C105 105 170 40 260 40 Z"
-                  fill="#FFFFFF"></path>
-                <rect class="holes" x="130" y="60" width="260" height="260" fill="url(#holes)" clip-path="url(#face)"
-                ></rect>
+                <rect x="229" y="592" width="62" height="20" rx="8" style="fill: var(--lima)"></rect>
+                <path d={contorno} style="fill: var(--blanco)"></path>
+                <g class="holes" style="fill: var(--azul)">
+                  {agujeros.map(([cx, cy]) => <circle cx={cx} cy={cy} r="5.6" />)}
+                </g>
                 <path
                   class="dr"
                   pathLength="1"
-                  d="M260 40 C350 40 415 105 415 195 C415 285 345 320 294 372 L226 372 C175 320 105 285 105 195 C105 105 170 40 260 40 Z"
+                  d={contorno}
                   fill="none"
-                  stroke="#081535"
                   stroke-width="9"
-                  stroke-linejoin="round"></path>
-                <path d="M234 322 L286 322 L260 360 Z" fill="#1747C9" stroke="#081535" stroke-width="5" stroke-linejoin="round"
+                  stroke-linejoin="round" style="stroke: var(--noche)"></path>
+                <path d="M234 322 L286 322 L260 360 Z" stroke-width="5" stroke-linejoin="round" style="fill: var(--azul); stroke: var(--noche)"
                 ></path>
                 <ellipse
                   cx="260"
@@ -144,52 +156,60 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
                   rx="60"
                   ry="66"
                   fill="none"
-                  stroke="#081535"
                   stroke-width="2"
                   stroke-dasharray="3 8"
-                  stroke-linecap="round"></ellipse>
-                <circle cx="260" cy="300" r="6" fill="#081535"></circle>
+                  stroke-linecap="round" style="stroke: var(--noche)"></ellipse>
+                <circle cx="260" cy="300" r="6" style="fill: var(--noche)"></circle>
               </g>
-              <circle class="golpe" cx="346.5" cy="197" r="17" fill="none" stroke="#D9F53B" stroke-width="3"></circle>
+              <circle class="golpe" cx="346.5" cy="197" r="17" fill="none" stroke-width="3" style="stroke: var(--lima)"></circle>
             </g>
             <g class="ball">
-              <circle cx="346.5" cy="197" r="16" fill="#D9F53B"></circle>
+              <circle cx="346.5" cy="197" r="16" style="fill: var(--lima)"></circle>
               <path
                 d="M334 190 C342 196 351 196 359 190"
                 fill="none"
-                stroke="#0A1B3D"
                 stroke-opacity=".45"
                 stroke-width="1.6"
-                stroke-linecap="round"></path>
+                stroke-linecap="round" style="stroke: var(--tinta)"></path>
             </g>
-            <g class="rotulos" font-size="17" letter-spacing="1.3" fill="#D9F53B">
+            <g class="rotulos" font-size="18" style="fill: var(--lima)">
               <g class="co" style="animation-delay:1.7s">
-                <path d="M438 78 L498 48 L520 48" fill="none" stroke="#FFFFFF" stroke-width="1.6"></path>
+                <path d="M438 78 L498 48 L546 48" fill="none" stroke-width="1.6" style="stroke: var(--blanco)"></path>
                 <circle cx="438" cy="78" r="4.5"></circle>
-                <text x="530" y="44">FORMA</text>
-                <text class="val" x="530" y="72">lágrima</text>
+                <text x="556" y="44">Forma</text>
+                <text class="val" x="556" y="72">redonda</text>
               </g>
               <g class="co" style="animation-delay:1.85s">
-                <path d="M362 205 L520 252 L546 252" fill="none" stroke="#FFFFFF" stroke-width="1.6"></path>
-                <text x="556" y="248">PUNTO DULCE</text>
+                <path d={lineaPuntoDulce} fill="none" stroke-width="1.6" style="stroke: var(--blanco)"></path>
+                <g clip-path="url(#dentro)">
+                  <path d={lineaPuntoDulce} fill="none" stroke-width="1.8" style="stroke: var(--noche)"></path>
+                  <circle cx="346.7" cy="198" r="6.2" style="fill: var(--noche)"></circle>
+                </g>
+                <text x="556" y="248">Punto dulce</text>
                 <text class="val" x="556" y="276">amplio</text>
               </g>
               <g class="co" style="animation-delay:2s">
-                <path d="M398 488 L520 470 L546 470" fill="none" stroke="#FFFFFF" stroke-width="1.6"></path>
+                <path d="M398 488 L520 470 L546 470" fill="none" stroke-width="1.6" style="stroke: var(--blanco)"></path>
                 <circle cx="398" cy="488" r="4.5"></circle>
-                <text x="556" y="466">PESO</text>
+                <text x="556" y="466">Peso</text>
                 <text class="val" x="556" y="494">360 g</text>
               </g>
               <g class="co" style="animation-delay:2.15s" text-anchor="end">
-                <path d="M195.5 234 L136 268 L112 268" fill="none" stroke="#FFFFFF" stroke-width="1.6"></path>
-                <circle cx="195.5" cy="234" r="4.5"></circle>
-                <text x="102" y="264">NÚCLEO</text>
+                <path d={lineaNucleo} fill="none" stroke-width="1.6" style="stroke: var(--blanco)"></path>
+                <g clip-path="url(#dentro)">
+                  <path d={lineaNucleo} fill="none" stroke-width="1.8" style="stroke: var(--noche)"></path>
+                  <circle cx="215" cy="232" r="6.2" style="fill: var(--noche)"></circle>
+                </g>
+                <text x="102" y="264">Núcleo</text>
                 <text class="val" x="102" y="292">EVA blanda</text>
               </g>
               <g class="co" style="animation-delay:2.3s" text-anchor="end">
-                <path d="M366.5 310 L150 392 L124 392" fill="none" stroke="#FFFFFF" stroke-width="1.6"></path>
-                <text x="114" y="388">BALANCE</text>
-                <text class="val" x="114" y="416">medio</text>
+                <path d={lineaBalance} fill="none" stroke-width="1.6" style="stroke: var(--blanco)"></path>
+                <g clip-path="url(#dentro)">
+                  <path d={lineaBalance} fill="none" stroke-width="1.8" style="stroke: var(--noche)"></path>
+                </g>
+                <text x="102" y="388">Balance</text>
+                <text class="val" x="102" y="416">bajo</text>
               </g>
             </g>
           </svg>
@@ -210,7 +230,6 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
         {
           pasos.map(({ titulo, texto }, i) => (
             <li class:list={["paso rv", { oscuro: i === pasos.length - 1 }]}>
-              <span class="mono num">{String(i + 1).padStart(2, "0")}</span>
               <h3 class="subtitulo">{titulo}</h3>
               <p class="pretty">{texto}</p>
             </li>
@@ -265,16 +284,17 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
           formas.map(({ forma, punto, texto }) => (
             <article class="forma card card-enlace rv">
               <div class="forma-dibujo">
-                <Silueta forma={forma} ancho={150} cara="blanca" trazo={5} punto={punto} anillo />
+                <Silueta forma={forma} ancho={150} cara="blanca" trazo={5} punto={punto} anillo class="diagrama-forma" />
               </div>
               <div class="forma-texto">
-                <span class="etiqueta azul">{textoCaracter[forma]}</span>
                 <h3 class="subtitulo">
                   <a class="cubre" href={rutas.palasPorForma(forma)} aria-label={`Ver palas de forma ${textoForma[forma].toLowerCase()}`}>
                     {textoForma[forma]}
                   </a>
                 </h3>
-                <p class="suave pretty">{texto}</p>
+                <p class="suave pretty">
+                  <strong class="azul">{textoCaracter[forma]}.</strong> {texto}
+                </p>
               </div>
             </article>
           ))
@@ -284,7 +304,7 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
 
     <section id="guias" class="contenedor guias">
       <div class="cabeza-guias rv">
-        <h2 class="titulo t-seccion">Guías para elegir bien</h2>
+        <h2 class="titulo t-seccion">Cómo elegir tu primera pala.</h2>
         <a class="lnk lnk-azul lnk-alto" href={rutas.guias}>Ver todas las guías</a>
       </div>
       <ListaGuias guias={guiasDestacadas} class="rv" />
@@ -292,18 +312,17 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
 
     <section class="banda-pista dk">
       <svg class="pista" aria-hidden="true" viewBox="0 0 1440 360" preserveAspectRatio="xMidYMid slice">
-        <g fill="none" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="3">
+        <g fill="none" stroke-opacity="0.24" stroke-width="3" style="stroke: var(--blanco)">
           <path d="M-20 300 L1460 300"></path>
           <path d="M1040 -20 L1040 380"></path>
           <path d="M1040 150 L1460 150"></path>
         </g>
-        <circle cx="1180" cy="120" r="26" fill="#D9F53B"></circle>
+        <circle cx="1180" cy="120" r="26" style="fill: var(--lima)"></circle>
       </svg>
       <div class="contenedor cierre rv">
         <h2 class="titulo">Seis preguntas y sabes qué pala comprar.</h2>
         <a class="btn btn-xl btn-lima" href={rutas.encuesta}>
           Empezar el cuestionario
-          <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
         </a>
       </div>
     </section>
@@ -332,19 +351,12 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     flex-wrap: wrap;
     align-items: center;
     gap: 32px 40px;
-    padding: 36px 0 72px;
+    /* Mantiene la altura del hero que tenía con el rótulo, para que las líneas de pista no crucen la navegación. */
+    padding: 56px 0 92px;
   }
   .hero-texto {
     flex: 1.15 1 460px;
     min-width: 0;
-  }
-  .hero-kicker {
-    margin: 0 0 22px;
-    font-family: var(--f-mono);
-    font-size: 13.5px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--lima);
   }
   .hero h1 {
     font-size: clamp(46px, 6.1vw, 84px);
@@ -370,29 +382,17 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     font-weight: 600;
     color: var(--blanco);
   }
+  /* Tres hechos en fila, separados por aire: sin puntos ni mono. */
   .hero-puntos {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 22px;
+    gap: 8px 28px;
     margin: 30px 0 0;
     padding: 0;
     list-style: none;
-    font-family: var(--f-mono);
-    font-size: 13px;
-    letter-spacing: 0.04em;
+    font-size: 15px;
+    font-weight: 500;
     color: var(--sobre-azul);
-  }
-  .hero-puntos li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .hero-puntos li::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--lima);
   }
   .hero-dibujo {
     flex: 1 1 380px;
@@ -407,7 +407,8 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     overflow: visible;
   }
   .rotulos {
-    font-family: var(--f-mono);
+    font-family: var(--f-texto);
+    font-weight: 500;
   }
   .rotulos .val {
     font-family: var(--f-texto);
@@ -433,22 +434,23 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     opacity: 0;
     animation: rise 0.6s var(--curva) forwards;
   }
+  /* El golpe se juega una vez y el dibujo se queda quieto (nada se mueve más de 5 s). */
   .floaty {
-    animation: flotar 7s ease-in-out infinite;
+    animation: flotar 4s ease-in-out 1;
   }
   .recoil {
     transform-origin: 422px 625px;
-    animation: retroceso 8s 1.4s infinite both;
+    animation: retroceso 8s 1.4s 1 both;
   }
   .ball {
     transform-box: fill-box;
     transform-origin: center;
-    animation: bola 8s 1.4s infinite both;
+    animation: bola 8s 1.4s 1 both;
   }
   .golpe {
     transform-box: fill-box;
     transform-origin: center;
-    animation: onda 8s 1.4s infinite both;
+    animation: onda 8s 1.4s 1 both;
   }
   @keyframes flotar {
     0%,
@@ -557,10 +559,6 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     background: var(--blanco);
     border: 1px solid var(--borde);
   }
-  .paso .num {
-    font-size: 15px;
-    color: var(--azul);
-  }
   .paso h3 {
     font-size: 28px;
   }
@@ -572,9 +570,6 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     background: var(--tinta);
     border-color: var(--tinta);
     color: var(--blanco);
-  }
-  .paso.oscuro .num {
-    color: var(--lima);
   }
   .paso.oscuro p {
     color: var(--sobre-noche);
@@ -607,11 +602,8 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
   }
   thead th {
     padding: 0 16px 14px 0;
-    font-family: var(--f-mono);
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 500;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
     color: var(--suave);
   }
   thead th:first-child {
@@ -648,8 +640,9 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
   }
 
   /* --- Formas --- */
+  /* El aire hasta Guías lo pone solo esta sección, el mismo que hay entre la tabla y las formas. */
   .formas {
-    padding-bottom: clamp(72px, 9vw, 120px);
+    padding-bottom: clamp(64px, 8vw, 104px);
   }
   .cabeza-formas {
     margin-bottom: 48px;
@@ -712,47 +705,10 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     }
   }
 
-  /* --- Transparencia --- */
-  .transparencia {
-    background: var(--noche);
-    color: var(--blanco);
-  }
-  .transparencia > .contenedor {
-    padding-block: clamp(64px, 8vw, 112px);
-  }
-  .transparencia h2 {
-    margin-bottom: 56px;
-    max-width: 900px;
-    font-size: clamp(34px, 4.6vw, 64px);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-  }
-  .columnas {
-    gap: 40px 48px;
-  }
-  .columnas > div {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding-top: 24px;
-    border-top: 1.5px solid var(--linea-noche);
-  }
-  .columnas h3 {
-    font-size: 25px;
-  }
-  .columnas p {
-    margin: 0;
-    color: var(--sobre-noche);
-  }
-  .columnas a {
-    align-self: flex-start;
-    margin-top: auto;
-    font-size: 15.5px;
-  }
-
   /* --- Guías --- */
+  /* Sin aire arriba: ya lo deja la sección de formas. */
   .guias {
-    padding-block: clamp(64px, 8vw, 112px);
+    padding-block: 0 clamp(64px, 8vw, 112px);
   }
   .cabeza-guias {
     display: flex;
@@ -829,11 +785,8 @@ const formas: { forma: Forma; punto: number; texto: string }[] = [
     td::before {
       content: attr(data-rotulo);
       display: block;
-      font-family: var(--f-mono);
-      font-size: 11.5px;
-      font-weight: 400;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--suave);
     }
     .paso {

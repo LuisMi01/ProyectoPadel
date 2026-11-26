@@ -8,7 +8,7 @@ import type { Forma } from "@/lib/catalogo";
 
 const SILUETAS: Record<Forma, { contorno: string; puntoY: number }> = {
   redonda: {
-    contorno: "M80 10 C116 10 142 38 142 74 C142 110 118 128 94 152 L66 152 C42 128 18 110 18 74 C18 38 44 10 80 10 Z",
+    contorno: "M80 10 C117 10 145 40 145 78 C145 115 121 139 94 152 L66 152 C39 139 15 115 15 78 C15 40 43 10 80 10 Z",
     puntoY: 80,
   },
   lagrima: {
@@ -45,18 +45,17 @@ export function Silueta({ forma, ancho, cara = "tenue", trazo = 6, punto = 11, a
       viewBox="0 0 160 210"
       style={{ flex: "none" }}
     >
-      <rect x="68" y="146" width="24" height="58" rx="5" fill="#0A1B3D" />
+      <rect x="68" y="146" width="24" height="58" rx="5" style="fill: var(--tinta)" />
       <path
         d={contorno}
-        fill={cara === "blanca" ? "#FFFFFF" : "#E3EAF4"}
-        stroke="#0A1B3D"
         stroke-width={trazo}
         stroke-linejoin="round"
+        style={`fill: ${cara === "blanca" ? "var(--blanco)" : "var(--tenue)"}; stroke: var(--tinta)`}
       />
       {anillo && (
-        <circle class="spot" cx="80" cy={puntoY} r={punto + 3} fill="none" stroke="#1747C9" stroke-width="2.5" />
+        <circle class="spot" cx="80" cy={puntoY} r={punto + 3} fill="none" stroke-width="2.5" style="stroke: var(--azul)" />
       )}
-      <circle cx="80" cy={puntoY} r={punto} fill="#1747C9" />
+      <circle cx="80" cy={puntoY} r={punto} style="fill: var(--azul)" />
     </svg>
   );
 }
@@ -74,7 +73,7 @@ interface Geometria {
 const PALAS: Record<Forma, Geometria> = {
   redonda: {
     contorno:
-      "M160 20 C232 20 284 76 284 148 C284 220 236 256 188 304 L132 304 C84 256 36 220 36 148 C36 76 88 20 160 20 Z",
+      "M160 20 C234 20 290 80 290 156 C290 230 242 278 188 304 L132 304 C78 278 30 230 30 156 C30 80 86 20 160 20 Z",
     cara: { cx: 160, cy: 150, rx: 88, ry: 92 },
     puntoY: 156,
     descripcion: "forma redonda con el punto dulce centrado",
@@ -119,16 +118,16 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase
     <svg class={clase} role="img" aria-label={etiqueta} viewBox="0 0 320 420">
       <defs>
         <pattern id={patron} width="30" height="30" patternUnits="userSpaceOnUse">
-          <circle cx="7.5" cy="7.5" r="4.8" fill="#1747C9" />
-          <circle cx="22.5" cy="22.5" r="4.8" fill="#1747C9" />
+          <circle cx="7.5" cy="7.5" r="4.8" style="fill: var(--azul)" />
+          <circle cx="22.5" cy="22.5" r="4.8" style="fill: var(--azul)" />
         </pattern>
         <clipPath id={recorte}>
           <ellipse cx={cara.cx} cy={cara.cy} rx={cara.rx} ry={cara.ry} />
         </clipPath>
       </defs>
-      <rect x="138" y="288" width="44" height="120" rx="9" fill="#081535" />
-      <rect x="131" y="394" width="58" height="18" rx="8" fill="#D9F53B" />
-      <path d={contorno} fill="#FFFFFF" />
+      <rect x="138" y="288" width="44" height="120" rx="9" style="fill: var(--noche)" />
+      <rect x="131" y="394" width="58" height="18" rx="8" style="fill: var(--lima)" />
+      <path d={contorno} style="fill: var(--blanco)" />
       <rect
         class={animada ? "holes" : undefined}
         x={cara.cx - cara.rx}
@@ -143,21 +142,19 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase
         pathLength={animada ? 1 : undefined}
         d={contorno}
         fill="none"
-        stroke="#081535"
         stroke-width="8"
-        stroke-linejoin="round"
+        stroke-linejoin="round" style="stroke: var(--noche)"
       />
-      <path d="M140 262 L180 262 L160 292 Z" fill="#1747C9" stroke="#081535" stroke-width="4.5" stroke-linejoin="round" />
+      <path d="M140 262 L180 262 L160 292 Z" stroke-width="4.5" stroke-linejoin="round" style="fill: var(--azul); stroke: var(--noche)" />
       <circle
         class={animada ? "ring tarde" : "ring"}
         cx="160"
         cy={puntoY}
         r="20"
         fill="none"
-        stroke="#081535"
-        stroke-width="2.5"
+        stroke-width="2.5" style="stroke: var(--noche)"
       />
-      <circle cx="160" cy={puntoY} r="20" fill="#D9F53B" stroke="#081535" stroke-width="3" />
+      <circle cx="160" cy={puntoY} r="20" stroke-width="3" style="fill: var(--lima); stroke: var(--noche)" />
     </svg>
   );
 }

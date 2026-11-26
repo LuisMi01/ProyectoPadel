@@ -32,7 +32,7 @@ const formas: { id: FiltroForma | "todas"; texto: string; href: string }[] = [
 
 const topes = [
   { id: "", texto: "Cualquier precio" },
-  { id: "80", texto: "Hasta 80 €" },
+  { id: "100", texto: "Hasta 100 €" },
   { id: "150", texto: "Hasta 150 €" },
   { id: "250", texto: "Hasta 250 €" },
 ];
@@ -48,16 +48,15 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
 >
   <main id="contenido">
     <section class="contenedor cabeza">
-      <p class="kicker s1">Catálogo</p>
       <h1 class="titulo t-pagina s1">Todas las palas, con su mejor precio.</h1>
       <p class="lead s2">
-        Cada ficha dice lo que importa —forma, balance, peso y núcleo— y lo que cuesta hoy en cada tienda. Si no sabes
+        Cada ficha dice lo que importa (forma, balance, peso y núcleo) y lo que cuesta hoy en cada tienda. Si no sabes
         por dónde empezar, <a class="lnk lnk-azul" href={rutas.encuesta}>el cuestionario te lo reduce a tres</a>.
       </p>
       {
         CATALOGO_DE_EJEMPLO && (
           <p class="aviso s2">
-            <Icono nombre="info" tamano={20} color="#1747C9" />
+            <Icono nombre="info" tamano={20} color="var(--azul)" />
             <span>
               Catálogo de ejemplo: las marcas, las tiendas y los precios son provisionales hasta conectar las tiendas
               reales.
@@ -114,13 +113,15 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
                 <Silueta forma={pala.forma} ancho={118} cara="blanca" trazo={5} punto={9} anillo />
               </div>
               <div class="cuerpo">
-                <span class="etiqueta caracter">{pala.junior ? "Junior" : textoCaracter[pala.forma]}</span>
                 <h2 class="subtitulo">
                   <a class="cubre" href={rutas.pala(pala.slug)}>
                     {pala.nombre}
                   </a>
                 </h2>
-                <span class="marca">{pala.marca}</span>
+                <p class="linea-marca">
+                  <span class="marca">{pala.marca}</span>
+                  <span class="caracter">{pala.junior ? "Junior" : textoCaracter[pala.forma]}</span>
+                </p>
                 <ul class="rasgos">
                   <li class="pastilla">Balance {textoBalance[pala.balance].toLowerCase()}</li>
                   <li class="pastilla">{pala.peso} g</li>
@@ -133,7 +134,6 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
                   </span>
                   <span class="tiendas">
                     {plural(ofertasDisponibles(pala).length, "tienda", "tiendas")}
-                    <Icono nombre="flecha" tamano={20} class="arr" />
                   </span>
                 </div>
               </div>
@@ -152,18 +152,17 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
     <section class="contenedor cierre">
       <div class="banda-pista dk banda rv">
         <svg class="pista" aria-hidden="true" viewBox="0 0 1128 300" preserveAspectRatio="xMidYMid slice">
-          <g fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="3">
+          <g fill="none" stroke-opacity="0.22" stroke-width="3" style="stroke: var(--blanco)">
             <path d="M-20 232 L1150 232"></path>
             <path d="M820 -20 L820 320"></path>
             <path d="M820 110 L1150 110"></path>
           </g>
-          <circle cx="940" cy="86" r="22" fill="#D9F53B"></circle>
+          <circle cx="940" cy="86" r="22" style="fill: var(--lima)"></circle>
         </svg>
         <div class="banda-dentro">
           <h2 class="titulo">¿No sabes cuál elegir?</h2>
           <a class="btn btn-xl btn-lima" href={rutas.encuesta}>
             Responder 6 preguntas
-            <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
           </a>
         </div>
       </div>
@@ -182,7 +181,7 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
   const vacio = document.getElementById("vacio")!;
 
   const FORMAS = ["todas", "redonda", "lagrima", "diamante", "junior"];
-  const TOPES = ["", "80", "150", "250"];
+  const TOPES = ["", "100", "150", "250"];
   const ORDENES = ["", "precio-asc", "precio-desc"];
 
   const inicial = new URLSearchParams(location.search);
@@ -345,18 +344,33 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
     color: var(--blanco);
   }
   .orden {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
   }
+  /* Flecha del desplegable: una máscara pintada con el token, no un color en el SVG. */
+  .orden::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    background: var(--azul);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    pointer-events: none;
+  }
   select {
     height: 44px;
     padding: 0 38px 0 14px;
-    border: 2px solid var(--borde);
+    border: 2px solid var(--borde-campo);
     border-radius: 12px;
-    background: var(--blanco)
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231747C9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
-      no-repeat right 12px center;
+    background: var(--blanco);
     font-size: 15.5px;
     font-weight: 600;
     appearance: none;
@@ -406,7 +420,18 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
     gap: 8px;
     padding: 24px;
   }
+  /* Marca a la izquierda y carácter de la forma a la derecha, debajo del nombre. */
+  .linea-marca {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    margin: 0;
+  }
   .caracter {
+    font-size: 14px;
+    font-weight: 600;
     color: var(--azul);
   }
   .pala h2 {
@@ -460,16 +485,9 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: var(--f-mono);
-    font-size: 13px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
     color: var(--suave);
-  }
-  .tiendas :global(.arr) {
-    color: var(--azul);
-    transition: transform 0.22s var(--curva);
-  }
-  .pala:hover .tiendas :global(.arr) {
-    transform: translateX(6px);
   }
 
   .vacio {
