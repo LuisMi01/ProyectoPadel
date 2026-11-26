@@ -1,9 +1,9 @@
 ---
 /** Pinta el contenido en bloques de las guías y de las páginas de texto. */
 import PalaMini from "@/components/PalaMini";
-import { palaPorSlug } from "@/data/catalogo";
-import type { Bloque } from "@/data/guias";
-import { type Pala, textoCaracter } from "@/lib/catalogo";
+import { palas as catalogo, palaPorSlug } from "@/data/catalogo";
+import type { Bloque, CriteriosPalas } from "@/data/guias";
+import { type Caras, type Pala, mejorOferta, textoCaracter, textoFormaPlural } from "@/lib/catalogo";
 
 interface Props {
   bloques: Bloque[];
@@ -11,7 +11,66 @@ interface Props {
 
 const { bloques } = Astro.props;
 
-const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pala => p !== undefined);
+type BloquePalas = Extract<Bloque, { tipo: "palas" }>;
+
+/** Precio de la mejor oferta disponible; Infinity si ninguna tienda la tiene. */
+const precio = (pala: Pala) => mejorOferta(pala)?.precio ?? Infinity;
+
+function cumple(pala: Pala, c: CriteriosPalas): boolean {
+  const euros = precio(pala);
+  return (
+    !pala.junior &&
+    euros !== Infinity &&
+    (!c.formas || c.formas.includes(pala.forma)) &&
+    (!c.balances || c.balances.includes(pala.balance)) &&
+    (c.durezaMax === undefined || pala.dureza <= c.durezaMax) &&
+    (c.pesoMax === undefined || pala.peso <= c.pesoMax) &&
+    (!c.caras || c.caras.includes(pala.caras)) &&
+    euros >= (c.precioMin ?? 0) &&
+    euros <= (c.precioMax ?? Infinity)
+  );
+}
+
+/** Las palas fijadas a mano o las que cumplen los criterios, de la más barata a la más cara. */
+function palasDelBloque({ slugs, criterios }: BloquePalas): Pala[] {
+  if (slugs) return slugs.map(palaPorSlug).filter((p): p is Pala => p !== undefined);
+  const lasQueCumplen = (c: CriteriosPalas) =>
+    catalogo.filter((pala) => cumple(pala, c)).sort((a, b) => precio(a) - precio(b));
+  if (criterios.length === 1) return lasQueCumplen(criterios[0]).slice(0, 3);
+  const elegidas = criterios.flatMap((c) => lasQueCumplen(c).slice(0, 1));
+  return elegidas.filter((pala, i) => elegidas.indexOf(pala) === i);
+}
+
+/** «a, b o c» y «a, b y c». */
+const unir = (partes: string[], nexo: "o" | "y") =>
+  partes.length < 2 ? partes.join("") : `${partes.slice(0, -1).join(", ")} ${nexo} ${partes.at(-1)}`;
+
+const TEXTO_CARAS: Record<Caras, string> = { fibra: "fibra de vidrio", hibrida: "fibra y carbono", carbono: "carbono" };
+
+/** «redondas, de balance bajo, con núcleo blando o medio, de 360 g o menos y de hasta 130 €». */
+function describir(c: CriteriosPalas): string {
+  const partes: string[] = [];
+  if (c.formas) partes.push(unir(c.formas.map((f) => textoFormaPlural[f].toLowerCase()), "o"));
+  if (c.balances) partes.push(`de balance ${unir(c.balances, "o")}`);
+  if (c.durezaMax !== undefined) {
+    partes.push(c.durezaMax <= 2 ? "con núcleo blando" : c.durezaMax === 3 ? "con núcleo blando o medio" : "sin núcleo duro");
+  }
+  if (c.pesoMax !== undefined) partes.push(`de ${c.pesoMax} g o menos`);
+  if (c.caras) partes.push(`con caras de ${unir(c.caras.map((x) => TEXTO_CARAS[x]), "o")}`);
+  if (c.precioMin !== undefined && c.precioMax !== undefined) partes.push(`de entre ${c.precioMin} y ${c.precioMax} €`);
+  else if (c.precioMax !== undefined) partes.push(`de hasta ${c.precioMax} €`);
+  else if (c.precioMin !== undefined) partes.push(`desde ${c.precioMin} €`);
+  return unir(partes, "y");
+}
+
+/** Frase bajo el título: qué cumplen las palas y en qué orden van. */
+function explicar({ slugs, criterios }: BloquePalas): string | null {
+  if (slugs) return null;
+  if (criterios.length === 1) {
+    return `Cumplen lo que pide esta guía: ${describir(criterios[0])}. Van de la más barata a la más cara.`;
+  }
+  return `La más barata que hay ahora en el catálogo de cada tipo: ${unir(criterios.map(describir), "y")}.`;
+}
 ---
 
 <div class="prosa">
@@ -72,17 +131,22 @@ const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pal
               </p>
             </aside>
           );
-        case "palas":
+        case "palas": {
+          // Sin palas que enseñar (catálogo vacío o nada dentro del tope) no se pinta el título solo.
+          const palas = palasDelBloque(bloque);
+          if (palas.length === 0) return null;
           return (
             <section class="palas">
               <h2 class="titulo">{bloque.titulo}</h2>
+              {explicar(bloque) && <p class="explica">{explicar(bloque)}</p>}
               <div class="rejilla-palas">
-                {palasDe(bloque.slugs).map((pala) => (
+                {palas.map((pala) => (
                   <PalaMini pala={pala} texto={`${pala.junior ? "Junior" : textoCaracter[pala.forma]} · ${pala.marca}`} />
                 ))}
               </div>
             </section>
           );
+        }
       }
     })
   }
@@ -221,6 +285,12 @@ const palasDe = (slugs: string[]) => slugs.map(palaPorSlug).filter((p): p is Pal
     display: flex;
     flex-direction: column;
     gap: 20px;
+  }
+  .palas .explica {
+    margin: -8px 0 0;
+    font-size: 16px;
+    color: var(--suave);
+    text-wrap: pretty;
   }
 
   /* En móvil las tablas pasan a fichas: la primera columna hace de título. */

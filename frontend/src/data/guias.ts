@@ -2,6 +2,23 @@
  * Guías de la web. El contenido va en bloques tipados (no en Markdown) para
  * poder enlazar con rutas.* y con el catálogo sin escribir URLs a mano.
  */
+import type { Balance, Caras, Forma } from "@/lib/catalogo";
+
+/**
+ * Lo que una guía pide a una pala (components/Bloques.astro). Lo que no se pone no se mira.
+ * Siempre son palas de adulto que alguna tienda tiene disponibles.
+ */
+export interface CriteriosPalas {
+  formas?: Forma[];
+  balances?: Balance[];
+  /** Dureza máxima del núcleo: 2 es blando y 3, medio. */
+  durezaMax?: 1 | 2 | 3 | 4 | 5;
+  pesoMax?: number;
+  caras?: Caras[];
+  /** Precio de la mejor oferta, en euros. */
+  precioMin?: number;
+  precioMax?: number;
+}
 
 export type Bloque =
   | { tipo: "p"; texto: string }
@@ -12,8 +29,15 @@ export type Bloque =
   | { tipo: "tabla"; cabecera: string[]; filas: string[][] }
   /** Recuadro destacado: avisos y resúmenes. */
   | { tipo: "nota"; titulo: string; texto: string }
-  /** Tarjetas de palas del catálogo, por slug. */
-  | { tipo: "palas"; titulo: string; slugs: string[] };
+  /**
+   * Palas del catálogo que cumplen lo que pide la guía, de la más barata a la más cara: con un
+   * grupo de criterios, hasta tres; con varios, la más barata de cada uno. Debajo del título se
+   * explica qué cumplen. `slugs` fija palas a mano y, si está, manda sobre los criterios.
+   */
+  | { tipo: "palas"; titulo: string; criterios: CriteriosPalas[]; slugs?: string[] };
+
+/** «Punto dulce amplio»: redonda o lágrima, nunca diamante. */
+const PERDONA: Forma[] = ["redonda", "lagrima"];
 
 export interface Guia {
   slug: string;
@@ -101,8 +125,9 @@ export const guias: Guia[] = [
       },
       {
         tipo: "palas",
-        titulo: "Tres palas para empezar",
-        slugs: ["redonda-inicio-355", "redonda-control-360", "redonda-basica-350"],
+        titulo: "Palas para empezar",
+        // «Peso contenido»: 360 g o menos, como en la guía de hombro o espalda.
+        criterios: [{ formas: ["redonda"], balances: ["bajo"], durezaMax: 3, pesoMax: 360, precioMin: 60, precioMax: 130 }],
       },
     ],
   },
@@ -189,7 +214,7 @@ export const guias: Guia[] = [
       {
         tipo: "palas",
         titulo: "Una pala de cada forma",
-        slugs: ["redonda-control-360", "lagrima-polivalente-365", "diamante-potencia-370"],
+        criterios: [{ formas: ["redonda"] }, { formas: ["lagrima"] }, { formas: ["diamante"] }],
       },
     ],
   },
@@ -277,7 +302,7 @@ export const guias: Guia[] = [
       {
         tipo: "palas",
         titulo: "Palas cómodas del catálogo",
-        slugs: ["redonda-confort-350", "redonda-control-360", "lagrima-confort-355"],
+        criterios: [{ formas: PERDONA, balances: ["bajo", "medio"], durezaMax: 2, pesoMax: 360, caras: ["fibra"] }],
       },
     ],
   },
@@ -359,7 +384,7 @@ export const guias: Guia[] = [
       {
         tipo: "palas",
         titulo: "Palas ligeras del catálogo",
-        slugs: ["redonda-confort-350", "lagrima-confort-355", "redonda-control-360"],
+        criterios: [{ formas: PERDONA, balances: ["bajo", "medio"], durezaMax: 2, pesoMax: 360 }],
       },
     ],
   },
@@ -422,7 +447,7 @@ export const guias: Guia[] = [
       {
         tipo: "palas",
         titulo: "Palas del catálogo por menos de 100 €",
-        slugs: ["redonda-basica-350", "lagrima-basica-360", "redonda-inicio-355"],
+        criterios: [{ formas: ["redonda"], balances: ["bajo"], pesoMax: 360, precioMax: 100 }],
       },
     ],
   },
