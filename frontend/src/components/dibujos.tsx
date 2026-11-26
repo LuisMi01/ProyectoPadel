@@ -111,6 +111,9 @@ interface PropsPala {
   class?: string;
 }
 
+/** Radio del punto dulce según la forma: grande en la redonda, medio en la lágrima, pequeño en el diamante. */
+const RADIO_PUNTO: Record<Forma, number> = { redonda: 24, lagrima: 19, diamante: 14 };
+
 /** Cómo se ve cada material: color de la cara, trama del tejido y color de los agujeros. */
 const MATERIAL: Record<Caras, { cara: string; tejido: number; agujero: string }> = {
   fibra: { cara: "var(--blanco)", tejido: 0, agujero: "var(--azul)" },
@@ -118,8 +121,16 @@ const MATERIAL: Record<Caras, { cara: string; tejido: number; agujero: string }>
   carbono: { cara: "#2b303b", tejido: 0.9, agujero: "#8fb0ff" },
 };
 
-export function PalaGrande({ forma, uid, etiqueta, animada = false, caras = "fibra", class: clase }: PropsPala) {
+export function PalaGrande({
+  forma,
+  uid,
+  etiqueta,
+  animada = false,
+  caras = "fibra",
+  class: clase,
+}: PropsPala) {
   const { contorno, cara, puntoY } = PALAS[forma];
+  const radio = RADIO_PUNTO[forma];
   const material = MATERIAL[caras];
   const patron = `agujeros-${uid}`;
   const recorte = `cara-${uid}`;
@@ -169,11 +180,11 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, caras = "fib
         class={animada ? "ring tarde" : "ring"}
         cx="160"
         cy={puntoY}
-        r="20"
+        r={radio}
         fill="none"
         stroke-width="2.5" style="stroke: var(--noche)"
       />
-      <circle cx="160" cy={puntoY} r="20" stroke-width="3" style="fill: var(--lima); stroke: var(--noche)" />
+      <circle cx="160" cy={puntoY} r={radio} stroke-width="3" style="fill: var(--lima); stroke: var(--noche)" />
     </svg>
   );
 }
