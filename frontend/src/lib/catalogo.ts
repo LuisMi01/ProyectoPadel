@@ -56,10 +56,17 @@ export interface Pala {
   /** Rango de nivel de juego para el que está pensada. */
   nivel: [Nivel, Nivel];
 
-  /** Valoraciones de 1 a 5. */
-  control: number;
+  /** Valoraciones de 1 a 5 con un decimal, calculadas con valoraciones() a partir de la ficha. */
+  /** Lo fácil que es moverla. */
+  manejabilidad: number;
+  /** Lo exacta que sale la bola. */
+  precision: number;
   tolerancia: number;
   potencia: number;
+  /** Cuánto absorbe las vibraciones (y cuida el brazo). Baja: tacto seco. */
+  amortiguacion: number;
+  /** Control de juego: no se enseña, lo usa el recomendador para la alternativa «más control». */
+  control: number;
 
   resumen: string;
   paraTi: string[];
@@ -71,6 +78,50 @@ export interface Pala {
 }
 
 // --- Textos ------------------------------------------------------------------
+
+/** Lo que se escribe de una pala: las valoraciones se calculan (ver conValoraciones). */
+export type FichaPala = Omit<Pala, "manejabilidad" | "precision" | "tolerancia" | "potencia" | "amortiguacion" | "control">;
+
+/** De 0 a 1 a una nota de 1 a 5, con un decimal para que se distingan palas de la misma forma. */
+const nota = (x: number) => Math.round((1 + 4 * x) * 10) / 10;
+
+/**
+ * Manejabilidad, precisión, tolerancia, potencia y amortiguación (más el control de juego que usa
+ * el recomendador), de 1 a 5, a partir de la ficha. Son iguales para
+ * todas las palas y no se pueden inflar a mano. Mismas fórmulas en backend/app/domain/valoraciones.py.
+ */
+export function valoraciones({
+  forma,
+  balance,
+  dureza,
+  peso,
+  caras,
+}: Pick<Pala, "forma" | "balance" | "dureza" | "peso" | "caras">): Pick<
+  Pala,
+  "manejabilidad" | "precision" | "tolerancia" | "potencia" | "amortiguacion" | "control"
+> {
+  const puntoDulce = { redonda: 1, lagrima: 0.5, diamante: 0 }[forma]; // amplio y centrado: 1
+  const cabeza = { bajo: 0, medio: 0.5, alto: 1 }[balance]; // peso hacia la cabeza: 1
+  const blandura = (5 - dureza) / 4; // núcleo muy blando: 1; duro: 0
+  const ligereza = Math.min(1, Math.max(0, (375 - peso) / 30)); // 345 g o menos: 1; 375 g: 0
+  const rigidez = { fibra: 0, hibrida: 0.5, carbono: 1 }[caras];
+  return {
+    manejabilidad: nota(0.6 * ligereza + 0.4 * (1 - cabeza)),
+    // Núcleo duro y caras rígidas: la bola sale como la mandas. Un punto dulce pequeño también
+    // premia a quien golpea en el centro.
+    precision: nota(0.45 * (1 - blandura) + 0.3 * rigidez + 0.25 * (1 - puntoDulce)),
+    tolerancia: nota(0.6 * puntoDulce + 0.25 * blandura + 0.15 * (1 - cabeza)),
+    // Control de juego (no se enseña): forma, balance bajo, núcleo duro y ligereza.
+    control: nota(0.35 * puntoDulce + 0.25 * (1 - cabeza) + 0.25 * (1 - blandura) + 0.15 * ligereza),
+    potencia: nota(0.4 * (1 - puntoDulce) + 0.3 * cabeza + 0.15 * (1 - blandura) + 0.15 * rigidez),
+    amortiguacion: nota(0.4 * blandura + 0.25 * ligereza + 0.2 * (1 - cabeza) + 0.15 * (1 - rigidez)),
+  };
+}
+
+/** La pala con sus valoraciones calculadas. */
+export function conValoraciones(ficha: FichaPala): Pala {
+  return { ...ficha, ...valoraciones(ficha) };
+}
 
 export const FORMAS: Forma[] = ["redonda", "lagrima", "diamante"];
 export const BALANCES: Balance[] = ["bajo", "medio", "alto"];

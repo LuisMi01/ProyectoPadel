@@ -29,7 +29,7 @@ class RecomendacionIn(Esquema):
     frec: Literal["1", "2-3", "4+"] | None = None
     estilo: Literal["control", "mixto", "potencia"] | None = None
     edad: Literal["adulto", "junior"]
-    ppto: Literal["80", "150", "250", "max"]
+    ppto: Literal["100", "150", "250", "max"]
     # La mejor y sus alternativas (ids de modelo, los mismos que en el catálogo de la web).
     palas: list[int] = Field(min_length=1, max_length=3)
 

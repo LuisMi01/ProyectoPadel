@@ -163,7 +163,7 @@ export default function Encuesta() {
               aria-valuemax={100}
               aria-valuenow={avance.porcentaje}
             >
-              <div class="bar" style={{ width: `${avance.porcentaje}%` }} />
+              <div class="bar" style={{ transform: `scaleX(${avance.porcentaje / 100})` }} />
             </div>
           </div>
           <a class="lnk lnk-alto enc-salir" href={rutas.inicio}>
@@ -185,7 +185,6 @@ export default function Encuesta() {
 
           {def && esPregunta(paso) && (
             <div class="enc-pregunta" key={paso}>
-              <p class="kicker">{paso === "camino" ? "Antes de empezar" : `${avance.rotulo} · ${def.nombre}`}</p>
               <h1 class="titulo" ref={titulo} tabIndex={-1}>
                 {def.pregunta}
               </h1>
@@ -207,7 +206,6 @@ export default function Encuesta() {
                       <span class="t">{opcion.titulo}</span>
                       {opcion.detalle && <span class="d">{opcion.detalle}</span>}
                     </span>
-                    <Icono nombre="flecha" grosor={2.2} color="#1747C9" class="arr" />
                   </button>
                 ))}
               </div>
@@ -216,7 +214,6 @@ export default function Encuesta() {
 
           {paso === "zona" && (
             <div class="enc-pregunta" key="zona">
-              <p class="kicker">{avance.rotulo} · Molestias</p>
               <h1 class="titulo" ref={titulo} tabIndex={-1}>
                 ¿Dónde lo notas y cuándo?
               </h1>
@@ -273,7 +270,6 @@ export default function Encuesta() {
                   onClick={() => zonaLista && avanzar("zona", respuestas, salud)}
                 >
                   Continuar
-                  <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
                 </button>
               </div>
             </div>
@@ -281,7 +277,7 @@ export default function Encuesta() {
 
           {paso === "mol" && (
             <p class="enc-salud">
-              <Icono nombre="candado" tamano={20} color="#1747C9" />
+              <Icono nombre="candado" tamano={20} color="var(--azul)" />
               <span>
                 Las molestias son un dato de salud. Las usamos solo para esta recomendación y no se guardan en tu
                 perfil. Puedes no contestar.
@@ -291,7 +287,6 @@ export default function Encuesta() {
 
           {paso === "fin" && (
             <div class="enc-pregunta fin" key="fin">
-              <p class="kicker">Completado</p>
               <h1 class="titulo" ref={titulo} tabIndex={-1}>
                 Listo. Ya sabemos qué buscar.
               </h1>
@@ -306,7 +301,6 @@ export default function Encuesta() {
               <div>
                 <a class="btn btn-xl btn-azul" href={rutas.recomendacion}>
                   Ver mi recomendación
-                  <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
                 </a>
               </div>
             </div>
@@ -357,7 +351,7 @@ function PalaTomandoForma({ respuestas, salud }: { respuestas: Respuestas; salud
   return (
     <aside class="enc-pala" aria-label="Perfil de pala orientativo">
       <svg aria-hidden="true" viewBox="0 0 480 760" preserveAspectRatio="xMidYMid slice">
-        <path d="M-10 130 L490 130" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2.5" />
+        <path d="M-10 130 L490 130" fill="none" stroke-opacity="0.2" stroke-width="2.5" style="stroke: var(--blanco)" />
       </svg>
       <div class="enc-pala-dentro">
         <p class="kicker">Tu pala, tomando forma</p>
@@ -373,28 +367,29 @@ function PalaTomandoForma({ respuestas, salud }: { respuestas: Respuestas; salud
             <div class="agujeros" />
           </div>
           <div class="puente" />
+          {/* Se mueven y crecen con transform: el tamaño base es el del punto medio. */}
           <div
             class="punto-dulce"
             style={{
-              width: u(diametro),
-              height: u(diametro),
-              left: u(115 - diametro / 2),
-              bottom: u(centro - diametro / 2),
+              transform: `translateY(${u(-(centro - DIAMETRO_PUNTO.medio / 2))}) scale(${diametro / DIAMETRO_PUNTO.medio})`,
               opacity: perfil.forma ? 1 : 0,
             }}
           />
           <div class="eje" />
           <span class="marca" style={{ bottom: u(384) }}>
-            ALTO
+            Alto
           </span>
           <span class="marca" style={{ bottom: u(293) }}>
-            MEDIO
+            Medio
           </span>
           <span class="marca" style={{ bottom: u(202) }}>
-            BAJO
+            Bajo
           </span>
-          <div class="cursor" style={{ bottom: u(balance), opacity: perfil.balance !== null ? 1 : 0.3 }} />
-          <span class="marca titulo-eje">BALANCE</span>
+          <div
+            class="cursor"
+            style={{ transform: `translateY(${u(-balance)})`, opacity: perfil.balance !== null ? 1 : 0.3 }}
+          />
+          <span class="marca titulo-eje">Balance</span>
         </div>
 
         <dl class="enc-datos">

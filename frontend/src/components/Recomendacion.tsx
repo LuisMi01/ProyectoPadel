@@ -4,7 +4,7 @@
  * Si hay API, la registra (sin molestias), pinta la explicación con IA y los
  * botones de tienda llevan el id para que el clic cuente para esta recomendación.
  */
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import { AvisoEnLinea } from "@/components/AvisoPrecio";
 import FormularioAcceso from "@/components/FormularioAcceso";
@@ -110,13 +110,11 @@ export default function Recomendacion() {
       return (
         <main id="contenido" class="contenedor rec-main">
           <section class="rec-vacio s1">
-            <p class="kicker">Tu recomendación</p>
             <h1 class="titulo t-pagina">Todavía no has hecho el cuestionario.</h1>
             <p>Son 6 preguntas sobre cómo juegas. Al terminar te decimos qué pala te conviene y por qué.</p>
             <div class="acciones">
               <a class="btn btn-xl btn-azul" href={rutas.encuesta}>
                 Empezar el cuestionario
-                <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
               </a>
               <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>
                 Ver todas las palas
@@ -131,7 +129,6 @@ export default function Recomendacion() {
       return (
         <main id="contenido" class="contenedor rec-main">
           <section class="rec-vacio s1">
-            <p class="kicker">Tu recomendación</p>
             <h1 class="titulo t-pagina">No hay ninguna pala que cumpla todo lo que pides.</h1>
             <p>
               {limite === Infinity
@@ -141,7 +138,6 @@ export default function Recomendacion() {
             <div class="acciones">
               <a class="btn btn-xl btn-azul" href={rutas.encuestaEditar}>
                 Cambiar respuestas
-                <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
               </a>
               <a class="lnk lnk-azul lnk-alto" href={rutas.palas}>
                 Ver todas las palas
@@ -170,7 +166,7 @@ function Resultados({
   resultado: Resultado;
   guardadaEl: string | null;
 }) {
-  const { mejor, motivos, alternativas, nota, titular } = resultado;
+  const { mejor, afinidad, motivos, alternativas, nota, titular } = resultado;
   const [avisoAbierto, setAvisoAbierto] = useState(false);
   const precio = precioDesde(mejor);
   // Id en la API. Solo se registra la recomendación recién hecha, no la que se vuelve a ver del historial.
@@ -189,7 +185,6 @@ function Resultados({
   return (
     <main id="contenido" class="contenedor rec-main">
       <section class="rec-cabeza s1">
-        <p class="kicker">Tu recomendación</p>
         <h1 class="titulo t-pagina">{titular}</h1>
         <div class="rec-respuestas">
           <ul aria-label="Tus respuestas">
@@ -203,7 +198,7 @@ function Resultados({
         </div>
         {guardadaEl && (
           <p class="rec-info">
-            <Icono nombre="reloj" tamano={20} color="#1747C9" />
+            <Icono nombre="reloj" tamano={20} color="var(--azul)" />
             <span>
               Recomendación del {fechaLarga(guardadaEl)}, recalculada con los precios de hoy y sin el dato de
               molestias, que no guardamos.
@@ -211,7 +206,7 @@ function Resultados({
           </p>
         )}
         <p class="rec-info">
-          <Icono nombre="info" tamano={20} color="#1747C9" />
+          <Icono nombre="info" tamano={20} color="var(--azul)" />
           <span>
             Los botones «Ir a la tienda» son enlaces de afiliado: si compras, la tienda nos paga una comisión. A ti
             te cuesta lo mismo y no cambia el orden de esta lista.{" "}
@@ -225,23 +220,23 @@ function Resultados({
       <article class="rec-mejor s2" aria-labelledby="rec1">
         <div class="rec-panel dk">
           <svg class="linea" aria-hidden="true" viewBox="0 0 440 720" preserveAspectRatio="xMidYMid slice">
-            <path d="M-10 250 L450 250" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2.5" />
+            <path d="M-10 250 L450 250" fill="none" stroke-opacity="0.2" stroke-width="2.5" style="stroke: var(--blanco)" />
           </svg>
-          <p class="rec-puesto">
-            <span class="n">01</span>
-            <span>Mejor encaje</span>
-          </p>
+          <div class="rec-panel-arriba">
+            <p class="rec-puesto">
+              <Medalla puesto={1} />
+              <span>Mejor encaje</span>
+            </p>
+            <BarraAfinidad valor={afinidad} oscura />
+          </div>
           <PalaGrande
             class="pala"
             forma={mejor.forma}
+            caras={mejor.caras}
             uid="mejor"
             etiqueta={`Pala de ${descripcionForma(mejor.forma)}`}
           />
-          <dl class="rec-barras">
-            <Barra nombre="Control" valor={mejor.control} retraso={0.6} />
-            <Barra nombre="Tolerancia al fallo" valor={mejor.tolerancia} retraso={0.75} />
-            <Barra nombre="Potencia" valor={mejor.potencia} retraso={0.9} />
-          </dl>
+          <BarrasValoraciones pala={mejor} />
         </div>
 
         <div class="rec-detalle">
@@ -255,6 +250,7 @@ function Resultados({
               <li class="pastilla">Balance {textoBalance[mejor.balance].toLowerCase()}</li>
               <li class="pastilla">{mejor.peso} g</li>
               <li class="pastilla">{textoNucleo(mejor)}</li>
+              <li class="pastilla">Caras de {mejor.carasTexto.toLowerCase()}</li>
             </ul>
           </div>
 
@@ -270,7 +266,7 @@ function Resultados({
             </ul>
             {nota && (
               <p class="rec-nota">
-                <Icono nombre="info" tamano={18} color="#1747C9" />
+                <Icono nombre="info" tamano={18} color="var(--azul)" />
                 <span>{nota}</span>
               </p>
             )}
@@ -305,7 +301,7 @@ function Resultados({
       {alternativas.length > 0 && (
         <section class="rec-otras s3">
           <h2 class="titulo t-bloque">
-            {alternativas.length === 1 ? "Otra que también encaja" : "Otras dos que también encajan"}
+            {alternativas.length === 1 ? "Otra alternativa" : "Otras dos alternativas"}
           </h2>
           <div class="rec-rejilla">
             {alternativas.map((alt, i) => (
@@ -354,7 +350,7 @@ function Explicacion({ recomendacion }: { recomendacion: number }) {
       {texto ? <p>{texto}</p> : <p class="cargando">Preparando la explicación…</p>}
       {conIa && (
         <p class="aviso">
-          <Icono nombre="info" tamano={16} color="#1747C9" />
+          <Icono nombre="info" tamano={16} color="var(--azul)" />
           <span>Texto redactado con IA a partir de los datos de las palas.</span>
         </p>
       )}
@@ -362,15 +358,52 @@ function Explicacion({ recomendacion }: { recomendacion: number }) {
   );
 }
 
+/** Las cinco valoraciones. Se llenan de 0 a su valor cuando aparecen en pantalla, no al cargar. */
+function BarrasValoraciones({ pala }: { pala: Pala }) {
+  const lista = useRef<HTMLDListElement>(null);
+  const [llenar, setLlenar] = useState(false);
+
+  useEffect(() => {
+    const el = lista.current;
+    if (!el || !("IntersectionObserver" in window)) {
+      setLlenar(true);
+      return;
+    }
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        if (entrada.isIntersecting) {
+          setLlenar(true);
+          observador.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, []);
+
+  return (
+    <dl ref={lista} class={llenar ? "rec-barras llenar" : "rec-barras"}>
+      <Barra nombre="Manejabilidad" valor={pala.manejabilidad} retraso={0} />
+      <Barra nombre="Precisión" valor={pala.precision} retraso={0.12} />
+      <Barra nombre="Tolerancia al fallo" valor={pala.tolerancia} retraso={0.24} />
+      <Barra nombre="Potencia" valor={pala.potencia} retraso={0.36} />
+      <Barra nombre="Amortiguación" valor={pala.amortiguacion} retraso={0.48} />
+    </dl>
+  );
+}
+
 function Barra({ nombre, valor, retraso }: { nombre: string; valor: number; retraso: number }) {
+  // La nota tiene un decimal para el recomendador; aquí se enseña redondeada, número y barra.
+  const entera = Math.round(valor);
   return (
     <div>
       <div class="fila">
         <dt>{nombre}</dt>
-        <dd>{valor} / 5</dd>
+        <dd>{entera} / 5</dd>
       </div>
       <div class="pista" aria-hidden="true">
-        <div class="fill" style={{ width: `${valor * 20}%`, animationDelay: `${retraso}s` }} />
+        <div class="fill" style={{ width: `${entera * 20}%`, animationDelay: `${retraso}s` }} />
       </div>
     </div>
   );
@@ -420,7 +453,7 @@ function FilaOferta({ oferta, href }: { oferta: Oferta; href: string }) {
       <span class="lado">
         <span class="estado">{textoDisponibilidad[oferta.disponibilidad]}</span>
         <span class="precio">{euros(oferta.precio)}</span>
-        {oferta.disponibilidad !== "agotada" && <Icono nombre="salida" tamano={16} grosor={2.4} color="#1747C9" />}
+        {oferta.disponibilidad !== "agotada" && <Icono nombre="salida" tamano={16} grosor={2.4} color="var(--azul)" />}
       </span>
     </>
   );
@@ -438,6 +471,101 @@ function FilaOferta({ oferta, href }: { oferta: Oferta; href: string }) {
   );
 }
 
+const METALES = ["oro", "plata", "bronce"] as const;
+
+/** Puesto de la pala: el número dentro de una pelota de pádel con aro de medalla (oro, plata, bronce). */
+function Medalla({ puesto }: { puesto: number }) {
+  const metal = METALES[puesto - 1] ?? "bronce";
+  return (
+    <svg class={`medalla ${metal}`} viewBox="0 0 40 40" role="img" aria-label={`Puesto ${puesto}`}>
+      <circle class="aro" cx="20" cy="20" r="18" />
+      <circle class="bola" cx="20" cy="20" r="14.5" />
+      <path class="costura" d="M7.6 12.5 C11 16.5 11 23.5 7.6 27.5 M32.4 12.5 C29 16.5 29 23.5 32.4 27.5" />
+      <text x="20" y="20.5" text-anchor="middle" dominant-baseline="central">
+        {puesto}
+      </text>
+    </svg>
+  );
+}
+
+/** «Encaja muy bien», «bien», «a medias» o «poco», según la afinidad. */
+function textoAfinidad(valor: number): string {
+  if (valor >= 85) return "Encaja muy bien";
+  if (valor >= 70) return "Encaja bien";
+  if (valor >= 50) return "Encaja a medias";
+  return "Encaja poco";
+}
+
+/** Afinidad con las respuestas, de 0 a 100: etiqueta pequeña con barra, en la esquina de la tarjeta.
+ *  `oscura`: sobre el recuadro azul de la recomendada. */
+function BarraAfinidad({ valor, oscura = false }: { valor: number; oscura?: boolean }) {
+  const texto = `Afinidad con tus respuestas: ${valor} %. ${textoAfinidad(valor)}`;
+  const caja = useRef<HTMLDivElement>(null);
+  // Cuenta desde 0 hasta el valor; la barra la acompaña.
+  const desde = 0;
+  const [mostrado, setMostrado] = useState(desde);
+
+  useEffect(() => {
+    const el = caja.current;
+    const sinMovimiento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!el || sinMovimiento || !("IntersectionObserver" in window)) {
+      setMostrado(valor);
+      return;
+    }
+    // De número en número, sin saltarse ninguno: al principio uno por fotograma (lo más rápido que
+    // se puede ver) y cada vez más lento hasta unos 55 ms por número al final.
+    let espera = 0;
+    const contar = () => {
+      const pasos = valor - desde;
+      let k = 0;
+      const siguiente = () => {
+        k += 1;
+        setMostrado(desde + k);
+        if (k < pasos) espera = window.setTimeout(siguiente, 14 + 40 * (k / pasos) ** 4);
+      };
+      if (pasos > 0) espera = window.setTimeout(siguiente, 14);
+    };
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        if (entrada.isIntersecting) {
+          observador.disconnect();
+          contar();
+        }
+      },
+      { threshold: 0.6 },
+    );
+    observador.observe(el);
+    return () => {
+      observador.disconnect();
+      window.clearTimeout(espera);
+    };
+  }, [valor]);
+
+  return (
+    <div
+      ref={caja}
+      class={oscura ? "afinidad oscura" : "afinidad"}
+      role="meter"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={valor}
+      aria-label={texto}
+      title={texto}
+    >
+      <div class="afinidad-fila" aria-hidden="true">
+        <span class="afinidad-nombre">Afinidad</span>
+        <span class="afinidad-valor">
+          {mostrado}
+          {"\u00a0%"}
+        </span>
+      </div>
+      <div class="afinidad-pista" aria-hidden="true">
+        <div class="afinidad-fill" style={{ width: `${mostrado}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function TarjetaAlternativa({
   alt,
   puesto,
@@ -447,7 +575,7 @@ function TarjetaAlternativa({
   puesto: number;
   recomendacion: number | null;
 }) {
-  const { pala, etiqueta, ganas, pierdes } = alt;
+  const { pala, etiqueta, ganas, pierdes, afinidad } = alt;
   const oferta = mejorOferta(pala);
 
   return (
@@ -455,13 +583,16 @@ function TarjetaAlternativa({
       <div class="alt-cabeza">
         <div class="alt-titulo">
           <span class="alt-etiqueta">
-            <span class="n">{String(puesto).padStart(2, "0")}</span>
+            <Medalla puesto={puesto} />
             <span>{etiqueta}</span>
           </span>
           <span class="etiqueta">{pala.marca}</span>
           <h3 class="titulo">{pala.nombre}</h3>
         </div>
-        <Silueta forma={pala.forma} ancho={84} />
+        <div class="alt-lado">
+          <BarraAfinidad valor={afinidad} />
+          <Silueta forma={pala.forma} ancho={84} />
+        </div>
       </div>
       <dl>
         <div>
@@ -513,7 +644,6 @@ function GuardarRecomendacion() {
         <div class="lado">
           <a class="btn btn-l btn-lima" href={rutas.historial}>
             Ver mi historial
-            <Icono nombre="flecha" tamano={20} grosor={2.4} class="arr" />
           </a>
         </div>
       </section>

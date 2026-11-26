@@ -50,6 +50,8 @@ export const rutas = {
   comoGanamosDinero: "/como-ganamos-dinero/",
   afiliacion: "/legal/afiliacion/",
   avisoLegal: "/legal/aviso-legal/",
+  /** El correo de contacto está con los datos del titular. */
+  contacto: "/legal/aviso-legal/",
   privacidad: "/legal/privacidad/",
   cookies: "/legal/cookies/",
 
@@ -61,21 +63,14 @@ export const rutas = {
   historial: "/cuenta/historial/",
 } as const;
 
-export type SeccionNav = "cuestionario" | "palas" | "guias" | "transparencia";
+export type SeccionNav = "cuestionario" | "palas" | "guias";
 
-/** Enlaces de la navegación principal (cabecera). */
+/** Enlaces de la navegación principal (cabecera). «Cómo ganamos dinero» va en el pie, en Transparencia. */
 export const navegacion: { id: SeccionNav; texto: string; href: string }[] = [
   { id: "cuestionario", texto: "Cuestionario", href: rutas.encuesta },
   { id: "palas", texto: "Palas", href: rutas.palas },
   { id: "guias", texto: "Guías", href: rutas.guias },
 ];
-
-/** Enlace extra que la portada añade a la navegación. */
-export const navTransparencia = {
-  id: "transparencia" as SeccionNav,
-  texto: "Cómo ganamos dinero",
-  href: rutas.comoGanamosDinero,
-};
 
 /** Sub-navegación del área de cuenta. */
 export const navegacionCuenta = [
@@ -100,7 +95,6 @@ export const pieColumnas = [
     enlaces: [
       { texto: "Acceder", href: rutas.acceso },
       { texto: "Palas guardadas", href: rutas.palasGuardadas },
-      { texto: "Avisos de precio", href: rutas.alertas },
     ],
   },
   {
@@ -116,6 +110,7 @@ export const pieColumnas = [
       { texto: "Aviso legal", href: rutas.avisoLegal },
       { texto: "Privacidad", href: rutas.privacidad },
       { texto: "Cookies", href: rutas.cookies },
+      { texto: "Contacto", href: rutas.contacto },
     ],
   },
 ] as const;

@@ -7,7 +7,7 @@ Idioma del código, comentarios, commits y UI: **español**.
 ## Estructura
 
 ```
-frontend/   Astro + Preact + TypeScript. Web estática (dist/). Despliegue previsto: Vercel (vercel.json).
+frontend/   Astro + Preact + TypeScript. Web estática (dist/). Despliegue previsto: Vercel (`vercel.json` en la raíz).
             wrangler.jsonc es la configuración anterior para Cloudflare Workers.
 backend/    Python 3.13 + FastAPI + Pydantic + SQLAlchemy 2 + psycopg 3 + Alembic. Despliegue previsto: Render.
 docs/       GITFLOW.md y documentación.

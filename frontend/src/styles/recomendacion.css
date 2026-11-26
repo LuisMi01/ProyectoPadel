@@ -87,7 +87,9 @@
   justify-content: space-between;
   gap: 24px;
   padding: clamp(24px, 3vw, 36px);
-  background: var(--azul);
+  /* Diagonal: azul oscuro (el de «Ir a la tienda» al pasar el cursor) en la esquina superior
+     derecha, el azul de siempre en el centro y uno algo más claro en la inferior izquierda. */
+  background: linear-gradient(to bottom left, #0a2470 0%, var(--azul) 40%, var(--azul) 65%, #4f7ff0 100%);
   color: var(--blanco);
 }
 
@@ -104,15 +106,134 @@
   align-items: center;
   gap: 12px;
   margin: 0;
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--lima);
 }
 
 .rec-puesto .n {
   font-size: 15px;
+}
+
+/* Puesto: pelota de pádel con el número y un aro de medalla (oro, plata, bronce). */
+.medalla {
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+
+.medalla .aro {
+  fill: none;
+  stroke-width: 4;
+}
+
+.medalla.oro .aro {
+  stroke: #e3b23c;
+}
+
+.medalla.plata .aro {
+  stroke: #c3cad4;
+}
+
+.medalla.bronce .aro {
+  stroke: #c47b45;
+}
+
+.medalla .bola {
+  fill: var(--lima);
+}
+
+.medalla .costura {
+  fill: none;
+  stroke: var(--blanco);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.medalla text {
+  font-family: var(--f-titulo);
+  font-size: 16px;
+  font-weight: 800;
+  fill: var(--noche);
+}
+
+/* Afinidad con las respuestas: etiqueta pequeña con barra en la esquina superior derecha (del
+   recuadro azul en la recomendada y encima del dibujo en las alternativas). */
+.afinidad {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 132px;
+}
+
+.afinidad-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.afinidad-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+}
+
+.afinidad-valor {
+  font-family: var(--f-titulo);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--azul);
+  font-variant-numeric: tabular-nums;
+}
+
+.afinidad-pista {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--tenue);
+  overflow: hidden;
+}
+
+.afinidad-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--azul);
+  /* El ancho lo mueve BarraAfinidad (Recomendacion.tsx) a la vez que cuenta el porcentaje. */
+}
+
+.afinidad.oscura .afinidad-nombre {
+  color: var(--sobre-azul);
+}
+
+.afinidad.oscura .afinidad-valor {
+  color: var(--lima);
+}
+
+.afinidad.oscura .afinidad-pista {
+  background: var(--pista-noche);
+}
+
+.afinidad.oscura .afinidad-fill {
+  background: var(--lima);
+}
+
+.rec-panel-arriba {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.alt-lado {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
 }
 
 .rec-panel .pala {
@@ -155,26 +276,36 @@
 }
 
 .rec-barras .pista {
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(8, 21, 53, 0.45);
+  height: 10px;
+  border-radius: 5px;
+  background: var(--pista-noche);
+  /* Hundida: sombra interior arriba. */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
 .rec-barras .fill {
   height: 100%;
-  border-radius: 4px;
-  background: var(--lima);
-  transform-origin: left center;
-  animation: rec-crece 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  border-radius: 5px;
+  /* Relieve: brillo arriba y sombra abajo, sobre el degradado en diagonal de lima a verde. */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0.1) 100%),
+    linear-gradient(115deg, var(--lima) 60%, #b3da2a);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  /* Vacía hasta que la barra aparece en pantalla (.llenar, Recomendacion.tsx); entonces se
+     llena de 0 a su valor. */
+  animation: rec-llena 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both paused;
 }
 
-@keyframes rec-crece {
+.rec-barras.llenar .fill {
+  animation-play-state: running;
+}
+
+@keyframes rec-llena {
   from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
+    width: 0;
   }
 }
 
@@ -237,10 +368,9 @@
 
 .rec-porque .respuesta {
   flex: 0 0 190px;
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  line-height: 1.9;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
   color: var(--azul);
 }
 
@@ -302,6 +432,13 @@
   border-radius: 18px;
   border: 1.5px solid var(--tinta);
   overflow: hidden;
+}
+
+/* «Ir a la tienda»: azul más oscuro al pasar el cursor, sin elevarse. */
+.oferta-mejor .btn-azul:hover {
+  background: #0a2470;
+  transform: none;
+  box-shadow: none;
 }
 
 .oferta-mejor {
@@ -375,7 +512,7 @@ a.ofr:hover {
 }
 
 .ofr .precio {
-  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
@@ -443,12 +580,10 @@ a.ofr:hover {
 
 .alt-etiqueta {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--azul);
 }
 
@@ -476,11 +611,9 @@ a.ofr:hover {
 
 .alt dt {
   flex: 0 0 70px;
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  line-height: 2;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.8;
   color: var(--suave);
 }
 

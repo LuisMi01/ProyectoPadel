@@ -112,7 +112,7 @@ export default function AvisoPrecio(props: Props) {
 
   return (
     <form class="aviso-ficha dk" onSubmit={aviso.crear} noValidate>
-      <Icono nombre="campana" tamano={30} grosor={1.8} color="#D9F53B" />
+      <Icono nombre="campana" tamano={30} grosor={1.8} color="var(--lima)" />
       <h3 class="titulo">¿Esperas a que baje?</h3>
       <p class="aviso-intro">Dinos tu precio y te escribimos el día que alguna tienda lo alcance.</p>
 

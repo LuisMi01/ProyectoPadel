@@ -43,16 +43,16 @@ const { guias, conResumen = false, class: clase } = Astro.props;
     border-bottom: 1px solid var(--borde);
     text-decoration: none;
     color: var(--tinta);
-    transition:
-      background-color 0.18s,
-      padding-left 0.22s var(--curva);
+    transition: background-color 0.18s;
   }
   .fila :global(.arr) {
     transition: transform 0.22s var(--curva);
   }
   .fila:hover {
     background-color: var(--tenue);
-    padding-left: 28px;
+  }
+  .fila:active {
+    background-color: var(--azul-tinte);
   }
   .fila:hover :global(.arr) {
     transform: translateX(8px);

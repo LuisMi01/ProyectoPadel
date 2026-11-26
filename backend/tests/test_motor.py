@@ -26,9 +26,16 @@ def _resultado(respuestas: dict, salud: dict | None) -> dict | None:
     return {
         "titular": res.titular,
         "mejor": res.mejor.slug,
+        "afinidad": res.afinidad,
         "motivos": [{"respuesta": m.respuesta, "explicacion": m.explicacion} for m in res.motivos],
         "alternativas": [
-            {"slug": a.pala.slug, "etiqueta": a.etiqueta, "ganas": a.ganas, "pierdes": a.pierdes}
+            {
+                "slug": a.pala.slug,
+                "etiqueta": a.etiqueta,
+                "ganas": a.ganas,
+                "pierdes": a.pierdes,
+                "afinidad": a.afinidad,
+            }
             for a in res.alternativas
         ],
         "nota": res.nota,
@@ -41,8 +48,8 @@ def test_mismo_resultado_que_el_frontend(caso):
 
 
 def test_sin_palas_dentro_del_tope_devuelve_none():
-    caras = [p for p in CATALOGO if min(o.precio for o in p.ofertas) > 80]
-    assert recomendar(Respuestas(exp="gt2", ppto="80", edad="adulto"), None, caras) is None
+    caras = [p for p in CATALOGO if min(o.precio for o in p.ofertas) > 100]
+    assert recomendar(Respuestas(exp="gt2", ppto="100", edad="adulto"), None, caras) is None
 
 
 @pytest.mark.parametrize("frec", ["1", "2-3", "4+"])

@@ -6,19 +6,16 @@
  */
 import Icono from "@/components/Icono";
 import Logo from "@/components/Logo.astro";
-import { type SeccionNav, navTransparencia, navegacion, rutas } from "@/lib/rutas";
+import { type SeccionNav, navegacion, rutas } from "@/lib/rutas";
 
 interface Props {
   tono: "oscuro" | "claro";
   /** Botón de la derecha: acceso a la cuenta o llamada al cuestionario. */
   accion?: "acceder" | "cuestionario";
   activo?: SeccionNav;
-  /** La portada añade «Cómo ganamos dinero» a los enlaces. */
-  conTransparencia?: boolean;
 }
 
-const { tono, accion = "acceder", activo, conTransparencia = false } = Astro.props;
-const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacion;
+const { tono, accion = "acceder", activo } = Astro.props;
 ---
 
 <nav aria-label="Principal" class:list={["nav", tono]}>
@@ -26,7 +23,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
 
   <div class="navlinks">
     {
-      enlaces.map(({ id, texto, href }) => (
+      navegacion.map(({ id, texto, href }) => (
         <a class="nv" href={href} aria-current={activo === id ? "page" : undefined}>
           {texto}
         </a>
@@ -54,7 +51,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
       </summary>
       <div class="panel">
         {
-          [...navegacion, navTransparencia].map(({ id, texto, href }) => (
+          navegacion.map(({ id, texto, href }) => (
             <a href={href} aria-current={activo === id ? "page" : undefined}>
               {texto}
             </a>
@@ -128,7 +125,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     align-items: center;
     height: 44px;
     padding: 0 18px;
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border: 1.5px solid var(--linea-clara);
     border-radius: 10px;
     font-size: 16px;
     font-weight: 600;
@@ -152,7 +149,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     justify-content: center;
     width: 44px;
     height: 44px;
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border: 1.5px solid var(--linea-clara);
     border-radius: 10px;
     cursor: pointer;
     list-style: none;
@@ -182,7 +179,7 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     border-radius: 18px;
     background: var(--noche);
     color: var(--blanco);
-    box-shadow: 0 28px 44px -24px rgba(8, 21, 53, 0.7);
+    box-shadow: 0 28px 44px -24px var(--sombra-noche-fuerte);
     animation: pop 0.25s var(--curva) both;
   }
   .claro .panel {
@@ -190,13 +187,13 @@ const enlaces = conTransparencia ? [...navegacion, navTransparencia] : navegacio
     border: 1px solid var(--borde);
     background: var(--blanco);
     color: var(--tinta);
-    box-shadow: 0 28px 44px -28px rgba(10, 27, 61, 0.45);
+    box-shadow: 0 28px 44px -28px var(--sombra);
   }
   .panel a {
     display: flex;
     align-items: center;
     min-height: 54px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 1px solid var(--hilo-claro);
     font-family: var(--f-titulo);
     font-size: 21px;
     font-weight: 700;

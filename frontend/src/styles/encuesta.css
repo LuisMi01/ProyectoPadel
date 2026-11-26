@@ -28,10 +28,6 @@ body {
   gap: 8px;
 }
 
-.enc-progreso .etiqueta {
-  letter-spacing: 0.08em;
-}
-
 .enc-barra {
   height: 6px;
   border-radius: 3px;
@@ -39,11 +35,13 @@ body {
   overflow: hidden;
 }
 
+/* El avance se pinta con scaleX (no se anima el ancho). */
 .enc-barra .bar {
+  width: 100%;
   height: 100%;
-  border-radius: 3px;
   background: var(--azul);
-  transition: width 0.7s cubic-bezier(0.3, 1, 0.4, 1);
+  transform-origin: left center;
+  transition: transform 0.7s cubic-bezier(0.3, 1, 0.4, 1);
 }
 
 .enc-salir {
@@ -168,7 +166,7 @@ body {
 .opt:hover {
   transform: translateX(8px);
   border-color: var(--azul);
-  box-shadow: 0 14px 26px -20px rgba(10, 27, 61, 0.6);
+  box-shadow: 0 14px 26px -20px var(--sombra-fuerte);
 }
 
 .opt:active {
@@ -208,18 +206,6 @@ body {
   color: var(--suave);
 }
 
-.opt .arr {
-  opacity: 0;
-  transform: translateX(-10px);
-  transition:
-    opacity 0.2s,
-    transform 0.2s var(--curva);
-}
-
-.opt:hover .arr {
-  opacity: 1;
-  transform: none;
-}
 
 /* --- Zona y momento de la molestia --- */
 
@@ -339,10 +325,8 @@ body {
 }
 
 .enc-resumen dt {
-  font-family: var(--f-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--suave);
 }
 
@@ -445,9 +429,8 @@ body {
   border: calc(var(--u) * 8) solid var(--noche);
   background: var(--blanco);
   overflow: hidden;
-  transition:
-    height 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
-    border-radius 0.75s cubic-bezier(0.3, 1.35, 0.5, 1);
+  /* La forma cambia con el radio; la altura no se anima. */
+  transition: border-radius 0.75s cubic-bezier(0.3, 1.35, 0.5, 1);
 }
 
 .dibujo .cabeza.sin-definir {
@@ -459,17 +442,17 @@ body {
   background: repeating-linear-gradient(
     45deg,
     var(--blanco) 0 calc(var(--u) * 7),
-    #dfe5f1 calc(var(--u) * 7) calc(var(--u) * 14)
+    var(--cara-hibrida) calc(var(--u) * 7) calc(var(--u) * 14)
   );
 }
 
 .dibujo .cabeza[data-caras="carbono"] {
-  --hilo: rgba(255, 255, 255, 0.07);
+  --hilo: var(--hilo-carbono);
   --paso: calc(var(--u) * 7);
   background:
     repeating-linear-gradient(45deg, var(--hilo) 0 var(--paso), transparent var(--paso) calc(var(--paso) * 2)),
     repeating-linear-gradient(-45deg, var(--hilo) 0 var(--paso), transparent var(--paso) calc(var(--paso) * 2)),
-    #2a3143;
+    var(--cara-carbono);
 }
 
 .dibujo .agujeros {
@@ -495,15 +478,16 @@ body {
 }
 
 .dibujo .punto-dulce {
-  /* Posición y tamaño los pone Encuesta.tsx según la forma. */
+  /* Tamaño base: el del punto medio (46). Encuesta.tsx lo sube y lo escala con transform. */
+  left: calc(var(--u) * 92);
+  bottom: 0;
+  width: calc(var(--u) * 46);
+  height: calc(var(--u) * 46);
   border-radius: 50%;
   background: var(--lima);
   border: calc(var(--u) * 3) solid var(--noche);
   transition:
-    bottom 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
-    left 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
-    width 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
-    height 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
+    transform 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
     opacity 0.4s;
 }
 
@@ -533,15 +517,14 @@ body {
   bottom: calc(var(--u) * 205);
   width: 2px;
   height: calc(var(--u) * 190);
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--linea-clara);
 }
 
 .dibujo .marca {
   left: calc(var(--u) * 266);
-  font-family: var(--f-mono);
-  font-size: max(9px, calc(var(--u) * 10.5));
+  font-size: max(12px, calc(var(--u) * 13));
+  font-weight: 500;
   line-height: 1.5;
-  letter-spacing: 0.06em;
   color: var(--sobre-azul);
 }
 
@@ -556,9 +539,10 @@ body {
   width: calc(var(--u) * 16);
   height: calc(var(--u) * 8);
   border-radius: calc(var(--u) * 4);
+  bottom: 0;
   background: var(--lima);
   transition:
-    bottom 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
+    transform 0.75s cubic-bezier(0.3, 1.35, 0.5, 1),
     opacity 0.4s;
 }
 
@@ -568,7 +552,7 @@ body {
   gap: 16px 20px;
   margin: 0;
   padding-top: 20px;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-top: 1.5px solid var(--linea-clara-suave);
 }
 
 .enc-datos > div {
@@ -578,10 +562,8 @@ body {
 }
 
 .enc-datos dt {
-  font-family: var(--f-mono);
-  font-size: 11.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--sobre-azul);
 }
 
@@ -633,11 +615,7 @@ body {
     font-size: 18px;
   }
 
-  /* En táctil no hay «hover»: la flecha sobra y el desplazamiento también. */
-  .opt .arr {
-    display: none;
-  }
-
+  /* En táctil no hay «hover»: el desplazamiento sobra. */
   .opt:hover {
     transform: none;
   }

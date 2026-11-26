@@ -1,5 +1,4 @@
 ---
-import Icono from "@/components/Icono";
 import ListaGuias from "@/components/ListaGuias.astro";
 import { guias } from "@/data/guias";
 import Base from "@/layouts/Base.astro";
@@ -14,7 +13,6 @@ import { rutas } from "@/lib/rutas";
 >
   <main id="contenido">
     <section class="contenedor cabeza">
-      <p class="kicker s1">Guías</p>
       <h1 class="titulo t-pagina s1">Guías para elegir bien.</h1>
       <p class="lead s2">
         Lo que conviene saber antes de comprar una pala, explicado sin jerga de catálogo. Si un término técnico importa,
@@ -29,18 +27,17 @@ import { rutas } from "@/lib/rutas";
     <section class="contenedor cierre">
       <div class="banda-pista dk banda rv">
         <svg class="pista" aria-hidden="true" viewBox="0 0 1128 300" preserveAspectRatio="xMidYMid slice">
-          <g fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="3">
+          <g fill="none" stroke-opacity="0.22" stroke-width="3" style="stroke: var(--blanco)">
             <path d="M-20 232 L1150 232"></path>
             <path d="M820 -20 L820 320"></path>
             <path d="M820 110 L1150 110"></path>
           </g>
-          <circle cx="940" cy="86" r="22" fill="#D9F53B"></circle>
+          <circle cx="940" cy="95" r="14" style="fill: var(--lima)"></circle>
         </svg>
         <div class="banda-dentro">
           <h2 class="titulo">¿Prefieres ir al grano?</h2>
           <a class="btn btn-xl btn-lima" href={rutas.encuesta}>
             Responder 6 preguntas
-            <Icono nombre="flecha" tamano={22} grosor={2.4} class="arr" />
           </a>
         </div>
       </div>

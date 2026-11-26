@@ -15,7 +15,7 @@ Frecuencia = Literal["1", "2-3", "4+"]
 Estilo = Literal["control", "mixto", "potencia"]
 RespuestaMolestias = Literal["no", "si", "nc"]
 Edad = Literal["adulto", "junior"]
-Presupuesto = Literal["80", "150", "250", "max"]
+Presupuesto = Literal["100", "150", "250", "max"]
 
 Zona = Literal["Codo", "Hombro", "Muñeca", "Espalda"]
 Momento = Literal["Mientras juego", "Al día siguiente", "Casi siempre"]
@@ -80,9 +80,13 @@ class Pala:
     caras_texto: str
     gama: int  # 1 básica · 2 media · 3 alta
     nivel: tuple[int, int]  # 1 iniciación · 2 medio · 3 avanzado
-    control: int
-    tolerancia: int
-    potencia: int
+    # Calculadas a partir de la ficha (domain/valoraciones.py), de 1 a 5 con un decimal.
+    manejabilidad: float  # lo fácil que es moverla
+    precision: float  # lo exacta que sale la bola
+    tolerancia: float
+    potencia: float
+    amortiguacion: float  # cuánto absorbe las vibraciones; baja: tacto seco
+    control: float  # control de juego: no se enseña, lo usa el motor
     ofertas: tuple[OfertaPala, ...] = ()
     resumen: str = ""
     para_ti: tuple[str, ...] = ()
@@ -101,12 +105,14 @@ class Alternativa:
     etiqueta: str
     ganas: str
     pierdes: str
+    afinidad: int  # encaje con las respuestas, de 0 a 100
 
 
 @dataclass(frozen=True)
 class Resultado:
     titular: str
     mejor: Pala
+    afinidad: int  # encaje de la mejor con las respuestas, de 0 a 100
     motivos: tuple[Motivo, ...]
     alternativas: tuple[Alternativa, ...]
     nota: str | None = None
