@@ -26,9 +26,16 @@ def _resultado(respuestas: dict, salud: dict | None) -> dict | None:
     return {
         "titular": res.titular,
         "mejor": res.mejor.slug,
+        "afinidad": res.afinidad,
         "motivos": [{"respuesta": m.respuesta, "explicacion": m.explicacion} for m in res.motivos],
         "alternativas": [
-            {"slug": a.pala.slug, "etiqueta": a.etiqueta, "ganas": a.ganas, "pierdes": a.pierdes}
+            {
+                "slug": a.pala.slug,
+                "etiqueta": a.etiqueta,
+                "ganas": a.ganas,
+                "pierdes": a.pierdes,
+                "afinidad": a.afinidad,
+            }
             for a in res.alternativas
         ],
         "nota": res.nota,

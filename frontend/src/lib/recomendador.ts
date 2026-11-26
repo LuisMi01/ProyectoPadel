@@ -6,8 +6,9 @@
  * módulo es el que se sustituye por la llamada a la API.
  *
  * Reglas: se descartan las palas que no son de la talla (junior/adulto) o que
- * superan el tope de gasto; el resto se puntúa por cercanía al perfil que
- * dibujan las respuestas (forma, balance, núcleo, peso y nivel).
+ * superan el tope de gasto; el resto se ordena por afinidad con el perfil que
+ * dibujan las respuestas (ver encaje()); a igualdad de afinidad, va primero la de
+ * mejores materiales y, después, la más barata.
  */
 import {
   BALANCES,
@@ -37,12 +38,16 @@ export interface Alternativa {
   etiqueta: string;
   ganas: string;
   pierdes: string;
+  /** Encaje con las respuestas, de 0 a 100 (ver encaje()). */
+  afinidad: number;
 }
 
 export interface Recomendacion {
   /** «Tu pala es una redonda de control.» */
   titular: string;
   mejor: Pala;
+  /** Encaje de la mejor con las respuestas, de 0 a 100. */
+  afinidad: number;
   motivos: Motivo[];
   alternativas: Alternativa[];
   /** Aviso que acompaña a la recomendación cuando hay molestias. */
@@ -91,43 +96,86 @@ function objetivo(r: Respuestas): Objetivo {
   return { forma, balance, dureza, pesoMin, pesoMax, nivel, junior, molestias, tope: tope(r) };
 }
 
-function puntuar(pala: Pala, o: Objetivo, r: Respuestas, salud: Salud | null): number {
-  let puntos = 0;
+/** Lo que mira encaje() de una pala. */
+type Rasgos = Pick<Pala, "forma" | "balance" | "dureza" | "peso" | "nivel" | "tolerancia" | "gama">;
 
-  const saltoForma = Math.abs(FORMAS.indexOf(pala.forma) - FORMAS.indexOf(o.forma));
-  puntos += [40, 18, 0][saltoForma];
+// --- Afinidad -----------------------------------------------------------------
+// Ordena las palas y da su afinidad de 0 a 100: la primera es siempre la que más encaja. Más peso
+// en lo que más importa. Los
+// materiales cuentan según lo que pide la frecuencia, pero nunca por encima de lo que da el
+// presupuesto: una pala barata que encaja no puede salir con poca afinidad por no ser de carbono si
+// el tope no llega para carbono. Lo que se acerca suma: una lágrima cuando tocaba diamante se lleva
+// la mitad de los puntos de la forma.
 
-  const saltoBalance = Math.abs(BALANCES.indexOf(pala.balance) - BALANCES.indexOf(o.balance));
-  puntos += [15, 7, 0][saltoBalance];
+/** Puntos de cada cosa (suman 100). Con molestias manda el núcleo, y después el peso. */
+const PRIORIDAD = { forma: 30, nucleo: 15, balance: 15, nivel: 15, materiales: 10, peso: 10, perdona: 5 };
+const PRIORIDAD_MOLESTIAS = { nucleo: 30, forma: 20, peso: 15, balance: 15, nivel: 10, materiales: 5, perdona: 5 };
 
-  // Núcleo: con molestias, la dureza pesa mucho más.
-  const difDureza = Math.abs(pala.dureza - o.dureza);
-  puntos += o.molestias ? 26 - 10 * difDureza : 12 - 6 * difDureza;
+/** Gama de materiales que piden las respuestas: la de la frecuencia, con el tope del presupuesto. */
+function gamaQueToca(r: Respuestas): number {
+  const porFrecuencia = r.frec === "4+" ? 3 : r.frec === "2-3" ? 2 : 1;
+  const porPresupuesto = r.ppto === "100" ? 1 : r.ppto === "150" ? 2 : 3;
+  return Math.min(porFrecuencia, porPresupuesto);
+}
 
+/** Puntos de afinidad, sin pasar a porcentaje (afinidad() los divide entre los de la pala ideal). */
+function encaje(pala: Rasgos, o: Objetivo, r: Respuestas, salud: Salud | null): number {
+  const p = o.molestias ? PRIORIDAD_MOLESTIAS : PRIORIDAD;
+  const cerca = (salto: number) => [1, 0.5, 0][Math.min(salto, 2)];
+
+  const forma = cerca(Math.abs(FORMAS.indexOf(pala.forma) - FORMAS.indexOf(o.forma)));
+  // Con el codo o la muñeca, menos palanca: el balance bajo vale siempre y el alto, nada.
+  const enBrazo = o.molestias && (salud?.zona === "Codo" || salud?.zona === "Muñeca");
+  const balance =
+    enBrazo && pala.balance !== "medio"
+      ? Number(pala.balance === "bajo")
+      : cerca(Math.abs(BALANCES.indexOf(pala.balance) - BALANCES.indexOf(o.balance)));
+  const nucleo = Math.max(0, 1 - 0.25 * Math.abs(pala.dureza - o.dureza));
+  // Con el hombro o la espalda, más de 360 g no vale (es lo que dice su guía).
+  const enEspalda = o.molestias && (salud?.zona === "Hombro" || salud?.zona === "Espalda");
   const fueraDePeso = Math.max(o.pesoMin - pala.peso, pala.peso - o.pesoMax, 0);
-  puntos += 10 - Math.min(20, fueraDePeso * 0.8);
-
+  const peso = enEspalda && pala.peso > 360 ? 0 : Math.max(0, 1 - fueraDePeso / 25);
   const [nivelMin, nivelMax] = pala.nivel;
-  const fueraDeNivel = Math.max(nivelMin - o.nivel, o.nivel - nivelMax, 0);
-  puntos += fueraDeNivel === 0 ? 18 : -14 * fueraDeNivel;
+  const nivel = cerca(Math.max(nivelMin - o.nivel, o.nivel - nivelMax, 0));
+  // Materiales iguales o mejores que los que tocan: todos los puntos.
+  const materiales = cerca(Math.max(0, gamaQueToca(r) - pala.gama));
+  // Que perdone solo cuenta para quien empieza.
+  const perdona = r.camino === "primera" || o.nivel === 1 ? pala.tolerancia / 5 : 0;
 
-  // Quien empieza agradece una pala que perdone.
-  if (r.camino === "primera" || o.nivel === 1) puntos += pala.tolerancia * 2;
+  return (
+    p.forma * forma +
+    p.balance * balance +
+    p.nucleo * nucleo +
+    p.peso * peso +
+    p.nivel * nivel +
+    p.materiales * materiales +
+    p.perdona * perdona
+  );
+}
 
-  // A igualdad de encaje, mejores materiales dentro del presupuesto.
-  puntos += pala.gama * 6;
-  if (r.frec === "4+") puntos += (pala.gama - 1) * 4;
-  if (r.frec === "1") puntos -= (pala.gama - 1) * 3;
-  if (r.camino === "cambio") puntos += (pala.gama - 1) * 3;
-
-  if (o.molestias && salud) {
-    const enBrazo = salud.zona === "Codo" || salud.zona === "Muñeca";
-    if (enBrazo) puntos += pala.balance === "bajo" ? 6 : pala.balance === "alto" ? -10 : 0;
-    if (salud.zona === "Hombro" || salud.zona === "Espalda") puntos += pala.peso <= 360 ? 6 : -4;
-    if (salud.momento === "Casi siempre") puntos += pala.dureza <= 2 ? 6 : -6;
+/**
+ * Los puntos de afinidad de la pala ideal para estas respuestas. Se buscan probando todas las
+ * combinaciones, para que siga siendo cierto aunque cambien las prioridades de encaje().
+ * De peso se prueban los extremos del rango que toca y 360 g.
+ */
+function encajeMaximo(o: Objetivo, r: Respuestas, salud: Salud | null): number {
+  let maximo = 0;
+  for (const forma of FORMAS) {
+    for (const balance of BALANCES) {
+      for (const dureza of [1, 2, 3, 4, 5] as const) {
+        for (const peso of [o.pesoMin, Math.min(o.pesoMax, 360), o.pesoMax]) {
+          const ideal: Rasgos = { forma, balance, dureza, peso, nivel: [o.nivel, o.nivel], tolerancia: 5, gama: 3 };
+          maximo = Math.max(maximo, encaje(ideal, o, r, salud));
+        }
+      }
+    }
   }
+  return maximo;
+}
 
-  return puntos;
+/** Afinidad de 0 a 100: 100 es la pala ideal para esas respuestas y ese presupuesto. */
+function afinidad(puntos: number, maximo: number): number {
+  return Math.round((100 * puntos) / maximo);
 }
 
 // --- Alternativas -------------------------------------------------------------
@@ -255,8 +303,12 @@ function describir(
   }
 }
 
-function elegirAlternativas(orden: Candidata[], o: Objetivo): Alternativa[] {
-  const [ref, ...resto] = orden;
+/** Una pala que encaja menos que esto no se enseña como alternativa: no ayuda a elegir. */
+const AFINIDAD_MINIMA_ALTERNATIVA = 50;
+
+function elegirAlternativas(orden: Candidata[], o: Objetivo, maximo: number): Alternativa[] {
+  const [ref, ...todas] = orden;
+  const resto = todas.filter((c) => afinidad(c.puntos, maximo) >= AFINIDAD_MINIMA_ALTERNATIVA);
   const usadas = new Set<number>();
   const lista: Alternativa[] = [];
 
@@ -268,13 +320,19 @@ function elegirAlternativas(orden: Candidata[], o: Objetivo): Alternativa[] {
   const anadir = (tipo: TipoAlternativa, c: Candidata | undefined) => {
     if (!c || lista.length >= 2) return;
     usadas.add(c.pala.id);
-    lista.push({ pala: c.pala, etiqueta: ETIQUETAS[tipo], ...describir(tipo, c, ref, o.molestias) });
+    lista.push({
+      pala: c.pala,
+      etiqueta: ETIQUETAS[tipo],
+      ...describir(tipo, c, ref, o.molestias),
+      afinidad: afinidad(c.puntos, maximo),
+    });
   };
 
   // 1) Una alternativa de carácter: más pegada, más control o más cuidado del brazo.
   const suave = (c: Candidata) => !o.molestias || c.pala.dureza <= 3;
   const masPegada = (c: Candidata) => c.pala.potencia > ref.pala.potencia && suave(c);
-  const extraPegada = (c: Candidata) => (c.pala.potencia - ref.pala.potencia) * 8;
+  // Escala de encaje(): de 0 a 100. Cada punto más de potencia vale como 6 de encaje.
+  const extraPegada = (c: Candidata) => (c.pala.potencia - ref.pala.potencia) * 6;
   // Más control de verdad: gana en precisión sin perdonar menos que la recomendada.
   const masControl = (c: Candidata) =>
     (c.pala.control > ref.pala.control && c.pala.tolerancia >= ref.pala.tolerancia) ||
@@ -481,14 +539,20 @@ function titular(pala: Pala): string {
  */
 export function recomendar(r: Respuestas, salud: Salud | null, catalogo: Pala[]): Recomendacion | null {
   const o = objetivo(r);
+  const maximo = encajeMaximo(o, r, salud);
 
+  // Primero la de más afinidad (la que se ve en pantalla); a igualdad, mejores materiales y,
+  // después, la más barata.
   const candidatas: Candidata[] = catalogo
     .filter((pala) => pala.junior === o.junior)
     .flatMap((pala) => {
       const oferta = mejorOferta(pala);
-      return oferta && oferta.precio <= o.tope ? [{ pala, precio: oferta.precio, puntos: puntuar(pala, o, r, salud) }] : [];
+      return oferta && oferta.precio <= o.tope ? [{ pala, precio: oferta.precio, puntos: encaje(pala, o, r, salud) }] : [];
     })
-    .sort((a, b) => b.puntos - a.puntos || a.precio - b.precio);
+    .sort(
+      (a, b) =>
+        afinidad(b.puntos, maximo) - afinidad(a.puntos, maximo) || b.pala.gama - a.pala.gama || a.precio - b.precio,
+    );
 
   if (candidatas.length === 0) return null;
 
@@ -496,8 +560,10 @@ export function recomendar(r: Respuestas, salud: Salud | null, catalogo: Pala[])
   return {
     titular: titular(mejor),
     mejor,
+    afinidad: afinidad(candidatas[0].puntos, maximo),
     motivos: [motivoForma(mejor, r), motivoUso(mejor, r, salud), motivoPrecio(mejor, r)],
-    alternativas: elegirAlternativas(candidatas, o),
+    // El puesto (las medallas 2 y 3) lo da la afinidad: primero la que más encaja.
+    alternativas: elegirAlternativas(candidatas, o, maximo).sort((a, b) => b.afinidad - a.afinidad),
     nota:
       r.mol === "si"
         ? "Una pala adecuada ayuda, pero no trata una lesión. Si la molestia no se va, consulta a un fisioterapeuta."

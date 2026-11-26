@@ -10,11 +10,14 @@ from pathlib import Path
 from typing import Any
 
 from app.domain.modelos import OfertaPala, Pala
+from app.domain.valoraciones import valoraciones
 
 RUTA_EJEMPLO = Path(__file__).resolve().parents[1] / "semillas" / "catalogo_ejemplo.json"
 
 
 def pala_desde_frontend(d: dict[str, Any]) -> Pala:
+    # Las valoraciones no se leen de la ficha: se calculan, igual que en la web.
+    v = valoraciones(d["forma"], d["balance"], d["dureza"], d["peso"], d["caras"])
     return Pala(
         id=d["id"],
         slug=d["slug"],
@@ -33,9 +36,12 @@ def pala_desde_frontend(d: dict[str, Any]) -> Pala:
         caras_texto=d["carasTexto"],
         gama=d["gama"],
         nivel=(d["nivel"][0], d["nivel"][1]),
-        control=d["control"],
-        tolerancia=d["tolerancia"],
-        potencia=d["potencia"],
+        manejabilidad=v.manejabilidad,
+        precision=v.precision,
+        tolerancia=v.tolerancia,
+        potencia=v.potencia,
+        amortiguacion=v.amortiguacion,
+        control=v.control,
         resumen=d.get("resumen", ""),
         para_ti=tuple(d.get("paraTi", ())),
         mejor_otra=tuple(d.get("mejorOtra", ())),

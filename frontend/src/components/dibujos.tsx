@@ -2,7 +2,7 @@
  * Dibujos de pala de los diseños, por forma. Son componentes Preact para poder
  * usarlos igual en páginas Astro (se renderizan a HTML) y dentro de las islas.
  */
-import type { Forma } from "@/lib/catalogo";
+import type { Caras, Forma } from "@/lib/catalogo";
 
 // --- Silueta pequeña (viewBox 160×210) ----------------------------------------
 
@@ -106,20 +106,38 @@ interface PropsPala {
   etiqueta: string;
   /** Dibuja el contorno y hace aparecer los agujeros al cargar (ficha). */
   animada?: boolean;
+  /** Material de las caras: cambia el color de la cara y le pone la trama del tejido. */
+  caras?: Caras;
   class?: string;
 }
 
-export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase }: PropsPala) {
+/** Cómo se ve cada material: color de la cara, trama del tejido y color de los agujeros. */
+const MATERIAL: Record<Caras, { cara: string; tejido: number; agujero: string }> = {
+  fibra: { cara: "var(--blanco)", tejido: 0, agujero: "var(--azul)" },
+  hibrida: { cara: "#e3e7ee", tejido: 0.35, agujero: "var(--azul)" },
+  carbono: { cara: "#2b303b", tejido: 0.9, agujero: "#8fb0ff" },
+};
+
+export function PalaGrande({ forma, uid, etiqueta, animada = false, caras = "fibra", class: clase }: PropsPala) {
   const { contorno, cara, puntoY } = PALAS[forma];
+  const material = MATERIAL[caras];
   const patron = `agujeros-${uid}`;
   const recorte = `cara-${uid}`;
+  const tejido = `tejido-${uid}`;
 
   return (
     <svg class={clase} role="img" aria-label={etiqueta} viewBox="0 0 320 420">
       <defs>
         <pattern id={patron} width="30" height="30" patternUnits="userSpaceOnUse">
-          <circle cx="7.5" cy="7.5" r="4.8" style="fill: var(--azul)" />
-          <circle cx="22.5" cy="22.5" r="4.8" style="fill: var(--azul)" />
+          <circle cx="7.5" cy="7.5" r="4.8" style={`fill: ${material.agujero}`} />
+          <circle cx="22.5" cy="22.5" r="4.8" style={`fill: ${material.agujero}`} />
+        </pattern>
+        {/* Trama de tejido (sarga): cuadros alternos claros y oscuros en diagonal. */}
+        <pattern id={tejido} width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="5" height="5" fill="rgba(255,255,255,0.14)" />
+          <rect x="5" y="5" width="5" height="5" fill="rgba(255,255,255,0.14)" />
+          <rect x="5" width="5" height="5" fill="rgba(0,0,0,0.12)" />
+          <rect y="5" width="5" height="5" fill="rgba(0,0,0,0.12)" />
         </pattern>
         <clipPath id={recorte}>
           <ellipse cx={cara.cx} cy={cara.cy} rx={cara.rx} ry={cara.ry} />
@@ -127,7 +145,8 @@ export function PalaGrande({ forma, uid, etiqueta, animada = false, class: clase
       </defs>
       <rect x="138" y="288" width="44" height="120" rx="9" style="fill: var(--noche)" />
       <rect x="131" y="394" width="58" height="18" rx="8" style="fill: var(--lima)" />
-      <path d={contorno} style="fill: var(--blanco)" />
+      <path d={contorno} style={`fill: ${material.cara}`} />
+      {material.tejido > 0 && <path d={contorno} fill={`url(#${tejido})`} opacity={material.tejido} />}
       <rect
         class={animada ? "holes" : undefined}
         x={cara.cx - cara.rx}

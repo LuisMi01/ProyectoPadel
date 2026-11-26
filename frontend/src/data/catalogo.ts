@@ -5,7 +5,7 @@
  *
  * Los `id` de pala y de oferta son los modelo_id y oferta_id que usará la API.
  */
-import type { Pala, Tienda } from "@/lib/catalogo";
+import { type FichaPala, type Pala, type Tienda, conValoraciones } from "@/lib/catalogo";
 
 /** Mientras sea true, la web avisa de que marcas, tiendas y precios son de ejemplo. */
 export const CATALOGO_DE_EJEMPLO = true;
@@ -16,7 +16,8 @@ export const tiendas: Tienda[] = [
   { id: "c", nombre: "Tienda C" },
 ];
 
-export const palas: Pala[] = [
+/** Fichas de las palas. Control, tolerancia, potencia y amortiguación se calculan (lib/catalogo.ts). */
+const fichas: FichaPala[] = [
   {
     id: 1,
     slug: "redonda-control-360",
@@ -35,9 +36,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 2,
     nivel: [1, 2],
-    control: 5,
-    tolerancia: 5,
-    potencia: 2,
     resumen:
       "Pala redonda de balance bajo y núcleo blando. Para quien empieza o prefiere control y comodidad antes que pegada.",
     paraTi: [
@@ -80,9 +78,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 1,
     nivel: [1, 1],
-    control: 4,
-    tolerancia: 5,
-    potencia: 2,
     resumen:
       "Redonda sencilla y ligera para dar los primeros pasos sin gastar de más. Perdona mucho y se mueve fácil.",
     paraTi: [
@@ -123,9 +118,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 2,
     nivel: [1, 2],
-    control: 5,
-    tolerancia: 5,
-    potencia: 1,
     resumen:
       "La redonda más blanda y ligera del catálogo. Pensada para quien quiere cuidar el brazo por encima de todo.",
     paraTi: [
@@ -164,9 +156,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono 3K",
     gama: 3,
     nivel: [2, 3],
-    control: 5,
-    tolerancia: 4,
-    potencia: 3,
     resumen:
       "Redonda con caras de carbono: el control de siempre con más salida de bola y más duración. Para quien juega mucho y no renuncia a la precisión.",
     paraTi: [
@@ -207,9 +196,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 1,
     nivel: [1, 1],
-    control: 4,
-    tolerancia: 4,
-    potencia: 1,
     resumen:
       "La redonda más económica del catálogo. Suficiente para probar si el pádel te engancha antes de gastar más.",
     paraTi: [
@@ -248,9 +234,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono y fibra de vidrio",
     gama: 2,
     nivel: [2, 3],
-    control: 4,
-    tolerancia: 3,
-    potencia: 4,
     resumen:
       "Lágrima de balance medio: un poco de todo. Para quien ya lleva un tiempo jugando y quiere defender y atacar con la misma pala.",
     paraTi: [
@@ -291,9 +274,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 1,
     nivel: [1, 2],
-    control: 3,
-    tolerancia: 4,
-    potencia: 3,
     resumen:
       "Lágrima económica para quien empieza a atacar más y no quiere gastar mucho. Más pegada que una redonda básica.",
     paraTi: [
@@ -333,9 +313,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 2,
     nivel: [2, 3],
-    control: 4,
-    tolerancia: 4,
-    potencia: 3,
     resumen:
       "Lágrima de núcleo blando: pegada suficiente sin castigar el brazo. Para quien ataca pero arrastra molestias.",
     paraTi: [
@@ -376,9 +353,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono 12K",
     gama: 3,
     nivel: [3, 3],
-    control: 4,
-    tolerancia: 3,
-    potencia: 4,
     resumen:
       "Lágrima de gama alta, con caras de carbono y núcleo firme. Para jugadores avanzados que quieren precisión y pegada a partes iguales.",
     paraTi: [
@@ -419,9 +393,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono y fibra de vidrio",
     gama: 2,
     nivel: [2, 3],
-    control: 3,
-    tolerancia: 2,
-    potencia: 4,
     resumen:
       "Diamante asequible: balance alto y pegada, con un núcleo más amable que el de los diamantes de competición.",
     paraTi: [
@@ -461,9 +432,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono 3K",
     gama: 3,
     nivel: [3, 3],
-    control: 2,
-    tolerancia: 2,
-    potencia: 5,
     resumen:
       "Diamante de balance alto para rematar. Mucha pegada arriba a cambio de exigir técnica y brazo.",
     paraTi: [
@@ -506,9 +474,6 @@ export const palas: Pala[] = [
     carasTexto: "Carbono 18K",
     gama: 3,
     nivel: [3, 3],
-    control: 3,
-    tolerancia: 1,
-    potencia: 5,
     resumen:
       "El diamante más exigente del catálogo: duro, con el peso en cabeza y sin concesiones. Solo si compites y tienes el golpe hecho.",
     paraTi: [
@@ -548,9 +513,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 1,
     nivel: [1, 2],
-    control: 4,
-    tolerancia: 5,
-    potencia: 1,
     resumen:
       "Pala junior redonda, más corta y ligera. Para que los más pequeños muevan la pala sin esfuerzo y cojan técnica.",
     paraTi: [
@@ -589,9 +551,6 @@ export const palas: Pala[] = [
     carasTexto: "Fibra de vidrio",
     gama: 2,
     nivel: [2, 3],
-    control: 3,
-    tolerancia: 4,
-    potencia: 3,
     resumen:
       "Pala junior de lágrima para quien ya entrena y compite: algo más de pegada sin dejar de ser ligera.",
     paraTi: [
@@ -615,6 +574,8 @@ export const palas: Pala[] = [
     ],
   },
 ];
+
+export const palas: Pala[] = fichas.map(conValoraciones);
 
 const porSlug = new Map(palas.map((p) => [p.slug, p]));
 const porOferta = new Map(palas.flatMap((p) => p.ofertas.map((o) => [o.id, p] as const)));

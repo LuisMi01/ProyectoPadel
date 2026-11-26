@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager
 from datetime import UTC, datetime, time
@@ -54,6 +55,11 @@ _NIVEL = {1: "iniciación", 2: "medio", 3: "avanzado"}
 _DUREZA = {1: "muy blando", 2: "blando", 3: "medio", 4: "medio-duro", 5: "duro"}
 
 
+def _entero(nota: float) -> int:
+    """Las valoraciones sin decimales, como en la web (Math.round: medio hacia arriba)."""
+    return math.floor(nota + 0.5)
+
+
 def hechos(perfil: dict[str, str], palas: list[Pala]) -> str:
     """Texto con las respuestas (sin salud) y los datos de las palas que se envía a la IA."""
     lineas = ["Respuestas de la persona:"]
@@ -68,7 +74,9 @@ def hechos(perfil: dict[str, str], palas: list[Pala]) -> str:
             f"{i}. {p.nombre} ({p.marca}): forma {_FORMA[p.forma]}, balance "
             f"{TEXTO_BALANCE[p.balance].lower()}, {p.peso} g, núcleo {_DUREZA[p.dureza]} "
             f"({p.nucleo}), caras de {p.caras_texto.lower()}, nivel {nivel}, "
-            f"control {p.control}/5, tolerancia {p.tolerancia}/5, potencia {p.potencia}/5, "
+            f"manejabilidad {_entero(p.manejabilidad)}/5, precisión {_entero(p.precision)}/5, "
+            f"tolerancia {_entero(p.tolerancia)}/5, potencia {_entero(p.potencia)}/5, "
+            f"amortiguación {_entero(p.amortiguacion)}/5, "
             f"desde {euros_cortos(precio_desde(p))}."
         )
     return "\n".join(lineas)

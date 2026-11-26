@@ -5,8 +5,8 @@ navegador mientras la web no use la API. tests/test_motor.py comprueba que los d
 resultado. Si cambian las reglas, hay que cambiarlas en los dos sitios y subir MOTOR_VERSION.
 
 Reglas: se descartan las palas que no son de la talla (junior/adulto) o que superan el tope de
-gasto; el resto se puntúa por cercanía al perfil que dibujan las respuestas (forma, balance,
-núcleo, peso y nivel).
+gasto; el resto se ordena por afinidad con el perfil que dibujan las respuestas (ver _encaje); a
+igualdad de afinidad, va primero la de mejores materiales y, después, la más barata.
 """
 
 import math
@@ -36,7 +36,7 @@ from app.domain.textos import (
     redondear,
 )
 
-MOTOR_VERSION = "reglas-2"
+MOTOR_VERSION = "reglas-3"
 
 NOTA_MOLESTIAS = (
     "Una pala adecuada ayuda, pero no trata una lesión. "
@@ -95,49 +95,97 @@ def _objetivo(r: Respuestas) -> _Objetivo:
     return _Objetivo(forma, balance, dureza, peso_min, peso_max, nivel, junior, molestias, tope(r))
 
 
-def _puntuar(pala: Pala, o: _Objetivo, r: Respuestas, salud: Salud | None) -> float:
-    puntos = 0.0
+@dataclass(frozen=True)
+class _Rasgos:
+    """Lo que mira _encaje de una pala (y la pala ideal de _encaje_maximo)."""
 
-    salto_forma = abs(FORMAS.index(pala.forma) - FORMAS.index(o.forma))
-    puntos += (40, 18, 0)[salto_forma]
+    forma: Forma
+    balance: Balance
+    dureza: int
+    peso: int
+    nivel: tuple[int, int]
+    tolerancia: int
+    gama: int
 
-    salto_balance = abs(BALANCES.index(pala.balance) - BALANCES.index(o.balance))
-    puntos += (15, 7, 0)[salto_balance]
 
-    # Núcleo: con molestias, la dureza pesa mucho más.
-    dif_dureza = abs(pala.dureza - o.dureza)
-    puntos += 26 - 10 * dif_dureza if o.molestias else 12 - 6 * dif_dureza
+# --- Afinidad -----------------------------------------------------------------
+# Ordena las palas y da su afinidad de 0 a 100 (igual que en recomendador.ts). Los materiales
+# cuentan según la frecuencia, con el tope de lo que da el presupuesto.
 
+PRIORIDAD = {
+    "forma": 30,
+    "nucleo": 15,
+    "balance": 15,
+    "nivel": 15,
+    "materiales": 10,
+    "peso": 10,
+    "perdona": 5,
+}
+PRIORIDAD_MOLESTIAS = {
+    "nucleo": 30,
+    "forma": 20,
+    "peso": 15,
+    "balance": 15,
+    "nivel": 10,
+    "materiales": 5,
+    "perdona": 5,
+}
+
+
+def _gama_que_toca(r: Respuestas) -> int:
+    """Gama que piden las respuestas: la de la frecuencia, con el tope del presupuesto."""
+    por_frecuencia = 3 if r.frec == "4+" else 2 if r.frec == "2-3" else 1
+    por_presupuesto = 1 if r.ppto == "100" else 2 if r.ppto == "150" else 3
+    return min(por_frecuencia, por_presupuesto)
+
+
+def _cerca(salto: int) -> float:
+    return (1, 0.5, 0)[min(salto, 2)]
+
+
+def _encaje(pala: Pala | _Rasgos, o: _Objetivo, r: Respuestas, salud: Salud | None) -> float:
+    p = PRIORIDAD_MOLESTIAS if o.molestias else PRIORIDAD
+    forma = _cerca(abs(FORMAS.index(pala.forma) - FORMAS.index(o.forma)))
+    # Con el codo o la muñeca, menos palanca: el balance bajo vale siempre y el alto, nada.
+    en_brazo = o.molestias and salud is not None and salud.zona in ("Codo", "Muñeca")
+    if en_brazo and pala.balance != "medio":
+        balance = 1.0 if pala.balance == "bajo" else 0.0
+    else:
+        balance = _cerca(abs(BALANCES.index(pala.balance) - BALANCES.index(o.balance)))
+    nucleo = max(0, 1 - 0.25 * abs(pala.dureza - o.dureza))
+    # Con el hombro o la espalda, más de 360 g no vale (es lo que dice su guía).
+    en_espalda = o.molestias and salud is not None and salud.zona in ("Hombro", "Espalda")
     fuera_de_peso = max(o.peso_min - pala.peso, pala.peso - o.peso_max, 0)
-    puntos += 10 - min(20, fuera_de_peso * 0.8)
-
+    peso = 0 if en_espalda and pala.peso > 360 else max(0, 1 - fuera_de_peso / 25)
     nivel_min, nivel_max = pala.nivel
-    fuera_de_nivel = max(nivel_min - o.nivel, o.nivel - nivel_max, 0)
-    puntos += 18 if fuera_de_nivel == 0 else -14 * fuera_de_nivel
+    nivel = _cerca(max(nivel_min - o.nivel, o.nivel - nivel_max, 0))
+    materiales = _cerca(max(0, _gama_que_toca(r) - pala.gama))
+    perdona = pala.tolerancia / 5 if r.camino == "primera" or o.nivel == 1 else 0
+    return (
+        p["forma"] * forma
+        + p["balance"] * balance
+        + p["nucleo"] * nucleo
+        + p["peso"] * peso
+        + p["nivel"] * nivel
+        + p["materiales"] * materiales
+        + p["perdona"] * perdona
+    )
 
-    # Quien empieza agradece una pala que perdone.
-    if r.camino == "primera" or o.nivel == 1:
-        puntos += pala.tolerancia * 2
 
-    # A igualdad de encaje, mejores materiales dentro del presupuesto.
-    puntos += pala.gama * 6
-    if r.frec == "4+":
-        puntos += (pala.gama - 1) * 4
-    if r.frec == "1":
-        puntos -= (pala.gama - 1) * 3
-    if r.camino == "cambio":
-        puntos += (pala.gama - 1) * 3
+def _encaje_maximo(o: _Objetivo, r: Respuestas, salud: Salud | None) -> float:
+    """Los puntos de afinidad de la pala ideal para estas respuestas."""
+    return max(
+        _encaje(_Rasgos(forma, balance, dureza, peso, (o.nivel, o.nivel), 5, 3), o, r, salud)
+        for forma in FORMAS
+        for balance in BALANCES
+        for dureza in (1, 2, 3, 4, 5)
+        for peso in (o.peso_min, min(o.peso_max, 360), o.peso_max)
+    )
 
-    if o.molestias and salud:
-        en_brazo = salud.zona in ("Codo", "Muñeca")
-        if en_brazo:
-            puntos += 6 if pala.balance == "bajo" else -10 if pala.balance == "alto" else 0
-        if salud.zona in ("Hombro", "Espalda"):
-            puntos += 6 if pala.peso <= 360 else -4
-        if salud.momento == "Casi siempre":
-            puntos += 6 if pala.dureza <= 2 else -6
 
-    return puntos
+def _afinidad(puntos: float, maximo: float) -> int:
+    """De 0 a 100. Redondea como Math.round de JS, no como round()."""
+    return math.floor(100 * puntos / maximo + 0.5)
 
 
 # --- Alternativas -------------------------------------------------------------
@@ -271,8 +319,13 @@ def _describir(
     return ganas, perdida_general()
 
 
-def _elegir_alternativas(orden: list[_Candidata], o: _Objetivo) -> list[Alternativa]:
-    ref, resto = orden[0], orden[1:]
+# Una pala que encaja menos que esto no se enseña como alternativa: no ayuda a elegir.
+AFINIDAD_MINIMA_ALTERNATIVA = 50
+
+
+def _elegir_alternativas(orden: list[_Candidata], o: _Objetivo, maximo: float) -> list[Alternativa]:
+    ref = orden[0]
+    resto = [c for c in orden[1:] if _afinidad(c.puntos, maximo) >= AFINIDAD_MINIMA_ALTERNATIVA]
     usadas: set[int] = set()
     lista: list[Alternativa] = []
 
@@ -289,7 +342,9 @@ def _elegir_alternativas(orden: list[_Candidata], o: _Objetivo) -> list[Alternat
             return
         usadas.add(c.pala.id)
         ganas, pierdes = _describir(tipo, c, ref, o.molestias)
-        lista.append(Alternativa(c.pala, ETIQUETAS[tipo], ganas, pierdes))
+        lista.append(
+            Alternativa(c.pala, ETIQUETAS[tipo], ganas, pierdes, _afinidad(c.puntos, maximo))
+        )
 
     # 1) Una alternativa de carácter: más pegada, más control o más cuidado del brazo.
     def suave(c: _Candidata) -> bool:
@@ -299,7 +354,8 @@ def _elegir_alternativas(orden: list[_Candidata], o: _Objetivo) -> list[Alternat
         return c.pala.potencia > ref.pala.potencia and suave(c)
 
     def extra_pegada(c: _Candidata) -> float:
-        return (c.pala.potencia - ref.pala.potencia) * 8
+        # Escala de _encaje: de 0 a 100. Cada punto más de potencia vale como 6 de encaje.
+        return (c.pala.potencia - ref.pala.potencia) * 6
 
     # Más control de verdad: gana en precisión sin perdonar menos que la recomendada.
     def mas_control(c: _Candidata) -> bool:
@@ -509,8 +565,11 @@ def recomendar(r: Respuestas, salud: Salud | None, catalogo: Iterable[Pala]) -> 
             continue
         oferta = mejor_oferta(pala)
         if oferta is not None and oferta.precio <= o.tope:
-            candidatas.append(_Candidata(pala, _puntuar(pala, o, r, salud), oferta.precio))
-    candidatas.sort(key=lambda c: (-c.puntos, c.precio))
+            candidatas.append(_Candidata(pala, _encaje(pala, o, r, salud), oferta.precio))
+    # Primero la de más afinidad (la que se ve en pantalla); a igualdad, mejores materiales y,
+    # después, la más barata.
+    maximo = _encaje_maximo(o, r, salud)
+    candidatas.sort(key=lambda c: (-_afinidad(c.puntos, maximo), -c.pala.gama, c.precio))
 
     if not candidatas:
         return None
@@ -519,7 +578,11 @@ def recomendar(r: Respuestas, salud: Salud | None, catalogo: Iterable[Pala]) -> 
     return Resultado(
         titular=_titular(mejor),
         mejor=mejor,
+        afinidad=_afinidad(candidatas[0].puntos, maximo),
         motivos=(_motivo_forma(mejor, r), _motivo_uso(mejor, r, salud), _motivo_precio(mejor, r)),
-        alternativas=tuple(_elegir_alternativas(candidatas, o)),
+        # El puesto (las medallas 2 y 3) lo da la afinidad: primero la que más encaja.
+        alternativas=tuple(
+            sorted(_elegir_alternativas(candidatas, o, maximo), key=lambda a: -a.afinidad)
+        ),
         nota=NOTA_MOLESTIAS if r.mol == "si" else None,
     )
